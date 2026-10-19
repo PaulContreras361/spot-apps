@@ -1080,7 +1080,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <footer>
     <div class="colo">My Fishing Spot — Texas salt &amp; fresh, week by week, all year.</div>
     <div class="lic" id="licLine"></div>
-    <div>Salt hotspots: 10-year Texas coast dataset · Fresh: Texas seasonal patterns · Live: NOAA tides, NWS weather, TWDB lake levels · Imagery: USGS The National Map · Charts: NOAA (not for navigation) · Award sizes: TPWD Angler Recognition Program. Always check current TPWD regulations before you keep a fish.</div>
+    <div>Salt hotspots: 10-year Texas coast dataset · Fresh: Texas seasonal patterns · Live: NOAA tides, NWS weather, TWDB lake levels · Imagery: Sentinel-2 cloudless 2017 by EOX (CC BY 4.0) · Charts: NOAA (not for navigation) · Award sizes: TPWD Angler Recognition Program. Always check current TPWD regulations before you keep a fish.</div>
     <details>
       <summary>Change log</summary>
       <ul>
@@ -1522,7 +1522,7 @@ function lockHash(s){
   if(!L.lock||!L.name) return;
   const key='unlock_'+L.lock;
   try{ if(localStorage.getItem(key)==='1') return; }catch(e){}
-  const app=/deer/i.test(document.title)?'My Deer Spot':'My Fishing Spot';
+  const app=/deer/i.test(document.title)?'My Deer Spot':/bird/i.test(document.title)?'My Bird Spot':'My Fishing Spot';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const st=document.createElement('style');
   st.textContent=`#lockScr{position:fixed;inset:0;z-index:9999;background:radial-gradient(900px 500px at 50% -100px,#3A2E20 0,#0d0b08 70%);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
@@ -1660,8 +1660,8 @@ function moonPhase(date){
   const syn=29.530588853, ref=Date.UTC(2026,9,10,15,50); /* verified new moon, Oct 10 2026 */
   const age=(((date-ref)/86400000)%syn+syn)%syn, frac=age/syn;
   const illum=(1-Math.cos(2*Math.PI*frac))/2;
-  const names=['New moon','Waxing crescent','First quarter','Waxing gibbous','Full moon','Waning gibbous','Last quarter','Waning crescent','New moon'];
-  return {frac, illum, name:names[Math.floor((age/syn)*8+0.5)%9]};
+  const wax=frac<0.5, name = illum<0.03?'New moon': illum>0.97?'Full moon': illum<0.42?(wax?'Waxing crescent':'Waning crescent'): illum<=0.58?(wax?'First quarter':'Last quarter'): (wax?'Waxing gibbous':'Waning gibbous');
+  return {frac, illum, name};
 }
 function moonIcon(frac, size){
   const r=7, k=Math.cos(2*Math.PI*frac), rx=Math.abs(k)*r;
@@ -1745,18 +1745,21 @@ window.addEventListener('resize',()=>{ if(coverWide!==null && (window.innerWidth
 /* ============================================================
    MAP — Leaflet satellite / NOAA chart, plus offline simple chart
    ============================================================ */
-const USGS_SAT = 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}';
+/* Sentinel-2 cloudless 2017 by EOX — CC BY 4.0 (commercial use OK with credit).
+   Unlike the USGS photos, it covers Gulf water cleanly, not just land. */
+const USGS_SAT = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2017_3857/default/g/{z}/{y}/{x}.jpg';
 const NOAA_CHART = 'https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/NOAAChartDisplay/MapServer/exts/MaritimeChartService/MapServer/export';
 let lmap=null, satLayer=null, chartLayer=null, pinLayer=null, mapView=store.get('map')||'sat';
 let tileOK=0, tileErr=0, mapFellBack=false;
+const SAT_MAX_Z = 13;   /* ≈ 5 miles across on a phone */
 
 function initLeaflet(){
   if(typeof L==='undefined'){ mapFellBack=true; return; }
-  lmap = L.map('leafMap',{zoomControl:true, attributionControl:true, preferCanvas:false, tap:true})
+  lmap = L.map('leafMap',{zoomControl:true, attributionControl:true, preferCanvas:false, tap:true, maxZoom: mapView==='chart'?17:SAT_MAX_Z})
            .setView([28.2,-96.4],7);
   lmap.attributionControl.setPrefix(false);
-  satLayer = L.tileLayer(USGS_SAT,{maxZoom:18, maxNativeZoom:16,
-    attribution:'Imagery: <a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" target="_blank">USGS The National Map</a>'});
+  satLayer = L.tileLayer(USGS_SAT,{maxZoom:17, maxNativeZoom:15,
+    attribution:'<a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless 2017 by EOX IT Services GmbH</a> (contains modified Copernicus Sentinel data 2017)'});
   const NoaaChart = L.TileLayer.extend({
     getTileUrl(c){
       const n=Math.pow(2,c.z), S=40075016.68557849, size=S/n;
@@ -1764,7 +1767,7 @@ function initLeaflet(){
       return `${NOAA_CHART}?bbox=${minx},${miny},${maxx},${maxy}&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png&transparent=true&layers=show:1,2,3,4,5,6,7&f=image`;
     }
   });
-  chartLayer = new NoaaChart('',{maxZoom:18, opacity:1,
+  chartLayer = new NoaaChart('',{maxZoom:17, opacity:1,
     attribution:'Charts: <a href="https://nauticalcharts.noaa.gov/" target="_blank">NOAA</a> — not for navigation'});
   satLayer.on('tileload',()=>{ tileOK++; });
   satLayer.on('tileerror',()=>{ tileErr++; checkTiles(); });
@@ -1792,11 +1795,15 @@ function applyMapView(){
     note.className='caption';
     note.innerHTML = simple ? '<b>Fig. 1</b> — Built-in chart. Works with no signal; bays and coast are simplified.'
       : mapView==='chart' ? '<b>Fig. 1</b> — NOAA chart: depths, channels, reefs and markers. Zoom in for detail. Not for navigation.'
-      : '<b>Fig. 1</b> — Satellite view. Tap a numbered pin for the spot, the bait and today’s best bite; pinch to zoom from the whole coast to a single jetty.';
+      : '<b>Fig. 1</b> — Satellite view. Tap a numbered pin for the spot, the bait and today’s best bite. Zoom stops at about 5 miles across so the photo stays sharp — tap <b>Chart</b> to get closer.';
   }
   if(!simple && lmap){
     if(mapView==='chart'){ if(!lmap.hasLayer(chartLayer)) chartLayer.addTo(lmap); }
     else if(lmap.hasLayer(chartLayer)) lmap.removeLayer(chartLayer);
+    /* Satellite stops at about 5 miles across — closer than that the free
+       photos over open Gulf water turn blotchy. NOAA charts stay sharp closer. */
+    const mz = mapView==='chart' ? 17 : SAT_MAX_Z;
+    lmap.setMaxZoom(mz); if(lmap.getZoom()>mz) lmap.setZoom(mz);
     setTimeout(()=>lmap.invalidateSize(),50);
   }
 }
@@ -1846,7 +1853,7 @@ function drawLeaflet(fit){
     L.marker([userSpot.lat,userSpot.lon],{icon:L.divIcon({className:'',html:`<div class="lf-me"><span class="dot"></span><span class="lbl">YOU · ${userSpot.zip}</span></div>`,iconSize:[0,0]}),zIndexOffset:2000}).addTo(pinLayer);
   }
   if(fit){
-    if(hotZone>=0){ const g=zoneGeo(week.zones[hotZone]); lmap.setView([g.lat,g.lon],12); }
+    if(hotZone>=0){ const g=zoneGeo(week.zones[hotZone]); lmap.setView([g.lat,g.lon],Math.min(12,lmap.getMaxZoom())); }
     else {
       const b=L.latLngBounds(pts); if(userSpot) b.extend([userSpot.lat,userSpot.lon]);
       lmap.fitBounds(b.pad(0.5),{maxZoom:11});
@@ -2402,5 +2409,57 @@ setInterval(()=>{ const n=weekForDate(new Date()); if(n!==currentWeekN){ const w
 })();
 
 </script>
+<!-- FAMILY SWITCHER — injected only into the family website copies (3 apps) -->
+<style>
+#spSw{position:fixed;right:0;top:46%;z-index:3000;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;
+  background:#C8501E;color:#fff;font:800 13px 'Barlow Condensed',Arial Narrow,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 10px 10px 12px;border-radius:8px 0 0 8px;box-shadow:-4px 6px 18px rgba(0,0,0,.45);writing-mode:vertical-rl;transform:rotate(180deg) translateY(50%)}
+#spAsk{position:fixed;left:50%;bottom:18px;transform:translate(-50%,150%);z-index:3001;width:min(420px,calc(100% - 24px));
+  background:#F4EDDD;color:#1C1A16;border-radius:6px;box-shadow:0 18px 44px rgba(0,0,0,.6);border-top:6px solid #C8501E;
+  padding:16px 16px 14px;transition:transform .45s cubic-bezier(.2,.9,.3,1.2);font:15px/1.45 Barlow,Arial,sans-serif}
+#spAsk.show{transform:translate(-50%,0)}
+#spAsk .k{font:800 12px 'Barlow Condensed',Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:#C8501E}
+#spAsk .t{font:900 23px/1.12 'Playfair Display',Georgia,serif;margin:3px 0 8px}
+#spAsk a.app{display:flex;align-items:center;gap:10px;text-decoration:none;color:#1C1A16;border:2px solid var(--c);border-left:8px solid var(--c);border-radius:4px;padding:9px 10px;margin:7px 0;background:#fff}
+#spAsk a.app b{display:block;font:900 18px 'Playfair Display',Georgia,serif}
+#spAsk a.app span{font-size:13px;color:#5A5244}
+#spAsk a.app i{font-style:normal;font-size:26px}
+#spAsk a.app em{margin-left:auto;font:800 14px Barlow,Arial,sans-serif;font-style:normal;color:var(--c);white-space:nowrap}
+#spAsk button.no{width:100%;margin-top:6px;padding:10px;border-radius:4px;font:800 15px Barlow,Arial,sans-serif;cursor:pointer;background:transparent;color:#1C1A16;border:2px solid #CBBF9F}
+@media print{#spSw,#spAsk{display:none}}
+</style>
+<script>
+(function(){
+  const T=document.title;
+  const ALL=[
+    {key:'fish', href:'../fish/', icon:'🎣', name:'My Fishing Spot', c:'#1E5A68', line:'Tides, wind and best bite times'},
+    {key:'deer', href:'../deer/', icon:'🦌', name:'My Deer Spot',    c:'#D2541B', line:'Rut report, season clock, stands'},
+    {key:'bird', href:'../bird/', icon:'🦆', name:'My Bird Spot',    c:'#8A6FB0', line:'Dove, ducks, geese, quail, turkey'}];
+  const me=/deer/i.test(T)?'deer':/bird/i.test(T)?'bird':'fish';
+  const others=ALL.filter(a=>a.key!==me);
+  function card(auto){
+    if(document.getElementById('spAsk')) return;
+    const ask=document.createElement('div'); ask.id='spAsk'; ask.setAttribute('role','dialog');
+    ask.innerHTML='<div class="k">Contreras Family · All three apps</div><div class="t">'+(auto?'Want to look at the other apps too?':'Switch apps')+'</div>'+
+      others.map(o=>'<a class="app" href="'+o.href+'" style="--c:'+o.c+'"><i>'+o.icon+'</i><span><b>'+o.name+'</b><span>'+o.line+'</span></span><em>Open →</em></a>').join('')+
+      '<div style="font-size:13px;color:#5A5244;margin-top:4px">Same code — no need to enter it again. The <b>Apps</b> tab on the right side brings this back any time.</div>'+
+      '<button type="button" class="no">'+(auto?'Not now':'Close')+'</button>';
+    document.body.appendChild(ask);
+    const done=()=>{ try{ sessionStorage.setItem('spAsked','1'); }catch(e){} };
+    ask.querySelector('button.no').onclick=()=>{ done(); ask.classList.remove('show'); setTimeout(()=>ask.remove(),500); };
+    ask.querySelectorAll('a').forEach(a=>a.onclick=done);
+    setTimeout(()=>ask.classList.add('show'), auto?2500:20);
+  }
+  function ready(){
+    if(document.getElementById('lockScr')){ setTimeout(ready,400); return; }   // wait until unlocked
+    const tab=document.createElement('button'); tab.id='spSw'; tab.type='button'; tab.setAttribute('aria-label','Switch apps');
+    tab.textContent='Apps ▸'; tab.onclick=()=>card(false); document.body.appendChild(tab);
+    let seen=false; try{ seen=sessionStorage.getItem('spAsked')==='1'; }catch(e){}
+    if(!seen) card(true);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ready); else ready();
+})();
+</script>
+
 </body>
 </html>

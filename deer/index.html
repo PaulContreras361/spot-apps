@@ -1870,7 +1870,7 @@ function lockHash(s){
   if(!L.lock||!L.name) return;
   const key='unlock_'+L.lock;
   try{ if(localStorage.getItem(key)==='1') return; }catch(e){}
-  const app=/deer/i.test(document.title)?'My Deer Spot':'My Fishing Spot';
+  const app=/deer/i.test(document.title)?'My Deer Spot':/bird/i.test(document.title)?'My Bird Spot':'My Fishing Spot';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const st=document.createElement('style');
   st.textContent=`#lockScr{position:fixed;inset:0;z-index:9999;background:radial-gradient(900px 500px at 50% -100px,#3A2E20 0,#0d0b08 70%);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
@@ -2183,11 +2183,11 @@ let tileOK=0, tileErr=0, mapFellBack=false, addMode=false;
 const pageStart=Date.now();
 function initLeaflet(){
   if(typeof L==='undefined'){ mapFellBack=true; return; }
-  lmap=L.map('leafMap',{zoomControl:true,attributionControl:true,tap:true}).setView([31.0,-99.3],6);
+  lmap=L.map('leafMap',{zoomControl:true,attributionControl:true,tap:true,maxZoom:16}).setView([31.0,-99.3],6);
   lmap.attributionControl.setPrefix(false);
   const att='Imagery &amp; topo: <a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" target="_blank">USGS The National Map</a>';
-  satLayer=L.tileLayer(USGS_SAT,{maxZoom:19,maxNativeZoom:16,attribution:att});
-  topoLayer=L.tileLayer(USGS_TOPO,{maxZoom:19,maxNativeZoom:16,attribution:att});
+  satLayer=L.tileLayer(USGS_SAT,{maxZoom:16,maxNativeZoom:16,attribution:att});
+  topoLayer=L.tileLayer(USGS_TOPO,{maxZoom:16,maxNativeZoom:16,attribution:att});
   [satLayer,topoLayer].forEach(l=>{ l.on('tileload',()=>tileOK++); l.on('tileerror',()=>{tileErr++;checkTiles();}); });
   pinLayer=L.layerGroup().addTo(lmap);
   (mapView==='topo'?topoLayer:satLayer).addTo(lmap);
@@ -2671,5 +2671,57 @@ setInterval(()=>{ const n=weekForDate(new Date()); if(n!==currentWeekN){ const w
 })();
 
 </script>
+<!-- FAMILY SWITCHER — injected only into the family website copies (3 apps) -->
+<style>
+#spSw{position:fixed;right:0;top:46%;z-index:3000;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;
+  background:#C8501E;color:#fff;font:800 13px 'Barlow Condensed',Arial Narrow,Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 10px 10px 12px;border-radius:8px 0 0 8px;box-shadow:-4px 6px 18px rgba(0,0,0,.45);writing-mode:vertical-rl;transform:rotate(180deg) translateY(50%)}
+#spAsk{position:fixed;left:50%;bottom:18px;transform:translate(-50%,150%);z-index:3001;width:min(420px,calc(100% - 24px));
+  background:#F4EDDD;color:#1C1A16;border-radius:6px;box-shadow:0 18px 44px rgba(0,0,0,.6);border-top:6px solid #C8501E;
+  padding:16px 16px 14px;transition:transform .45s cubic-bezier(.2,.9,.3,1.2);font:15px/1.45 Barlow,Arial,sans-serif}
+#spAsk.show{transform:translate(-50%,0)}
+#spAsk .k{font:800 12px 'Barlow Condensed',Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:#C8501E}
+#spAsk .t{font:900 23px/1.12 'Playfair Display',Georgia,serif;margin:3px 0 8px}
+#spAsk a.app{display:flex;align-items:center;gap:10px;text-decoration:none;color:#1C1A16;border:2px solid var(--c);border-left:8px solid var(--c);border-radius:4px;padding:9px 10px;margin:7px 0;background:#fff}
+#spAsk a.app b{display:block;font:900 18px 'Playfair Display',Georgia,serif}
+#spAsk a.app span{font-size:13px;color:#5A5244}
+#spAsk a.app i{font-style:normal;font-size:26px}
+#spAsk a.app em{margin-left:auto;font:800 14px Barlow,Arial,sans-serif;font-style:normal;color:var(--c);white-space:nowrap}
+#spAsk button.no{width:100%;margin-top:6px;padding:10px;border-radius:4px;font:800 15px Barlow,Arial,sans-serif;cursor:pointer;background:transparent;color:#1C1A16;border:2px solid #CBBF9F}
+@media print{#spSw,#spAsk{display:none}}
+</style>
+<script>
+(function(){
+  const T=document.title;
+  const ALL=[
+    {key:'fish', href:'../fish/', icon:'🎣', name:'My Fishing Spot', c:'#1E5A68', line:'Tides, wind and best bite times'},
+    {key:'deer', href:'../deer/', icon:'🦌', name:'My Deer Spot',    c:'#D2541B', line:'Rut report, season clock, stands'},
+    {key:'bird', href:'../bird/', icon:'🦆', name:'My Bird Spot',    c:'#8A6FB0', line:'Dove, ducks, geese, quail, turkey'}];
+  const me=/deer/i.test(T)?'deer':/bird/i.test(T)?'bird':'fish';
+  const others=ALL.filter(a=>a.key!==me);
+  function card(auto){
+    if(document.getElementById('spAsk')) return;
+    const ask=document.createElement('div'); ask.id='spAsk'; ask.setAttribute('role','dialog');
+    ask.innerHTML='<div class="k">Contreras Family · All three apps</div><div class="t">'+(auto?'Want to look at the other apps too?':'Switch apps')+'</div>'+
+      others.map(o=>'<a class="app" href="'+o.href+'" style="--c:'+o.c+'"><i>'+o.icon+'</i><span><b>'+o.name+'</b><span>'+o.line+'</span></span><em>Open →</em></a>').join('')+
+      '<div style="font-size:13px;color:#5A5244;margin-top:4px">Same code — no need to enter it again. The <b>Apps</b> tab on the right side brings this back any time.</div>'+
+      '<button type="button" class="no">'+(auto?'Not now':'Close')+'</button>';
+    document.body.appendChild(ask);
+    const done=()=>{ try{ sessionStorage.setItem('spAsked','1'); }catch(e){} };
+    ask.querySelector('button.no').onclick=()=>{ done(); ask.classList.remove('show'); setTimeout(()=>ask.remove(),500); };
+    ask.querySelectorAll('a').forEach(a=>a.onclick=done);
+    setTimeout(()=>ask.classList.add('show'), auto?2500:20);
+  }
+  function ready(){
+    if(document.getElementById('lockScr')){ setTimeout(ready,400); return; }   // wait until unlocked
+    const tab=document.createElement('button'); tab.id='spSw'; tab.type='button'; tab.setAttribute('aria-label','Switch apps');
+    tab.textContent='Apps ▸'; tab.onclick=()=>card(false); document.body.appendChild(tab);
+    let seen=false; try{ seen=sessionStorage.getItem('spAsked')==='1'; }catch(e){}
+    if(!seen) card(true);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',ready); else ready();
+})();
+</script>
+
 </body>
 </html>
