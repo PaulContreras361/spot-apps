@@ -1087,7 +1087,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <details>
       <summary>Change log</summary>
       <ul>
-        <li><b>Rev 3.3 (Oct 18, 2026)</b> — Real photo covers on the saltwater weeks: wade fishing hookups, redfish, jetty and surf anglers, and bay boats at sunset. Freshwater weeks keep the drawn covers.</li>
+        <li><b>Rev 3.3 (Oct 18, 2026)</b> — Real photo covers on the saltwater weeks: wade fishing hookups, redfish, jetty and surf anglers, and bay boats at sunset. Freshwater weeks, the Brag Board banner, catch pictures and share cards use the real photos too.</li>
         <li><b>Rev 3.2 (Oct 16, 2026)</b> — Each buyer’s copy now opens with a 4-digit unlock code (the last 4 digits of their Etsy order number). Enter it once per device.</li>
         <li><b>Rev 3.1 (Oct 12, 2026)</b> — Each buyer's copy is stamped with their name and Etsy order number (top bar, footer, share cards). Personal-use notice added.</li>
         <li><b>Rev 3 (Oct 12, 2026)</b> — Magazine look: a real cover with masthead and cover lines, cream paper pages, serif headlines, feature article, numbered hot spots, conditions report, and a polaroid Brag Board.</li>
@@ -1727,9 +1727,17 @@ const PHOTO_ALT = {wade:'Wade fisherman hooked up at sunset', redfish:'Angler ho
 /* [wide-screen focus, phone focus] — where the action is, so the crop keeps it */
 const PHOTO_FOCUS = {wade:['50% 50%','12% 50%'], redfish:['50% 50%','45% 50%'], jetty:['50% 50%','58% 50%'], surf:['30% 50%','18% 50%'], boat:['50% 50%','38% 50%']};
 function coverPhoto(week){
-  if(mode!=='salt' || typeof FISH_PHOTOS==='undefined' || store.get('coverMode')==='art') return null;
+  if(typeof FISH_PHOTOS==='undefined' || store.get('coverMode')==='art') return null;
+  if(mode==='fresh'){ const k=['boat','wade','jetty'][week.n%3]; return FISH_PHOTOS[k]?k:null; }   /* lake-looking shots */
   for(const k in PHOTO_WEEKS) if(PHOTO_WEEKS[k].includes(week.n) && FISH_PHOTOS[k]) return k;
   return null;
+}
+/* the best of your photos for a catch with no picture of its own */
+function photoForCatch(sp){
+  if(typeof FISH_PHOTOS==='undefined') return null;
+  const s=String(sp||'').toLowerCase();
+  const k = /red|drum/.test(s) ? 'redfish' : /trout|flounder/.test(s) ? 'wade' : /shark|king|tarpon|jack|cobia|mackerel/.test(s) ? 'surf' : /sheeps/.test(s) ? 'jetty' : 'boat';
+  return FISH_PHOTOS[k]||null;
 }
 function renderHero(){
   const W=weeksFor(mode), week=W[selectedWeek-1], month=MONTHS[mode].find(m=>m.key===week.m);
@@ -2320,6 +2328,7 @@ async function renderCatches(){
   else list.innerHTML=all.map(c=>{
     let ph;
     if(c.photo){ const u=URL.createObjectURL(c.photo); urlCache.push(u); ph=`<img src="${u}" alt="${esc(c.species)}">`; }
+    else if(photoForCatch(c.species)) ph=`<img src="${photoForCatch(c.species)}" alt="${esc(c.species)}">`;
     else ph=sceneSVG({month:+((c.date||'').slice(5,7))||1, mode:sceneMode(c), species:ICON_FOR(c.species), seed:c.saved%997, w:440, h:200, id:'c'+c.id});
     const a=awardText(c.species,c.len);
     const daysLeft = a&&a.cls==='yes' ? 60-Math.floor((Date.now()-new Date(c.date+'T12:00').getTime())/86400000) : null;
@@ -2343,7 +2352,8 @@ async function renderCatches(){
 }
 function openCatches(){
   $('catchCover').querySelector('.scene')?.remove();
-  $('catchCover').insertAdjacentHTML('afterbegin', sceneSVG({month:new Date().getMonth()+1, mode, species:mode==='salt'?'Tarpon':'Largemouth', seed:99, w:780, h:230, hz:.5, id:'cov'}));
+  const cp = typeof FISH_PHOTOS!=='undefined' && FISH_PHOTOS[mode==='salt'?'redfish':'boat'];
+  $('catchCover').insertAdjacentHTML('afterbegin', cp ? `<img class="scene" src="${cp}" alt="" style="object-fit:cover;object-position:50% 40%">` : sceneSVG({month:new Date().getMonth()+1, mode, species:mode==='salt'?'Tarpon':'Largemouth', seed:99, w:780, h:230, hz:.5, id:'cov'}));
   fillSpeciesSelect(); fillSpotList(); $('cDate').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
   liveAward();
   if(!DB.ok) $('cMsg').textContent='Heads up: this viewer can’t store data, so catches will disappear when you close it.';
@@ -2362,6 +2372,7 @@ async function shareCard(c){
   let img=null;
   try{
     if(c.photo){ const u=URL.createObjectURL(c.photo); img=await loadImg(u); }
+    else if(photoForCatch(c.species)){ img=await loadImg(photoForCatch(c.species)); }
     else { const s=sceneSVG({month:+c.date.slice(5,7)||1, mode:sceneMode(c), species:ICON_FOR(c.species), seed:c.saved%997, w:1080, h:1080, id:'share'});
       img=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" '))); }
   }catch(e){ img=null; }
