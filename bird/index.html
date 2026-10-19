@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#14110D">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="author" content="Paul Contreras Jr">
-<meta name="copyright" content="© 2026 Paul Contreras Jr. All rights reserved.">
 <meta name="apple-mobile-web-app-title" content="Bird Spot">
 <title>My Bird Spot — Texas Game Birds, Week by Week</title>
 <style>
@@ -1270,12 +1268,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <footer>
     <div class="colo">My Bird Spot — Texas game birds, week by week, all year.</div>
     <div class="lic" id="licLine"></div>
-    <div class="lic" id="madeBy">My Bird Spot · created by Paul Contreras Jr · © 2026 Paul Contreras Jr · All rights reserved</div>
     <div>Season dates, bag limits and zone lines: TPWD Outdoor Annual 2026–27 · Live: National Weather Service · Imagery &amp; topo: USGS The National Map · Turkey score: NWTF formula. Zones are found from your zip code and are a best guess near a zone line — check TPWD’s zone maps. Always check your county’s rules in the TPWD Outdoor Annual before you hunt.</div>
     <details>
       <summary>Change log</summary>
       <ul>
-        <li><b>Rev 1.3 (Oct 19, 2026)</b> — Creator credit: “© 2026 Paul Contreras Jr” is now on the unlock screen, in the footer and printed on every share card. The Etsy order number no longer shows on screen.</li>
+        <li><b>Rev 1.3 (Oct 19, 2026)</b> — The Etsy order number no longer shows on screen.</li>
         <li><b>Rev 1.2 (Oct 18, 2026)</b> — Real photos: mourning doves on the dove-week covers, plus a Photo of the Week in the feature story (doves, strutting gobblers, a flushing rooster pheasant, a bobwhite covey flush).</li>
         <li><b>Rev 1.1 (Oct 18, 2026)</b> — Live covers: wings beat, birds glide, flocks drift across the sky, the gobbler struts and the water shimmers. Phones set to Reduce Motion keep the still picture.</li>
         <li><b>Rev 1 (Oct 18, 2026)</b> — First edition: magazine cover, 48-week guide for 12 Texas game birds (dove, teal, ducks, geese, sandhill crane, quail, pheasant, turkey, chachalaca, woodcock, snipe, rails), 2026–27 season clock for your zones, What’s Flying report, zone lines on the map, spot pins with wind picker, live wind and front alerts, legal shooting light for migratory and upland birds, Brag Board with turkey score and band reporting, share cards, 4-digit unlock code.</li>
@@ -2083,7 +2080,6 @@ function lockHash(s){
   document.head.appendChild(st);
   const d=document.createElement('div'); d.id='lockScr'; d.setAttribute('role','dialog'); d.setAttribute('aria-modal','true'); d.setAttribute('aria-label','Enter your unlock code');
   d.innerHTML=`<div class="lk"><div class="kk">Texas Edition · Unlock</div><div class="mh">${esc(app.toUpperCase())}</div>
-    <div style="font:700 12px Barlow,Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#5A5244;margin-top:4px">by Paul Contreras Jr</div>
     <div class="who">Licensed to ${esc(L.name)}</div>
     <div style="font:700 16px Barlow,Arial,sans-serif">Enter your 4-digit code</div>
     <div class="pins">${[0,1,2,3].map(i=>`<input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Digit ${i+1}">`).join('')}</div>
@@ -2865,7 +2861,7 @@ async function shareCard(c){
   x.fillStyle=INK; x.font='italic 900 84px "Playfair Display", Georgia, serif'; let sp=kindName(c.kind); while(x.measureText(sp).width>W-112&&sp.length>4) sp=sp.slice(0,-2); x.fillText(sp,56,PH+150);
   x.fillStyle=RED; x.font='italic 700 50px "Playfair Display", Georgia, serif'; let dl=huntLine(c); while(x.measureText(dl).width>W-112&&dl.length>4) dl=dl.slice(0,-2); x.fillText(dl,56,PH+218);
   x.fillStyle='#5A5244'; x.font='500 32px Barlow, Arial'; x.fillText((c.spot||'').slice(0,46),56,PH+266);
-  if(LIC_NAME){ x.fillStyle='#8A7F6A'; x.font='600 22px Barlow, Arial'; x.textAlign='right'; x.fillText('My Bird Spot · licensed to '+LIC_NAME,W-40,H-22); x.textAlign='left'; } x.fillStyle='#8A7F6A'; x.font='600 22px Barlow, Arial'; x.textAlign='left'; x.fillText('© 2026 Paul Contreras Jr', 40, H-22);
+  if(LIC_NAME){ x.fillStyle='#8A7F6A'; x.font='600 22px Barlow, Arial'; x.textAlign='right'; x.fillText('My Bird Spot · licensed to '+LIC_NAME,W-40,H-22); x.textAlign='left'; }
   x.save(); x.translate(W-130,PH-120); x.rotate(0.2); x.beginPath();
   for(let k=0;k<36;k++){ const a=Math.PI*k/18, r=k%2?78:96; x.lineTo(r*Math.cos(a),r*Math.sin(a)); } x.closePath();
   x.fillStyle=GOLD; x.fill(); x.strokeStyle=INK; x.lineWidth=2; x.stroke(); x.textAlign='center';
