@@ -2248,8 +2248,10 @@ function renderHero(){
   coverWide = window.innerWidth>=760;
   const own=store.get('coverOwn'), useArt=store.get('coverMode')==='art';
   const bird=coverBird(week), veg = g.lat<29.6&&g.lon>-97.6 ? 'coast' : g.lon<-100 ? 'plains' : g.lon>-95.4 ? 'pine' : 'mesquite';
-  const ph = own || (!useArt && typeof BIRD_PHOTOS!=='undefined' && BIRD_PHOTOS[bird]) || null;
-  const art = ph ? `<img class="scene" src="${ph}" alt="${own?'Your hunting photo':esc(BIRDS[bird].name)+' in flight'}" style="object-position:${own?'center':(FOCUS[bird]||(coverWide?'50% 35%':'50% 30%'))}">` : coverWide
+  /* this week's bird if it has a photo; otherwise the top bird that's open now and has one */
+  let photoBird = (!useArt && typeof BIRD_PHOTOS!=='undefined') ? (BIRD_PHOTOS[bird] ? bird : (rank.find(x=>x.st.open&&BIRD_PHOTOS[x.k])||{}).k) : null;
+  const ph = own || (photoBird ? BIRD_PHOTOS[photoBird] : null);
+  const art = ph ? `<img class="scene" src="${ph}" alt="${own?'Your hunting photo':esc(BIRDS[photoBird].name)}" style="object-position:${own?'center':(FOCUS[photoBird]||(coverWide?'50% 35%':'50% 30%'))}">` : coverWide
     ? sceneSVG({month:week.mo, veg, bird, seed:week.n*17+3, w:1100, h:690, hz:.66, birdX:.68, birdY:.24, birdScale:.8, id:'hero', animate:true})
     : sceneSVG({month:week.mo, veg, bird, seed:week.n*17+3, w:600, h:800, hz:.5, birdX:.55, birdY:.27, id:'hero', animate:true});
   $('hero').classList.toggle('photo-cover',!!ph);
@@ -2310,8 +2312,17 @@ function render(fit){
 }
 /* Photo of the Week — small photos look sharp framed at this size */
 function photoFor(b){ if(typeof BIRD_PHOTOS!=='undefined'&&BIRD_PHOTOS[b]) return BIRD_PHOTOS[b]; if(typeof BIRD_INSETS!=='undefined'&&BIRD_INSETS[b]) return BIRD_INSETS[b]; return null; }
-function insetHTML(b){ const p=photoFor(b); if(!p) return '';
-  return `<figure class="potw"><img src="${p}" alt="${esc(BIRDS[b].name)}"><figcaption><b>Photo of the week</b> · ${esc(BIRDS[b].name)}</figcaption></figure>`; }
+function insetHTML(b){
+  let k=b, note='';
+  if(!photoFor(k)){
+    const date=selDate(), rank=flyRank(date);
+    const open=rank.find(x=>x.st.open&&photoFor(x.k)&&x.k!==WEEKS[selectedWeek-1].bird&&!(typeof BIRD_PHOTOS!=='undefined'&&BIRD_PHOTOS[x.k]&&$('hero').querySelector('img.scene')?.alt===BIRDS[x.k].name));
+    const soon=rank.filter(x=>!x.st.open&&x.st.s&&photoFor(x.k)).sort((p,q)=>p.st.days-q.st.days)[0];
+    const pick=soon&&soon.st.days<=45?soon:open||soon;
+    if(!pick) return '';
+    k=pick.k; note=pick.st.open?' · open now':` · opens ${fmtShort(parseD(pick.st.s.start))}`;
+  }
+  return `<figure class="potw"><img src="${photoFor(k)}" alt="${esc(BIRDS[k].name)}"><figcaption><b>Photo of the week</b> · ${esc(BIRDS[k].name)}${note}</figcaption></figure>`; }
 function renderFeature(){
   const week=WEEKS[selectedWeek-1], mm=MONTHS[week.mo-1], ev=weekEvents(week), fb=BIRDS[week.bird];
   $('weekCard').innerHTML=
