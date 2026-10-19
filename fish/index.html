@@ -1071,7 +1071,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="fig-top">
           <div class="stamp" style="font-weight:700;letter-spacing:1px;text-transform:uppercase">Map view</div>
           <span class="seg" id="mapSeg">
-            <button data-v="sat" class="on">Satellite</button><button data-v="chart">Chart</button><button data-v="simple">Simple</button>
+            <button data-v="sat" class="on">Satellite</button><button data-v="gulf">Gulf</button><button data-v="chart">Chart</button><button data-v="simple">Simple</button>
           </span>
         </div>
         <div class="frame">
@@ -1096,10 +1096,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <footer>
     <div class="colo">My Fishing Spot — Texas salt &amp; fresh, week by week, all year.</div>
     <div class="lic" id="licLine"></div>
-    <div>Salt hotspots: 10-year Texas coast dataset · Fresh: Texas seasonal patterns · Live: NOAA tides, NWS weather, TWDB lake levels · Imagery: Sentinel-2 cloudless 2017 by EOX (CC BY 4.0) · Charts: NOAA (not for navigation) · Award sizes: TPWD Angler Recognition Program. Always check current TPWD regulations before you keep a fish.</div>
+    <div>Salt hotspots: 10-year Texas coast dataset · Fresh: Texas seasonal patterns · Live: NOAA tides, NWS weather, TWDB lake levels · Imagery: USGS The National Map; Gulf view: Sentinel-2 cloudless 2017 by EOX (CC BY 4.0) · Charts: NOAA (not for navigation) · Award sizes: TPWD Angler Recognition Program. Always check current TPWD regulations before you keep a fish.</div>
     <details>
       <summary>Change log</summary>
       <ul>
+        <li><b>Rev 3.4 (Oct 18, 2026)</b> — Map fix: Satellite is back to sharp USGS photos that zoom in close; new Gulf button for a clean open-water view; if one won’t load, the map switches to the other on its own.</li>
         <li><b>Rev 3.3 (Oct 18, 2026)</b> — Real photo covers on the saltwater weeks: wade fishing hookups, redfish, jetty and surf anglers, and bay boats at sunset. Freshwater weeks, the Brag Board banner, catch pictures and share cards use the real photos too.</li>
         <li><b>Rev 3.2 (Oct 16, 2026)</b> — Each buyer’s copy now opens with a 4-digit unlock code (the last 4 digits of their Etsy order number). Enter it once per device.</li>
         <li><b>Rev 3.1 (Oct 12, 2026)</b> — Each buyer's copy is stamped with their name and Etsy order number (top bar, footer, share cards). Personal-use notice added.</li>
@@ -1798,20 +1799,28 @@ window.addEventListener('resize',()=>{ if(coverWide!==null && (window.innerWidth
 /* ============================================================
    MAP — Leaflet satellite / NOAA chart, plus offline simple chart
    ============================================================ */
-/* Sentinel-2 cloudless 2017 by EOX — CC BY 4.0 (commercial use OK with credit).
-   Unlike the USGS photos, it covers Gulf water cleanly, not just land. */
-const USGS_SAT = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2017_3857/default/g/{z}/{y}/{x}.jpg';
+/* Two satellite sources:
+   - USGS (Satellite): sharp aerial photos over land, bays and towns — zooms close (16).
+   - EOX Sentinel-2 cloudless 2017 (Gulf): smooth open-water view — CC BY 4.0, capped at ~5 miles across.
+   If one won't load, the map swaps to the other on its own instead of going blank. */
+const USGS_SAT = 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}';
+const EOX_SAT  = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2017_3857/default/g/{z}/{y}/{x}.jpg';
 const NOAA_CHART = 'https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/NOAAChartDisplay/MapServer/exts/MaritimeChartService/MapServer/export';
-let lmap=null, satLayer=null, chartLayer=null, pinLayer=null, mapView=store.get('map')||'sat';
-let tileOK=0, tileErr=0, mapFellBack=false;
-const SAT_MAX_Z = 13;   /* ≈ 5 miles across on a phone */
+let lmap=null, satLayer=null, gulfLayer=null, chartLayer=null, pinLayer=null, mapView=store.get('map')||'sat';
+if(!['sat','gulf','chart','simple'].includes(mapView)) mapView='sat';
+let mapFellBack=false;
+const MAXZ = {sat:16, gulf:13, chart:17};
+const tiles = {sat:{ok:0,err:0}, gulf:{ok:0,err:0}};
+function baseFor(v){ return v==='gulf' ? 'gulf' : 'sat'; }   /* chart sits on top of the USGS photos */
 
 function initLeaflet(){
   if(typeof L==='undefined'){ mapFellBack=true; return; }
-  lmap = L.map('leafMap',{zoomControl:true, attributionControl:true, preferCanvas:false, tap:true, maxZoom: mapView==='chart'?17:SAT_MAX_Z})
+  lmap = L.map('leafMap',{zoomControl:true, attributionControl:true, preferCanvas:false, tap:true, maxZoom: MAXZ[mapView]||16})
            .setView([28.2,-96.4],7);
   lmap.attributionControl.setPrefix(false);
-  satLayer = L.tileLayer(USGS_SAT,{maxZoom:17, maxNativeZoom:15,
+  satLayer = L.tileLayer(USGS_SAT,{maxZoom:16, maxNativeZoom:16,
+    attribution:'Imagery: <a href="https://www.usgs.gov/programs/national-geospatial-program/national-map" target="_blank">USGS The National Map</a>'});
+  gulfLayer = L.tileLayer(EOX_SAT,{maxZoom:13, maxNativeZoom:13,
     attribution:'<a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless 2017 by EOX IT Services GmbH</a> (contains modified Copernicus Sentinel data 2017)'});
   const NoaaChart = L.TileLayer.extend({
     getTileUrl(c){
@@ -1822,17 +1831,29 @@ function initLeaflet(){
   });
   chartLayer = new NoaaChart('',{maxZoom:17, opacity:1,
     attribution:'Charts: <a href="https://nauticalcharts.noaa.gov/" target="_blank">NOAA</a> — not for navigation'});
-  satLayer.on('tileload',()=>{ tileOK++; });
-  satLayer.on('tileerror',()=>{ tileErr++; checkTiles(); });
+  [['sat',satLayer],['gulf',gulfLayer]].forEach(([k,l])=>{ l.on('tileload',()=>{ tiles[k].ok++; }); l.on('tileerror',()=>{ tiles[k].err++; checkTiles(); }); });
   pinLayer = L.layerGroup().addTo(lmap);
-  satLayer.addTo(lmap);
+  setBase(baseFor(mapView));
   setTimeout(checkTiles, 7000);
 }
+function setBase(k){
+  const on = k==='gulf'?gulfLayer:satLayer, off = k==='gulf'?satLayer:gulfLayer;
+  if(lmap.hasLayer(off)) lmap.removeLayer(off);
+  if(!lmap.hasLayer(on)){ on.addTo(lmap); on.bringToBack(); }
+}
+let swapped='';
 function checkTiles(){
-  if(mapFellBack || tileOK>0) return;
-  if(tileErr>=4 || (Date.now()-pageStart>6500 && tileErr>0) || (Date.now()-pageStart>9000 && tileOK===0)){
-    mapFellBack=true; applyMapView();
+  if(mapFellBack || !lmap || mapView==='simple') return;
+  const k=baseFor(mapView), t=tiles[k], other=k==='gulf'?'sat':'gulf';
+  if(t.ok>0) return;
+  const failing = t.err>=4 || (Date.now()-pageStart>6500 && t.err>0) || (Date.now()-pageStart>9000 && t.ok===0);
+  if(!failing) return;
+  if(tiles[other].err<4 && swapped!==k){         /* try the other satellite source first */
+    swapped=k; mapView = other==='gulf'?'gulf':'sat'; tiles[other]={ok:0,err:0};
+    applyMapView(); toast(other==='gulf'?'Satellite photos wouldn’t load — showing the Gulf view':'Gulf view wouldn’t load — showing the satellite photos');
+    setTimeout(checkTiles,7000); return;
   }
+  mapFellBack=true; applyMapView();
 }
 const pageStart=Date.now();
 function applyMapView(){
@@ -1848,22 +1869,22 @@ function applyMapView(){
     note.className='caption';
     note.innerHTML = simple ? '<b>Fig. 1</b> — Built-in chart. Works with no signal; bays and coast are simplified.'
       : mapView==='chart' ? '<b>Fig. 1</b> — NOAA chart: depths, channels, reefs and markers. Zoom in for detail. Not for navigation.'
-      : '<b>Fig. 1</b> — Satellite view. Tap a numbered pin for the spot, the bait and today’s best bite. Zoom stops at about 5 miles across so the photo stays sharp — tap <b>Chart</b> to get closer.';
+      : mapView==='gulf' ? '<b>Fig. 1</b> — Gulf view: smooth satellite picture of open water and the bays. Stops at about 5 miles across — tap <b>Satellite</b> to zoom in close on land, jetties and marinas.'
+      : '<b>Fig. 1</b> — Satellite photos: sharp over land, jetties, marinas and the bays — zoom in close. Out over open Gulf water, tap <b>Gulf</b> for a cleaner picture.';
   }
   if(!simple && lmap){
+    setBase(baseFor(mapView));
     if(mapView==='chart'){ if(!lmap.hasLayer(chartLayer)) chartLayer.addTo(lmap); }
     else if(lmap.hasLayer(chartLayer)) lmap.removeLayer(chartLayer);
-    /* Satellite stops at about 5 miles across — closer than that the free
-       photos over open Gulf water turn blotchy. NOAA charts stay sharp closer. */
-    const mz = mapView==='chart' ? 17 : SAT_MAX_Z;
+    const mz = MAXZ[mapView]||16;
     lmap.setMaxZoom(mz); if(lmap.getZoom()>mz) lmap.setZoom(mz);
     setTimeout(()=>lmap.invalidateSize(),50);
   }
 }
 $('mapSeg').addEventListener('click',e=>{
   const v=e.target.dataset&&e.target.dataset.v; if(!v) return;
-  mapView=v; store.set('map',v);
-  if(v!=='simple' && mapFellBack){ mapFellBack=false; tileOK=0; tileErr=0; if(satLayer) satLayer.redraw(); setTimeout(checkTiles,7000); }
+  mapView=v; store.set('map',v); swapped='';
+  if(v!=='simple' && mapFellBack){ mapFellBack=false; tiles.sat={ok:0,err:0}; tiles.gulf={ok:0,err:0}; satLayer&&satLayer.redraw(); gulfLayer&&gulfLayer.redraw(); setTimeout(checkTiles,7000); }
   applyMapView(); drawMaps(true);
 });
 
@@ -2255,7 +2276,7 @@ $('zipSet').onclick=()=>{ const z=$('zipInput').value.trim(); if(/^\d{5}$/.test(
 $('zipInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('zipSet').onclick(); });
 $('zipClear').onclick=()=>{ userSpot=null; store.set('zip',''); $('zipInput').value=''; $('zipMsg').textContent='Pin cleared'; render(true); updateSpotReport(); };
 $('btnNow').onclick=()=>{ currentWeekN=weekForDate(new Date()); selectWeek(currentWeekN); window.scrollTo({top:0,behavior:'smooth'}); };
-$('btnRefresh').onclick=()=>{ twdbCache=null; for(const k in tideCache) delete tideCache[k]; updateLive(); armAutoRefresh(); if(mapFellBack){ mapFellBack=false; tileOK=0; tileErr=0; satLayer&&satLayer.redraw(); applyMapView(); setTimeout(checkTiles,7000);} };
+$('btnRefresh').onclick=()=>{ twdbCache=null; for(const k in tideCache) delete tideCache[k]; updateLive(); armAutoRefresh(); if(mapFellBack){ mapFellBack=false; tiles.sat={ok:0,err:0}; tiles.gulf={ok:0,err:0}; satLayer&&satLayer.redraw(); gulfLayer&&gulfLayer.redraw(); applyMapView(); setTimeout(checkTiles,7000);} };
 $('modeSalt').onclick=()=>setMode('salt');
 $('modeFresh').onclick=()=>setMode('fresh');
 
