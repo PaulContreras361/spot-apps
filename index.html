@@ -14,14 +14,16 @@
   h1{font-weight:900;font-size:clamp(40px,11vw,64px);line-height:.95;text-align:center;margin:6px 0 10px;letter-spacing:-1px}
   .dek{text-align:center;font-style:italic;color:#CBBF9F;margin-bottom:22px}
   .row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px 0 6px}
-  a.app{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--paper);border-radius:6px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.45);border-top:8px solid var(--c)}
+  a.app{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--paper);border-radius:6px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.5);border-top:6px solid var(--c)}
   a.app:active{transform:scale(.98)}
-  .app .ic{font-size:clamp(38px,11vw,64px);line-height:1;text-align:center;padding:16px 4px 6px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 14%,#fff),var(--paper))}
-  .app .bd{padding:6px 12px 14px;display:flex;flex-direction:column;flex:1;text-align:center}
-  .app b{display:block;font-weight:900;font-size:clamp(17px,4.6vw,26px);line-height:1.05}
-  .app span{display:block;font:clamp(12px,3.1vw,14.5px)/1.35 Arial,sans-serif;color:var(--ink2);margin:6px 0 10px;flex:1}
+  .app .ph{position:relative;aspect-ratio:4/5;background:#111 center/cover no-repeat}
+  .app .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45) 0,rgba(0,0,0,0) 28%,rgba(0,0,0,0) 55%,rgba(0,0,0,.78) 100%)}
+  .app .ph b{position:absolute;left:0;right:0;bottom:10px;z-index:1;color:#F6EFE0;text-align:center;font-weight:900;font-size:clamp(16px,4.4vw,27px);line-height:1.02;text-shadow:0 2px 10px rgba(0,0,0,.8);padding:0 6px}
+  .app .ph small{position:absolute;top:8px;left:0;right:0;z-index:1;text-align:center;font:800 clamp(8px,2.2vw,11px) Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#F6EFE0;opacity:.9}
+  .app .bd{padding:8px 10px 12px;display:flex;flex-direction:column;flex:1;text-align:center}
+  .app span{display:block;font:clamp(12px,3.1vw,14.5px)/1.35 Arial,sans-serif;color:var(--ink2);margin:0 0 10px;flex:1}
   .app i{display:block;font:800 clamp(11px,3vw,14px) Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#fff;background:var(--c);padding:8px 6px;font-style:normal;border-radius:4px}
-  @media (max-width:430px){ .row{gap:8px} .app .bd{padding:4px 7px 10px} .app span{display:none} .app b{margin-bottom:8px} }
+  @media (max-width:430px){ .row{gap:8px} .app .bd{padding:7px 6px 8px} .app span{display:none} }
   .how{max-width:560px;margin-left:auto;margin-right:auto;background:rgba(244,237,221,.08);border:1px solid rgba(244,237,221,.2);border-radius:4px;padding:14px 16px;margin-top:22px;font:15px/1.55 Arial,sans-serif;color:#E9E1CE}
   .how h2{font:800 13px Arial,sans-serif;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
   .how ol{margin-left:20px}
@@ -34,9 +36,9 @@
   <h1>My Spot Apps</h1>
   <p class="dek">All three apps in one place — fishing, deer and bird season. One code opens all of them, and the Apps tab inside each one switches between them.</p>
   <div class="row">
-    <a class="app" href="fish/" style="--c:#1E5A68"><div class="ic">🎣</div><div class="bd"><b>My Fishing Spot</b><span>Salt &amp; fresh · live tides, wind and best-bite times</span><i>Open →</i></div></a>
-    <a class="app" href="deer/" style="--c:#D2541B"><div class="ic">🦌</div><div class="bd"><b>My Deer Spot</b><span>Rut report · season clock · stand picker</span><i>Open →</i></div></a>
-    <a class="app" href="bird/" style="--c:#8A6FB0"><div class="ic">🦆</div><div class="bd"><b>My Bird Spot</b><span>Dove, ducks, geese, quail, turkey &amp; more</span><i>Open →</i></div></a>
+    <a class="app" href="fish/" style="--c:#1E5A68"><div class="ph" style="background-image:url(img/fish.jpg)"><small>Texas Edition</small><b>My Fishing Spot</b></div><div class="bd"><span>Salt &amp; fresh · live tides, wind and best-bite times</span><i>Open →</i></div></a>
+    <a class="app" href="deer/" style="--c:#D2541B"><div class="ph" style="background-image:url(img/deer.jpg)"><small>Texas Edition</small><b>My Deer Spot</b></div><div class="bd"><span>Rut report · season clock · stand picker</span><i>Open →</i></div></a>
+    <a class="app" href="bird/" style="--c:#8A6FB0"><div class="ph" style="background-image:url(img/bird.jpg)"><small>Texas Edition</small><b>My Bird Spot</b></div><div class="bd"><span>Dove, ducks, geese, quail, turkey &amp; more</span><i>Open →</i></div></a>
   </div>
   <div class="how">
     <h2>Put it on your home screen</h2>
