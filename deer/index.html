@@ -1122,6 +1122,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
   .photo-cover .cv-head,.photo-cover .cv-line,.photo-cover .cv-strip{text-shadow:0 2px 14px rgba(0,0,0,.85)}
   .photo-cover::after{background:linear-gradient(180deg,rgba(5,6,4,.62) 0,rgba(5,6,4,.08) 30%,rgba(5,6,4,0) 46%,rgba(5,6,4,.82) 100%)}
 
+  /* magazine section openers: photo header on the map and the live report */
+  .sec-photo{position:relative;margin:-14px -14px 12px;height:170px;background:#0B1626 center/cover no-repeat;overflow:hidden;border-bottom:4px solid var(--red)}
+  .report .sec-photo{margin:-16px -16px 12px}
+  .sec-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,6,4,.15) 0,rgba(6,6,4,.2) 40%,rgba(6,6,4,.85) 100%)}
+  .sec-photo .sp-t{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;color:#F6EFE0}
+  .sec-photo .kicker{color:var(--gold)!important}
+  .sec-photo h3{font-family:var(--serif);font-weight:900;font-style:italic;font-size:32px;line-height:1.02;margin:2px 0 4px;color:#F6EFE0;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+  .sec-photo p{font:600 14px var(--sans);color:#E9E1CE;margin:0;text-shadow:0 1px 8px rgba(0,0,0,.8)}
+  @media (min-width:760px){.sec-photo{height:200px}}
+  .report-top{justify-content:flex-end}
+  .sheet-cover img.scene{object-fit:cover}
+
+  .sec-photo .kicker,.sheet-cover .kicker{text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.7)}
+
 </style>
 </head>
 <body>
@@ -1177,8 +1191,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
     <div class="detail">
       <figure class="paper figure" id="figure">
+        <div class="sec-photo" id="mapPhoto"><div class="sp-t"><div class="kicker">The map</div><h3 id="mapTitle">Rut Map &amp; Your Stands</h3><p>Where the rut is — and where you’ll sit.</p></div></div>
         <div class="fig-top">
-          <div><div class="kicker">The map</div><h4 id="mapTitle" style="margin-bottom:0">Rut Map &amp; Your Stands</h4></div>
+          <div class="stamp" style="font-weight:700;letter-spacing:1px;text-transform:uppercase">Map view</div>
           <span class="seg" id="mapSeg">
             <button data-v="sat" class="on">Satellite</button><button data-v="topo">Topo</button><button data-v="simple">Simple</button>
           </span>
@@ -1198,8 +1213,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </figure>
       <section class="paper stand-card" id="standCard"></section>
       <section class="paper report">
+        <div class="sec-photo" id="repPhoto"><div class="sp-t"><div class="kicker"><span class="live-dot animate" id="liveDot"></span>Live today</div><h3 id="repTitle">Hunt Report</h3><p>Wind, fronts and legal light for your lease.</p></div></div>
         <div class="report-top">
-          <div><div class="kicker"><span class="live-dot animate" id="liveDot"></span>Live today</div><h4 style="margin-bottom:0" id="repTitle">Hunt Report</h4></div>
           <span class="stamp" id="stamp">connecting…</span>
         </div>
         <div class="net-banner" id="netBanner"></div>
@@ -2056,7 +2071,14 @@ function barcodeSVG(seed){
   return `<svg viewBox="0 0 80 30" preserveAspectRatio="none">${b}</svg>`;
 }
 let coverWide=null;
+function photoImg(k,pos){ return (typeof COVER_PHOTOS!=='undefined'&&COVER_PHOTOS[k]) ? `<img class="scene" src="${COVER_PHOTOS[k]}" alt="" style="object-fit:cover;object-position:${pos||'center'}">` : ''; }
+function sectionPhotos(){
+  if(typeof COVER_PHOTOS==='undefined') return;
+  const set=(id,k,pos)=>{ const e=$(id); if(e&&COVER_PHOTOS[k]){ e.style.backgroundImage=`url(${COVER_PHOTOS[k]})`; e.style.backgroundPosition=pos; } };
+  set('mapPhoto','wide','50% 32%'); set('repPhoto','tall','50% 48%');
+}
 function renderHero(){
+  sectionPhotos();
   const week=WEEKS[selectedWeek-1], mm=MONTHS[week.mo-1], date=selDate();
   const rank=rutRank(date), top=rank[0], mine=rutFor(myRegion,date);
   const g=here(), mp=moonPhase(new Date()), nb=nextMove(g.lat,g.lon);
@@ -2395,7 +2417,7 @@ let fetchSeq=0;
 async function updateLive(){
   const seq=++fetchSeq, g=here(), box=$('liveBox'), stamp=$('stamp');
   stamp.textContent='updating…'; stamp.classList.remove('err'); netFails=0; netOKs=0;
-  $('repTitle').textContent='Hunt Report · '+g.name;
+  $('repTitle').textContent='Hunt Report'; $('repPhoto').querySelector('p').textContent=g.name+' — wind, fronts and legal light.';
   /* offline-safe parts first */
   const now=new Date(), ev=dayAstro(g.lat,g.lon), mp=moonPhase(now);
   let wins=[]; try{ wins=bestWindows(g.lat,g.lon,[]); }catch(e){}
@@ -2502,7 +2524,7 @@ function openRegs(){
       <div><b>Your county</b><br>Seasons, bag limits and antler rules are set county by county. Look yours up in the <a href="https://tpwd.texas.gov/regulations/outdoor-annual/" target="_blank" rel="noopener">TPWD Outdoor Annual</a> or the Texas Hunt &amp; Fish app.</div>
     </div><div class="stamp">Summarized from the TPWD Outdoor Annual, ${SEASON_YEAR}. If anything here and TPWD disagree, TPWD is right.</div>`;
   $('regsCover').querySelector('.scene')?.remove();
-  $('regsCover').insertAdjacentHTML('afterbegin',sceneSVG({month:11,veg:REGIONS[myRegion].veg,seed:41,w:780,h:230,hz:.62,deerScale:.55,deerX:.62,blind:true,id:'rg'}));
+  $('regsCover').insertAdjacentHTML('afterbegin',photoImg('wide','50% 30%'));
   $('regsSheet').classList.add('open'); document.body.style.overflow='hidden';
 }
 $('btnRegs').onclick=openRegs;
@@ -2585,6 +2607,7 @@ async function renderBrag(){
   if(!all.length) list.innerHTML=`<div class="empty">Nothing on the board yet. Log your first deer above — a photo and the points is all it takes.</div>`;
   else list.innerHTML=all.map(c=>{
     let ph; if(c.photo){ const u=URL.createObjectURL(c.photo); urlCache.push(u); ph=`<img src="${u}" alt="${esc(c.kind)}">`; }
+    else if(typeof COVER_PHOTOS!=='undefined') ph=`<img src="${COVER_PHOTOS.wide}" alt="${esc(c.kind)}" style="object-fit:cover;object-position:50% 30%">`;
     else ph=sceneSVG({month:+((c.date||'').slice(5,7))||11, veg:(REGIONS[c.region]||REGIONS.brush).veg, seed:c.saved%997, w:440, h:200, hz:.55, deerScale:.85, deerX:.45, blind:false, points:c.pts||8, doe:/doe/i.test(c.kind), id:'d'+c.id});
     const marks=c.score?SCORE_MARKS.filter(m=>c.score>=m.min&&!(m.name.startsWith('Pope')&&c.weapon!=='Bow')).map(m=>m.name.split(' (')[0]):[];
     return `<div class="catch"><div class="ph">${ph}</div><div class="in">
@@ -2603,7 +2626,7 @@ async function renderBrag(){
 function fillStandList(){ $('standList').innerHTML=stands.map(s=>`<option value="${esc(s.name)}">`).join(''); }
 function openBrag(){
   $('bragCover').querySelector('.scene')?.remove();
-  $('bragCover').insertAdjacentHTML('afterbegin',sceneSVG({month:12,veg:REGIONS[myRegion].veg,seed:99,w:780,h:230,hz:.6,deerScale:.6,deerX:.6,points:10,id:'bc'}));
+  $('bragCover').insertAdjacentHTML('afterbegin',photoImg('tall','50% 50%'));
   fillStandList(); $('dDate').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
   if(!DB.ok) $('dMsg').textContent='Heads up: this viewer can’t store data, so deer will disappear when you close it.';
   $('bragSheet').classList.add('open'); document.body.style.overflow='hidden'; renderBrag();
@@ -2618,6 +2641,7 @@ async function shareCard(c){
   const loadImg=src=>new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; });
   let img=null;
   try{ if(c.photo){ img=await loadImg(URL.createObjectURL(c.photo)); }
+    else if(typeof COVER_PHOTOS!=='undefined'){ img=await loadImg(COVER_PHOTOS.tall); }
     else { const s=sceneSVG({month:+c.date.slice(5,7)||11, veg:(REGIONS[c.region]||REGIONS.brush).veg, seed:c.saved%997, w:1080, h:1080, hz:.6, deerScale:.7, deerX:.42, points:c.pts||8, doe:/doe/i.test(c.kind), id:'share'});
       img=await loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" '))); } }
   catch(e){ img=null; }
