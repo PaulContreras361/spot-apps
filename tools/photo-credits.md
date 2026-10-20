@@ -12,3 +12,4 @@ can't be sold as stand-alone photos.
 | bass | Fishing: Fresh weeks, fresh section headers, bass/crappie/catfish catches | https://unsplash.com/photos/man-holding-a-large-bass-fish-while-on-a-boat-XcEW8S1g578 | Jim Crowley | Unsplash License (cropped to the fish, no face) |
 | buck (big) | Deer: phone and computer covers, share cards, live report header | https://unsplash.com/photos/a-deer-with-large-antlers-standing-in-the-woods-By4N_rWdQDo | Bella | Unsplash License |
 | buck (wide) | Deer: computer cover, catch pictures, map header | https://www.pexels.com/photo/2016961 | James Lee | Pexels License |
+| turkey | Birds: turkey weeks (and all bird covers until the others arrive), section headers | https://www.pexels.com/photo/close-up-of-turkeys-23093198/ | Tom Fisk | Pexels License |
