@@ -15,3 +15,6 @@ can't be sold as stand-alone photos.
 | turkey | Birds: turkey weeks (and all bird covers until the others arrive), section headers | https://www.pexels.com/photo/close-up-of-turkeys-23093198/ | Tom Fisk | Pexels License |
 | pheasant | Birds: pheasant weeks | https://unsplash.com/photos/a-pheasant-flying-in-the-sky-with-its-wings-spread-JuoE5jHlcHs | Bob Brewer | Unsplash License |
 | dove | Birds: dove weeks, map header (Eurasian collared doves) | https://unsplash.com/photos/two-doves-perched-on-a-tree-branch-LPaOlsMD6ks | iuliu illes | Unsplash License |
+| quail | Birds: quail weeks (northern bobwhite) | https://www.pexels.com/photo/northern-bobwhite-quail-perched-on-branch-32090132/ | Naseeh | Pexels License |
+| duck | Birds: duck and teal weeks (mallards) | https://unsplash.com/photos/four-ducks-flying-low-over-water-pR_GlnMUDgI | Glennice Burns | Unsplash License |
+| goose | Birds: goose weeks (snow and blue geese) | https://unsplash.com/photos/flock-of-white-birds-flying-zU2BzAcY8zA | Richard Lee | Unsplash License |
