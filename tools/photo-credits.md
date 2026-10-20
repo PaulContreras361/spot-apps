@@ -13,3 +13,5 @@ can't be sold as stand-alone photos.
 | buck (big) | Deer: phone and computer covers, share cards, live report header | https://unsplash.com/photos/a-deer-with-large-antlers-standing-in-the-woods-By4N_rWdQDo | Bella | Unsplash License |
 | buck (wide) | Deer: computer cover, catch pictures, map header | https://www.pexels.com/photo/2016961 | James Lee | Pexels License |
 | turkey | Birds: turkey weeks (and all bird covers until the others arrive), section headers | https://www.pexels.com/photo/close-up-of-turkeys-23093198/ | Tom Fisk | Pexels License |
+| pheasant | Birds: pheasant weeks | https://unsplash.com/photos/a-pheasant-flying-in-the-sky-with-its-wings-spread-JuoE5jHlcHs | Bob Brewer | Unsplash License |
+| dove | Birds: dove weeks, map header (Eurasian collared doves) | https://unsplash.com/photos/two-doves-perched-on-a-tree-branch-LPaOlsMD6ks | iuliu illes | Unsplash License |
