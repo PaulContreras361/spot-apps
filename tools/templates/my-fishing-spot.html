@@ -1750,6 +1750,7 @@ function coverPhoto(week){
   if(typeof FISH_PHOTOS==='undefined' || store.get('coverMode')==='art') return null;
   if(mode==='fresh'){ const k=['boat','wade','jetty'][week.n%3]; return FISH_PHOTOS[k]?k:null; }   /* lake-looking shots */
   for(const k in PHOTO_WEEKS) if(PHOTO_WEEKS[k].includes(week.n) && FISH_PHOTOS[k]) return k;
+  if(mode==='salt' && FISH_PHOTOS.redfish) return 'redfish';   /* until each week's own photo is in */
   return null;
 }
 /* the best of your photos for a catch with no picture of its own */
@@ -1761,7 +1762,7 @@ function photoForCatch(sp){
 }
 function sectionPhotos(){
   if(typeof FISH_PHOTOS==='undefined') return;
-  const set=(id,k,pos)=>{ const e=$(id); if(e&&FISH_PHOTOS[k]){ e.style.backgroundImage=`url(${FISH_PHOTOS[k]})`; e.style.backgroundPosition=pos; } };
+  const set=(id,k,pos)=>{ const e=$(id); if(e&&!FISH_PHOTOS[k]&&mode==='salt'&&FISH_PHOTOS.redfish){ k='redfish'; pos='60% 50%'; } if(e&&FISH_PHOTOS[k]){ e.style.backgroundImage=`url(${FISH_PHOTOS[k]})`; e.style.backgroundPosition=pos; } };
   set('mapPhoto', mode==='salt'?'jetty':'wade', mode==='salt'?'55% 40%':'20% 45%');
   set('repPhoto', 'boat', '45% 55%');
 }
