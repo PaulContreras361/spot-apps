@@ -1745,7 +1745,7 @@ const PHOTO_WEEKS = {
 };
 const PHOTO_ALT = {wade:'Wade fisherman hooked up at sunset', redfish:'Angler holding up a redfish', jetty:'Angler on the jetty rocks at sunset', surf:'Surf casters on the rocks', boat:'Two anglers fishing from a boat at sunset'};
 /* [wide-screen focus, phone focus] — where the action is, so the crop keeps it */
-const PHOTO_FOCUS = {wade:['50% 50%','12% 50%'], redfish:['50% 48%','64% 50%'], jetty:['50% 50%','58% 50%'], surf:['30% 50%','18% 50%'], boat:['50% 50%','38% 50%']};
+const PHOTO_FOCUS = {wade:['50% 50%','12% 50%'], redfish:['50% 48%','90% 50%'], jetty:['50% 50%','58% 50%'], surf:['30% 50%','18% 50%'], boat:['50% 50%','38% 50%']};
 function coverPhoto(week){
   if(typeof FISH_PHOTOS==='undefined' || store.get('coverMode')==='art') return null;
   if(mode==='fresh'){ const k=['boat','wade','jetty'][week.n%3]; return FISH_PHOTOS[k]?k:null; }   /* lake-looking shots */
