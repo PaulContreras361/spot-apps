@@ -2401,7 +2401,7 @@ async function renderCatches(){
 }
 function openCatches(){
   $('catchCover').querySelector('.scene')?.remove();
-  const cp = typeof FISH_PHOTOS!=='undefined' && (mode==='salt'?FISH_PHOTOS.redfish:(FISH_PHOTOS.boat||FISH_PHOTOS.bass));
+  const cp = typeof FISH_PHOTOS!=='undefined' && (mode==='salt'?(FISH_PHOTOS.surf||FISH_PHOTOS.redfish):(FISH_PHOTOS.boat||FISH_PHOTOS.bass));
   $('catchCover').insertAdjacentHTML('afterbegin', cp ? `<img class="scene" src="${cp}" alt="" style="object-fit:cover;object-position:50% 40%">` : sceneSVG({month:new Date().getMonth()+1, mode, species:mode==='salt'?'Tarpon':'Largemouth', seed:99, w:780, h:230, hz:.5, id:'cov'}));
   fillSpeciesSelect(); fillSpotList(); $('cDate').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
   liveAward();
