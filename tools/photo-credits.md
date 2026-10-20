@@ -10,3 +10,5 @@ can't be sold as stand-alone photos.
 | surf | Fishing: surf weeks, wade weeks (for now), last-page header | https://unsplash.com/photos/silhouette-of-man-fishing-on-sea-during-sunset-oB_0YIVj7c0 | Clay LeConey | Unsplash License |
 | jetty | Fishing: jetty weeks, map header | https://unsplash.com/photos/man-in-white-t-shirt-and-brown-shorts-fishing-on-sea-during-daytime-JtRXnUNWHt4 | Ryan Arnst | Unsplash License |
 | bass | Fishing: Fresh weeks, fresh section headers, bass/crappie/catfish catches | https://unsplash.com/photos/man-holding-a-large-bass-fish-while-on-a-boat-XcEW8S1g578 | Jim Crowley | Unsplash License (cropped to the fish, no face) |
+| buck (tall) | Deer: phone cover, share cards, live report header | https://unsplash.com/photos/a-deer-with-large-antlers-standing-in-the-woods-By4N_rWdQDo | Bella | Unsplash License |
+| buck (wide) | Deer: computer cover, catch pictures, map header | https://www.pexels.com/photo/2016961 | James Lee | Pexels License |
