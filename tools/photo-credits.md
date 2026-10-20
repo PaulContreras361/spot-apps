@@ -7,3 +7,5 @@ can't be sold as stand-alone photos.
 | Photo | App / use | Source | Photographer | License |
 |---|---|---|---|---|
 | redfish | Fishing: redfish weeks, Brag Board banner, red/drum catches | https://www.pexels.com/photo/fisherman-holding-freshly-caught-red-drum-fish-32437034/ | Pexels contributor | Pexels License |
+| surf | Fishing: surf weeks, wade weeks (for now), last-page header | https://unsplash.com/photos/silhouette-of-man-fishing-on-sea-during-sunset-oB_0YIVj7c0 | Clay LeConey | Unsplash License |
+| jetty | Fishing: jetty weeks, map header | https://unsplash.com/photos/man-in-white-t-shirt-and-brown-shorts-fishing-on-sea-during-daytime-JtRXnUNWHt4 | Ryan Arnst | Unsplash License |
