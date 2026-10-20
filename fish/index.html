@@ -1124,7 +1124,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="form" id="catchForm">
         <div class="full"><div class="kicker">Add to the board</div><h4>Log a Catch</h4></div>
         <div class="full photo-pick">
-          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">📷 Add photo
+          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">Add photo
             <input type="file" id="cPhoto" accept="image/*" style="display:none"></label>
           <img class="photo-prev" id="cPrev" alt="Photo preview">
           <span class="stamp" id="cPhotoMsg">optional</span>
@@ -1149,10 +1149,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="bests" id="catchBests"></div>
       <div class="links">
         <div class="sec-h" style="margin-bottom:4px">Show It Off — Free</div>
-        <div>🏅 <a href="https://tpwd.texas.gov/fishboat/fish/programs/fishrecords/" target="_blank" rel="noopener">TPWD Angler Recognition Program</a> — official certificates: Big Fish, First Fish (any age), Catch &amp; Release and more. Apply within 60 days of the catch. Measure the fish on its side with the jaw closed.</div>
-        <div>📰 <a href="https://tpwd.texas.gov/fishboat/fish/programs/fishrecords/featurecatch/" target="_blank" rel="noopener">TPWD Catch of the Month</a> — send a sharp photo with your award application and it may be featured.</div>
-        <div>💬 <a href="https://www.2coolfishing.com/" target="_blank" rel="noopener">2coolfishing.com</a> — Texas fishing forum for reports and photos.</div>
-        <div>📱 <a href="https://fishbrain.com/" target="_blank" rel="noopener">Fishbrain</a> — free catch-sharing app.</div>
+        <div><a href="https://tpwd.texas.gov/fishboat/fish/programs/fishrecords/" target="_blank" rel="noopener">TPWD Angler Recognition Program</a> — official certificates: Big Fish, First Fish (any age), Catch &amp; Release and more. Apply within 60 days of the catch. Measure the fish on its side with the jaw closed.</div>
+        <div><a href="https://tpwd.texas.gov/fishboat/fish/programs/fishrecords/featurecatch/" target="_blank" rel="noopener">TPWD Catch of the Month</a> — send a sharp photo with your award application and it may be featured.</div>
+        <div><a href="https://www.2coolfishing.com/" target="_blank" rel="noopener">2coolfishing.com</a> — Texas fishing forum for reports and photos.</div>
+        <div><a href="https://fishbrain.com/" target="_blank" rel="noopener">Fishbrain</a> — free catch-sharing app.</div>
         <div class="stamp" style="border:none">Your catches are saved on this device only, in this browser.</div>
       </div>
     </div>
@@ -1895,7 +1895,7 @@ function popupHTML(z, week){
   try{ const w=bestWindows(g.lat,g.lon,[]); if(w.length) bite=`<div style="margin-top:6px"><b style="color:var(--strike)">⏰ Best bite today</b><br>${w.map(x=>x.range).join('<br>')}</div>`; }catch(e){}
   return `<div class="pop-z">${z.z} ${mode==='salt'?'coast':'region'} · ${esc(week.name)}</div>`+
     `<div class="pop-s">${esc(zoneName(z))}</div><div class="pop-n">${esc(zoneNote(z))}</div>`+
-    `<div style="margin-top:6px"><b style="color:var(--ok)">🎣 Bait</b><br>${esc(week.bait)}</div>`+bite+
+    `<div style="margin-top:6px"><b style="color:var(--ok)">Bait</b><br>${esc(week.bait)}</div>`+bite+
     `<div style="margin-top:8px"><a href="https://www.google.com/maps/dir/?api=1&destination=${g.lat},${g.lon}" target="_blank" rel="noopener" style="color:var(--strike)">Directions ↗</a></div>`;
 }
 function drawLeaflet(fit){
@@ -2223,13 +2223,13 @@ function render(fit){
    MY SPOT — zip pin (offline zip table) + report
    ============================================================ */
 function windVerdict(windStr){
-  if(/calm/i.test(windStr)) return {cls:'good',text:'🟢 Good — calm'};
+  if(/calm/i.test(windStr)) return {cls:'good',text:'Good — calm'};
   const nums=(windStr.match(/\d+/g)||[]).map(Number); if(!nums.length) return null;
   const mph=Math.max(...nums);
-  if(mph<=9) return {cls:'good',text:'🟢 Good — light wind'};
-  if(mph<=15) return {cls:'fair',text:'🟡 Fair — workable wind'};
-  if(mph<=20) return {cls:'tough',text:'🟠 Tough — stiff wind'};
-  return {cls:'poor',text:'🔴 Poor — likely blown out'};
+  if(mph<=9) return {cls:'good',text:'Good — light wind'};
+  if(mph<=15) return {cls:'fair',text:'Fair — workable wind'};
+  if(mph<=20) return {cls:'tough',text:'Tough — stiff wind'};
+  return {cls:'poor',text:'Poor — likely blown out'};
 }
 function setSpotFromZip(zip, quiet){
   const msg=$('zipMsg'); msg.classList.remove('err');
@@ -2259,7 +2259,7 @@ async function updateSpotReport(fetchWx=true){
   const more=inRange.length>6?`<br><span class="lab">+ ${inRange.length-6} more in range</span>`:'';
   let bite='';
   try{ const w=bestWindows(userSpot.lat,userSpot.lon,[]); if(w.length) bite=`<div class="in-range-list"><span class="lab">⏰ Best bite at your pin today:</span><br>${w.map(x=>`${x.range} · <span class="lab">${x.tags}</span>`).join('<br>')}</div>`; }catch(e){}
-  card.innerHTML=`<div class="kicker">📍 Local report · ${userSpot.zip} · ${userRange} mi range</div><h4>${esc(userSpot.place)}</h4>`+
+  card.innerHTML=`<div class="kicker">Local report · ${userSpot.zip} · ${userRange} mi range</div><h4>${esc(userSpot.place)}</h4>`+
     `<div class="rowline"><span class="lab">This week</span><span class="val">${esc(week.name)}</span></div>`+
     `<div class="rowline"><span class="lab">Nearest featured water</span><span class="val">${esc(nearest.name)} · ${nearest.d.toFixed(0)} mi</span></div>`+
     `<div class="rowline"><span class="lab">Wind at your spot</span><span class="val" id="spotWind">checking…</span></div>`+
@@ -2318,7 +2318,7 @@ function awardText(species,len){
   const min=AWARD_MIN[species];
   if(!len) return null;
   if(!min) return {cls:'no',text:'No TPWD Big Fish category for this species — the Outstanding Angler Award can still recognize a special catch.'};
-  if(len>=min) return {cls:'yes',text:`🏅 Big Fish Award size! TPWD minimum is ${min} in. Apply within 60 days.`};
+  if(len>=min) return {cls:'yes',text:`Big Fish Award size! TPWD minimum is ${min} in. Apply within 60 days.`};
   return {cls:'no',text:`${(min-len).toFixed(min-len<10?2:1).replace(/\.?0+$/,'')} in. short of a TPWD Big Fish Award (${min} in.)`};
 }
 function liveAward(){
@@ -2378,10 +2378,10 @@ async function renderCatches(){
       <div class="sp">${esc(c.species)}</div>
       <div class="sz">${[fmtLen(c.len), c.wt?c.wt+' lb':''].filter(Boolean).join(' · ')||'&nbsp;'}</div>
       <div class="meta">${fmtDate(c.date)}${c.spot?' · '+esc(c.spot):''}${c.bait?'<br>'+esc(c.bait):''}</div>
-      ${a?`<div class="award ${a.cls}">${a.cls==='yes'?(daysLeft>0?`🏅 Big Fish size — ${daysLeft} days left to apply`:'🏅 Big Fish size (60-day window passed)'):esc(a.text)}</div>`:''}
+      ${a?`<div class="award ${a.cls}">${a.cls==='yes'?(daysLeft>0?`Big Fish size — ${daysLeft} days left to apply`:'Big Fish size (60-day window passed)'):esc(a.text)}</div>`:''}
       <div class="acts"><button class="btn small" data-share="${c.id}">Share card</button>
         ${a&&a.cls==='yes'&&daysLeft>0?`<a class="btn ghost small" href="https://tpwd.texas.gov/fishboat/fish/programs/fishrecords/" target="_blank" rel="noopener">Apply</a>`:''}
-        <button class="btn ghost small" data-del="${c.id}" aria-label="Delete">🗑</button></div>
+        <button class="btn ghost small" data-del="${c.id}" aria-label="Delete">✕</button></div>
     </div></div>`;
   }).join('');
   const best={};
@@ -2444,7 +2444,7 @@ async function shareCard(c){
   x.fillText((c.spot||'').slice(0,46), 56, PH+266);
   let bx=56;
   const pill=(t,bg,fg)=>{ x.font='800 28px "Barlow Condensed", Arial'; const w=x.measureText(t).width+32; x.fillStyle=bg; x.fillRect(bx,PH+288,w,44); x.fillStyle=fg; x.fillText(t,bx+16,PH+320); bx+=w+12; };
-  if(a&&a.cls==='yes') pill('🏅 TPWD BIG FISH SIZE',GOLD,'#2A1A00');
+  if(a&&a.cls==='yes') pill('TPWD BIG FISH SIZE',GOLD,'#2A1A00');
   if(c.released) pill('RELEASED','#2F7D4F','#fff');
   if(LIC_NAME){ x.fillStyle='#8A7F6A'; x.font='600 22px Barlow, Arial'; x.textAlign='right'; x.fillText('My Fishing Spot · licensed to '+LIC_NAME, W-40, H-22); x.textAlign='left'; }
   /* starburst corner */

@@ -1207,7 +1207,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <button class="btn ghost small" id="zipClear">Clear</button>
     <span class="zip-msg" id="zipMsg">Set the zip where you hunt. The app picks your zone for each bird — change any that are wrong.</span>
     <div class="zone-grid" id="zoneGrid"></div>
-    <span class="cover-pick">Cover <button class="btn small" id="coverMine">📷 Use my photo</button><button class="btn ghost small" id="coverBuilt">Photo / drawn</button><input type="file" id="coverFile" accept="image/*" style="display:none"></span>
+    <span class="cover-pick">Cover <button class="btn small" id="coverMine">Use my photo</button><button class="btn ghost small" id="coverBuilt">Photo / drawn</button><input type="file" id="coverFile" accept="image/*" style="display:none"></span>
   </div>
 
   <section class="cover" id="hero" aria-live="polite"></section>
@@ -1249,7 +1249,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="lines-row"><span class="stamp">Zone lines:</span> <span class="seg" id="lineSeg"><button data-l="dove" class="on">Dove</button><button data-l="duck">Duck</button><button data-l="goose">Goose</button><button data-l="none">Off</button></span></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
           <button class="btn small" id="btnAddStand">＋ Add a spot</button>
-          <button class="btn ghost small" id="btnHere">📍 Spot where I am</button>
+          <button class="btn ghost small" id="btnHere">Spot where I am</button>
           <button class="btn ghost small" id="btnFitStands">Zoom to my spots</button>
         </div>
       </figure>
@@ -1293,7 +1293,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="form" id="bragForm">
         <div class="full"><div class="kicker">Add to the board</div><h4>Log a Hunt</h4></div>
         <div class="full photo-pick">
-          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">📷 Add photo
+          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">Add photo
             <input type="file" id="dPhoto" accept="image/*" style="display:none"></label>
           <img class="photo-prev" id="dPrev" alt="Photo preview">
           <span class="stamp" id="dPhotoMsg">optional</span>
@@ -1327,9 +1327,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="bests" id="bragBests"></div>
       <div class="links">
         <div class="sec-h" style="margin-bottom:4px">Report &amp; Show It Off — Free</div>
-        <div>🏷️ <a href="https://www.reportband.gov/" target="_blank" rel="noopener">reportband.gov</a> — report a banded dove, duck or goose. You keep the band and get a certificate showing where and when it was banded.</div>
-        <div>🦃 <a href="https://www.nwtf.org/" target="_blank" rel="noopener">National Wild Turkey Federation</a> — the turkey score formula used here.</div>
-        <div>📱 Share cards from your hunts above go straight to Facebook, Instagram or a text.</div>
+        <div><a href="https://www.reportband.gov/" target="_blank" rel="noopener">reportband.gov</a> — report a banded dove, duck or goose. You keep the band and get a certificate showing where and when it was banded.</div>
+        <div><a href="https://www.nwtf.org/" target="_blank" rel="noopener">National Wild Turkey Federation</a> — the turkey score formula used here.</div>
+        <div>Share cards from your hunts above go straight to Facebook, Instagram or a text.</div>
         <div class="stamp" style="border:none">Your hunts are saved on this device only, in this browser.</div>
       </div>
     </div>
@@ -1354,15 +1354,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="form">
       <label class="full">Name<input type="text" id="sdName" maxlength="40" placeholder="Sunflower field"></label>
       <label class="full">Type<select id="sdType">
-        <option value="field">🌻 Dove field</option><option value="blind">🦆 Duck blind</option><option value="pond">💧 Pond / tank</option><option value="goose">🌾 Goose field</option>
-        <option value="roost">🦃 Turkey roost</option><option value="covey">🌿 Quail covey</option><option value="other">📍 Other</option></select></label>
+        <option value="field">Dove field</option><option value="blind">Duck blind</option><option value="pond">Pond / tank</option><option value="goose">Goose field</option>
+        <option value="roost">Turkey roost</option><option value="covey">Quail covey</option><option value="other">Other</option></select></label>
       <div class="full"><label style="margin-bottom:2px">Good winds for this spot (where the wind comes FROM)</label>
         <div class="winds" id="sdWinds"></div></div>
       <label class="full">Notes<textarea id="sdNotes" placeholder="Birds come off the roost to the north…"></textarea></label>
       <div class="full" style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="sdSave">Save spot</button>
         <button class="btn ghost" id="sdCancel">Cancel</button>
-        <button class="btn ghost" id="sdDel" style="margin-left:auto">🗑 Delete</button>
+        <button class="btn ghost" id="sdDel" style="margin-left:auto">Delete</button>
       </div>
     </div>
   </div>
@@ -2494,7 +2494,7 @@ function linesFor(kind){
   if(kind==='goose') return [{pts:L_GOOSE, col:'#5A5244', lab:'◀ West / East ▶'}];
   return [];
 }
-const STAND_ICON={field:'🌻',blind:'🦆',pond:'💧',goose:'🌾',roost:'🦃',covey:'🌿',other:'📍'};
+const STAND_ICON={field:'D',blind:'B',pond:'P',goose:'G',roost:'T',covey:'Q',other:'•'};
 function standGood(s){ const w=liveWindNow(); return w&&s.winds&&s.winds.length ? windOK(w.dir,s.winds) : null; }
 function drawLeaflet(fit){
   if(!lmap) return;
@@ -2507,7 +2507,7 @@ function drawLeaflet(fit){
   });
   stands.forEach(s=>{
     const good=standGood(s);
-    const html=`<div class="lf-stand${good?' good':''}"><span class="dot">${STAND_ICON[s.type]||'📍'}</span><span class="lbl">${esc(s.name)}</span></div>`;
+    const html=`<div class="lf-stand${good?' good':''}"><span class="dot">${STAND_ICON[s.type]||'•'}</span><span class="lbl">${esc(s.name)}</span></div>`;
     L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html,iconSize:[0,0]}),zIndexOffset:2000,title:s.name})
       .on('click',()=>{ if(!addMode) openStand(s.id); }).addTo(pinLayer);
   });
@@ -2608,7 +2608,7 @@ function windAt(hour){
 }
 function renderStands(){
   const c=$('standCard'), wNow=liveWindNow(), am=windAt(7), pm=windAt(17);
-  let h=`<div class="kicker">📍 Your spots</div><h4>Where to Hunt Today?</h4>`;
+  let h=`<div class="kicker">Your spots</div><h4>Where to Hunt Today?</h4>`;
   if(!stands.length){
     h+=`<div class="rowline" style="border:none"><span>Pin your dove fields, duck blinds, ponds, goose fields and turkey roosts on the map and check the winds each one hunts best in. The app then picks the spot for today’s wind.</span></div>
       <div class="pick"><b>How</b><br>1. Zoom the map to where you hunt.<br>2. Tap <b style="color:#fff;letter-spacing:0">＋ Add a spot</b>, then tap the place.<br>3. Check the good winds. Ducks and geese land into the wind — you want it at your back.</div>`;
@@ -2620,8 +2620,8 @@ function renderStands(){
   if(liveWx) h+=`<div class="pick"><b>The pick</b><br>${[line('Now',wNow&&{dir:wNow.dir,spd:wNow.spd}),line('Morning flight (7 AM)',am),line('Evening flight (5 PM)',pm)].filter(Boolean).join('<br>')}</div>`;
   else h+=`<div class="pick"><b>The pick</b><br>Needs internet for today’s wind. Your spots and their good winds are below.</div>`;
   stands.forEach(s=>{ const g=wNow?windOK(wNow.dir,s.winds):null;
-    h+=`<div class="stand"><span class="ic">${STAND_ICON[s.type]||'📍'}</span><span><span class="nm">${esc(s.name)}</span><br><span class="wd">Good winds: ${s.winds.length?s.winds.join(', '):'not set'}${s.notes?' · '+esc(s.notes):''}</span></span>
-      <span style="text-align:right">${g===true?'<span class="ok">✓ WIND OK</span>':g===false?'<span class="no">WRONG WIND</span>':''}<br><button data-ed="${s.id}">Edit</button></span></div>`; });
+    h+=`<div class="stand"><span class="ic">${STAND_ICON[s.type]||'•'}</span><span><span class="nm">${esc(s.name)}</span><br><span class="wd">Good winds: ${s.winds.length?s.winds.join(', '):'not set'}${s.notes?' · '+esc(s.notes):''}</span></span>
+      <span style="text-align:right">${g===true?'<span class="ok">WIND OK</span>':g===false?'<span class="no">WRONG WIND</span>':''}<br><button data-ed="${s.id}">Edit</button></span></div>`; });
   c.innerHTML=h;
   c.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>openStand(+b.dataset.ed));
 }
@@ -2691,7 +2691,7 @@ async function updateLive(){
       `<div class="row"><span class="lab">Right now</span><span class="val">${h0.temperature}°${esc(h0.temperatureUnit)} · ${esc(h0.windDirection)} ${esc(h0.windSpeed)}</span></div>`+
       `<div class="row"><span class="lab">Sky</span><span class="val">${esc(h0.shortForecast)}</span></div>`+
       `<div class="wind-strip">${strip}</div><div class="stamp">Arrows point where the wind is going. Ducks and geese land into the wind — keep it at your back.</div>`+
-      (fr?`<div class="front"><b>❄ Front coming</b><br>${fr}</div>`:'')+
+      (fr?`<div class="front"><b>Front coming</b><br>${fr}</div>`:'')+
       (wx.daily[0]?`<div class="fcast">${esc(wx.daily[0].name)}: ${esc(wx.daily[0].detailedForecast||wx.daily[0].shortForecast)}</div>`:''));
   } else {
     first.querySelector('.loading').remove();
@@ -2845,9 +2845,9 @@ async function renderBrag(){
     return `<div class="catch"><div class="ph">${ph}</div><div class="in">
       <div class="sp">${esc(kindName(c.kind))}</div><div class="sz">${esc(huntLine(c))||'&nbsp;'}</div>
       <div class="meta">${fmtDate(c.date)} · ${esc(c.weapon)}${c.spot?' · '+esc(c.spot):''}${c.band?' · band '+esc(c.band):''}</div>
-      ${isLimit(c)?`<div class="award yes">🏆 Limit${(c.party||1)>1?' for the group':''}!</div>`:''}
-      ${c.band?`<div class="award">🏷️ Banded bird — <a href="https://www.reportband.gov/" target="_blank" rel="noopener">report it</a></div>`:''}
-      <div class="acts"><button class="btn small" data-share="${c.id}">Share card</button><button class="btn ghost small" data-del="${c.id}" aria-label="Delete">🗑</button></div>
+      ${isLimit(c)?`<div class="award yes">Limit${(c.party||1)>1?' for the group':''}!</div>`:''}
+      ${c.band?`<div class="award">Banded bird — <a href="https://www.reportband.gov/" target="_blank" rel="noopener">report it</a></div>`:''}
+      <div class="acts"><button class="btn small" data-share="${c.id}">Share card</button><button class="btn ghost small" data-del="${c.id}" aria-label="Delete">✕</button></div>
     </div></div>`; }).join('');
   const bk={}; all.forEach(c=>{ const v=c.tk?c.tk.score:(c.count||0); if(v&&(!bk[c.kind]||v>(bk[c.kind].tk?bk[c.kind].tk.score:(bk[c.kind].count||0)))) bk[c.kind]=c; });
   const rows=Object.values(bk);

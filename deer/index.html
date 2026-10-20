@@ -1164,7 +1164,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <label for="regSel">Region</label>
     <select id="regSel" style="font:15px var(--sans);padding:6px;border:1px solid var(--rule);background:#fff"></select>
     <span class="seg" id="zoneSeg"><button data-z="N">North Zone</button><button data-z="S">South Zone</button></span>
-    <span class="cover-pick">Cover photo <button class="btn small" id="coverMine">📷 Use my photo</button><button class="btn ghost small" id="coverBuilt">Built-in</button><input type="file" id="coverFile" accept="image/*" style="display:none"></span>
+    <span class="cover-pick">Cover photo <button class="btn small" id="coverMine">Use my photo</button><button class="btn ghost small" id="coverBuilt">Built-in</button><input type="file" id="coverFile" accept="image/*" style="display:none"></span>
     <span class="zip-msg" id="zipMsg">Set your lease zip and your region. Your zone is on your county’s TPWD page.</span>
   </div>
 
@@ -1207,7 +1207,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <div class="map-key" id="mapKey"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
           <button class="btn small" id="btnAddStand">＋ Add a stand</button>
-          <button class="btn ghost small" id="btnHere">📍 Stand where I am</button>
+          <button class="btn ghost small" id="btnHere">Stand where I am</button>
           <button class="btn ghost small" id="btnFitStands">Zoom to my stands</button>
         </div>
       </figure>
@@ -1250,7 +1250,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="form" id="bragForm">
         <div class="full"><div class="kicker">Add to the board</div><h4>Log a Deer</h4></div>
         <div class="full photo-pick">
-          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">📷 Add photo
+          <label class="btn small" style="display:inline-block;cursor:pointer;flex-direction:row;color:#fff;letter-spacing:1px">Add photo
             <input type="file" id="dPhoto" accept="image/*" style="display:none"></label>
           <img class="photo-prev" id="dPrev" alt="Photo preview">
           <span class="stamp" id="dPhotoMsg">optional</span>
@@ -1283,10 +1283,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="bests" id="bragBests"></div>
       <div class="links">
         <div class="sec-h" style="margin-bottom:4px">Show It Off — Free</div>
-        <div>🏆 <a href="https://www.texasbiggameawards.org/" target="_blank" rel="noopener">Texas Big Game Awards</a> — free entry. Scored entries need a certified TBGA or Boone &amp; Crockett scorer; first-harvest and youth entries need no score. Entries must be postmarked by <b>March 1</b>.</div>
-        <div>🏹 <a href="https://www.pope-young.org/" target="_blank" rel="noopener">Pope &amp; Young Club</a> — archery records; typical whitetail minimum 125.</div>
-        <div>📘 <a href="https://www.boone-crockett.org/" target="_blank" rel="noopener">Boone and Crockett Club</a> — all-time records; typical whitetail minimum 170.</div>
-        <div>📱 Share cards from your deer above go straight to Facebook, Instagram or a text.</div>
+        <div><a href="https://www.texasbiggameawards.org/" target="_blank" rel="noopener">Texas Big Game Awards</a> — free entry. Scored entries need a certified TBGA or Boone &amp; Crockett scorer; first-harvest and youth entries need no score. Entries must be postmarked by <b>March 1</b>.</div>
+        <div><a href="https://www.pope-young.org/" target="_blank" rel="noopener">Pope &amp; Young Club</a> — archery records; typical whitetail minimum 125.</div>
+        <div><a href="https://www.boone-crockett.org/" target="_blank" rel="noopener">Boone and Crockett Club</a> — all-time records; typical whitetail minimum 170.</div>
+        <div>Share cards from your deer above go straight to Facebook, Instagram or a text.</div>
         <div class="stamp" style="border:none">Your deer are saved on this device only, in this browser. Scores here are rough gross estimates — an official scorer has the final say.</div>
       </div>
     </div>
@@ -1311,15 +1311,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="form">
       <label class="full">Name<input type="text" id="sdName" maxlength="40" placeholder="Creek bottom ladder"></label>
       <label class="full">Type<select id="sdType">
-        <option value="blind">🏠 Box blind</option><option value="ladder">🪜 Ladder / tripod</option><option value="feeder">🌽 Feeder</option>
-        <option value="camera">📷 Trail camera</option><option value="plot">🌱 Food plot</option><option value="water">💧 Water</option><option value="other">📍 Other</option></select></label>
+        <option value="blind">Box blind</option><option value="ladder">Ladder / tripod</option><option value="feeder">Feeder</option>
+        <option value="camera">Trail camera</option><option value="plot">Food plot</option><option value="water">Water</option><option value="other">Other</option></select></label>
       <div class="full"><label style="margin-bottom:2px">Good winds for this stand (where the wind comes FROM)</label>
         <div class="winds" id="sdWinds"></div></div>
       <label class="full">Notes<textarea id="sdNotes" placeholder="Best in the evening, deer come from the creek…"></textarea></label>
       <div class="full" style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="sdSave">Save stand</button>
         <button class="btn ghost" id="sdCancel">Cancel</button>
-        <button class="btn ghost" id="sdDel" style="margin-left:auto">🗑 Delete</button>
+        <button class="btn ghost" id="sdDel" style="margin-left:auto">Delete</button>
       </div>
     </div>
   </div>
@@ -2241,7 +2241,7 @@ $('mapSeg').addEventListener('click',e=>{ const v=e.target.dataset&&e.target.dat
   if(v!=='simple'&&mapFellBack){ mapFellBack=false; tileOK=0; tileErr=0; (v==='topo'?topoLayer:satLayer)&&(v==='topo'?topoLayer:satLayer).redraw(); setTimeout(checkTiles,7000); }
   applyMapView(); drawMaps(false); });
 
-const STAND_ICON={blind:'🏠',ladder:'🪜',feeder:'🌽',camera:'📷',plot:'🌱',water:'💧',other:'📍'};
+const STAND_ICON={blind:'B',ladder:'L',feeder:'F',camera:'C',plot:'P',water:'W',other:'•'};
 function standGood(s){ const w=liveWindNow(); return w&&s.winds&&s.winds.length ? windOK(w.dir,s.winds) : null; }
 function drawLeaflet(fit){
   if(!lmap) return;
@@ -2257,7 +2257,7 @@ function drawLeaflet(fit){
   });
   stands.forEach(s=>{
     const good=standGood(s);
-    const html=`<div class="lf-stand${good?' good':''}"><span class="dot">${STAND_ICON[s.type]||'📍'}</span><span class="lbl">${esc(s.name)}</span></div>`;
+    const html=`<div class="lf-stand${good?' good':''}"><span class="dot">${STAND_ICON[s.type]||'•'}</span><span class="lbl">${esc(s.name)}</span></div>`;
     L.marker([s.lat,s.lon],{icon:L.divIcon({className:'',html,iconSize:[0,0]}),zIndexOffset:2000,title:s.name})
       .on('click',()=>{ if(!addMode) openStand(s.id); }).addTo(pinLayer);
   });
@@ -2361,7 +2361,7 @@ function windAt(hour){ /* forecast wind at a given clock hour today (or tomorrow
 }
 function renderStands(){
   const c=$('standCard'), wNow=liveWindNow(), am=windAt(7), pm=windAt(17);
-  let h=`<div class="kicker">🦌 Your stands</div><h4>Which Stand Today?</h4>`;
+  let h=`<div class="kicker">Your stands</div><h4>Which Stand Today?</h4>`;
   if(!stands.length){
     h+=`<div class="rowline" style="border:none"><span>Pin your blinds, feeders and cameras on the map and check the winds each one hunts best in. The app then tells you which stand to sit for today’s wind.</span></div>
       <div class="pick"><b>How</b><br>1. Zoom the map to your lease.<br>2. Tap <b style="color:#fff;letter-spacing:0">＋ Add a stand</b>, then tap the spot.<br>3. Check the good winds — where the wind comes <i>from</i> when the deer can’t smell you.</div>`;
@@ -2373,8 +2373,8 @@ function renderStands(){
   if(liveWx) h+=`<div class="pick"><b>The pick</b><br>${[line('Now',wNow&&{dir:wNow.dir,spd:wNow.spd}),line('Morning sit (7 AM)',am),line('Evening sit (5 PM)',pm)].filter(Boolean).join('<br>')}</div>`;
   else h+=`<div class="pick"><b>The pick</b><br>Needs internet for today’s wind. Your stands and their good winds are below.</div>`;
   stands.forEach(s=>{ const g=wNow?windOK(wNow.dir,s.winds):null;
-    h+=`<div class="stand"><span class="ic">${STAND_ICON[s.type]||'📍'}</span><span><span class="nm">${esc(s.name)}</span><br><span class="wd">Good winds: ${s.winds.length?s.winds.join(', '):'not set'}${s.notes?' · '+esc(s.notes):''}</span></span>
-      <span style="text-align:right">${g===true?'<span class="ok">✓ WIND OK</span>':g===false?'<span class="no">WRONG WIND</span>':''}<br><button data-ed="${s.id}">Edit</button></span></div>`; });
+    h+=`<div class="stand"><span class="ic">${STAND_ICON[s.type]||'•'}</span><span><span class="nm">${esc(s.name)}</span><br><span class="wd">Good winds: ${s.winds.length?s.winds.join(', '):'not set'}${s.notes?' · '+esc(s.notes):''}</span></span>
+      <span style="text-align:right">${g===true?'<span class="ok">WIND OK</span>':g===false?'<span class="no">WRONG WIND</span>':''}<br><button data-ed="${s.id}">Edit</button></span></div>`; });
   c.innerHTML=h;
   c.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>openStand(+b.dataset.ed));
 }
@@ -2442,7 +2442,7 @@ async function updateLive(){
       `<div class="row"><span class="lab">Right now</span><span class="val">${h0.temperature}°${esc(h0.temperatureUnit)} · ${esc(h0.windDirection)} ${esc(h0.windSpeed)}</span></div>`+
       `<div class="row"><span class="lab">Sky</span><span class="val">${esc(h0.shortForecast)}</span></div>`+
       `<div class="wind-strip">${strip}</div><div class="stamp">Arrows point where the wind is going. Keep your stand downwind of where deer come from.</div>`+
-      (fr?`<div class="front"><b>❄ Front coming</b><br>${fr}</div>`:'')+
+      (fr?`<div class="front"><b>Front coming</b><br>${fr}</div>`:'')+
       (wx.daily[0]?`<div class="fcast">${esc(wx.daily[0].name)}: ${esc(wx.daily[0].detailedForecast||wx.daily[0].shortForecast)}</div>`:''));
   } else {
     first.querySelector('.loading').remove();
@@ -2560,7 +2560,7 @@ function marksHTML(score, weapon){
   return SCORE_MARKS.map(m=>{
     if(m.name.startsWith('Pope')&&weapon!=='Bow') return `<div class="n">· ${esc(m.name)} — ${m.min} · ${weapon==='Crossbow'?'P&amp;Y doesn’t take crossbow kills':'bow kills only'}</div>`;
     const hit=score>=m.min;
-    return `<div class="${hit?'y':'n'}">${hit?'✓':'·'} ${esc(m.name)} — ${m.min}${hit?'':' · '+eighths(m.min-score)+' short'}</div>`; }).join('');
+    return `<div class="${hit?'y':'n'}">${hit?'':'·'} ${esc(m.name)} — ${m.min}${hit?'':' · '+eighths(m.min-score)+' short'}</div>`; }).join('');
 }
 function liveScore(){
   const s=calcScore();
@@ -2614,8 +2614,8 @@ async function renderBrag(){
     return `<div class="catch"><div class="ph">${ph}</div><div class="in">
       <div class="sp">${esc(c.kind)}</div><div class="sz">${esc(deerLine(c))||'&nbsp;'}</div>
       <div class="meta">${fmtDate(c.date)} · ${esc(c.weapon)}${c.spot?' · '+esc(c.spot):''}</div>
-      ${marks.length?`<div class="award yes">🏆 Makes ${esc(marks.join(', '))} (gross — get it officially scored)</div>`:''}
-      <div class="acts"><button class="btn small" data-share="${c.id}">Share card</button><button class="btn ghost small" data-del="${c.id}" aria-label="Delete">🗑</button></div>
+      ${marks.length?`<div class="award yes">Makes ${esc(marks.join(', '))} (gross — get it officially scored)</div>`:''}
+      <div class="acts"><button class="btn small" data-share="${c.id}">Share card</button><button class="btn ghost small" data-del="${c.id}" aria-label="Delete">✕</button></div>
     </div></div>`; }).join('');
   const bk={}; all.forEach(c=>{ const v=c.score||c.spread||c.pts||0; if(v&&(!bk[c.kind]||v>(bk[c.kind].score||bk[c.kind].spread||bk[c.kind].pts||0))) bk[c.kind]=c; });
   const rows=Object.values(bk);
