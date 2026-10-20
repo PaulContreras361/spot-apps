@@ -1,1 +1,91 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your Spot Apps</title><style>body{margin:0;min-height:100vh;background:#14110D;color:#F4EDDD;font:17px/1.5 Georgia,serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}.w{max-width:420px;width:100%;text-align:center}h1{font-size:34px;margin:0 0 4px}p{color:#CBBF9F;margin:0 0 18px}a{display:block;margin:10px 0;padding:14px;border-radius:4px;background:#F4EDDD;color:#1C1A16;text-decoration:none;font-weight:700}</style></head><body><div class="w"><h1>Your Spot Apps</h1><p>Licensed to Sample Buyer. One code opens all of them.</p><a href="fish/">My Fishing Spot →</a><a href="deer/">My Deer Spot →</a><a href="bird/">My Bird Spot →</a></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#14110D">
+<title>My Spot Apps — Texas Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Barlow+Condensed:wght@600;800&family=Barlow:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--night:#14110D;--paper:#F4EDDD;--ink:#1C1A16;--ink2:#5A5244;--red:#C4361C;--gold:#E8A93A;--cream:#F6EFE0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--night);color:var(--cream);font:16px/1.5 Barlow,Arial,sans-serif;min-height:100vh}
+  .wrap{max-width:900px;margin:0 auto;padding:0 16px 40px}
+
+  /* the cover */
+  .cover{position:relative;margin:0 -16px;min-height:min(78vh,620px);background:#0B0C12 url(../../tools/tiles/cover.jpg) 38% 50%/cover no-repeat;display:flex;flex-direction:column;justify-content:space-between;padding:16px 18px 20px;overflow:hidden;border-bottom:6px solid var(--red)}
+  .cover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,8,12,.72) 0,rgba(8,8,12,.15) 34%,rgba(8,8,12,.1) 55%,rgba(8,8,12,.88) 100%)}
+  .cover>*{position:relative;z-index:1}
+  .topline{display:flex;justify-content:space-between;font:800 12px 'Barlow Condensed',Arial;letter-spacing:2.5px;text-transform:uppercase;color:var(--cream);opacity:.92}
+  .mast{font:900 clamp(54px,15.5vw,124px)/.86 'Playfair Display',Georgia,serif;letter-spacing:-2px;text-align:center;margin-top:6px;text-shadow:0 4px 24px rgba(0,0,0,.55)}
+  .rule{border-top:1px solid rgba(246,239,224,.6);border-bottom:1px solid rgba(246,239,224,.6);text-align:center;font:800 12px 'Barlow Condensed',Arial;letter-spacing:3px;text-transform:uppercase;padding:5px 0;margin:10px 0 0}
+  .lines{max-width:540px}
+  .tag{display:inline-block;background:var(--red);color:#fff;font:800 13px 'Barlow Condensed',Arial;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;margin-bottom:8px}
+  .head{font:italic 900 clamp(38px,9vw,64px)/.95 'Playfair Display',Georgia,serif;text-shadow:0 3px 18px rgba(0,0,0,.7)}
+  .dek{font:700 clamp(16px,4vw,20px)/1.3 'Playfair Display',Georgia,serif;margin-top:8px;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+  .who{margin-top:12px;font:800 13px 'Barlow Condensed',Arial;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+  .burst{position:absolute;right:14px;top:44%;width:108px;height:108px;z-index:2;transform:rotate(10deg)}
+
+  /* inside: the three features */
+  .sec{display:flex;align-items:baseline;gap:12px;margin:26px 0 12px}
+  .sec b{font:800 13px 'Barlow Condensed',Arial;letter-spacing:3px;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+  .sec::after{content:"";flex:1;border-top:3px double rgba(246,239,224,.3)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  a.app{display:block;text-decoration:none;color:var(--ink);background:var(--paper);border-radius:3px;overflow:hidden;box-shadow:0 16px 36px rgba(0,0,0,.55);transition:transform .15s}
+  a.app:active{transform:scale(.98)}
+  .ph{position:relative;height:0;padding-top:125%;background:#111 center/cover no-repeat;border-bottom:5px solid var(--c)}
+  .ph::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.5) 0,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 52%,rgba(0,0,0,.85) 100%)}
+  .ph small{position:absolute;top:10px;left:12px;right:12px;z-index:1;font:800 11px 'Barlow Condensed',Arial;letter-spacing:2.5px;text-transform:uppercase;color:var(--cream);display:flex;justify-content:space-between}
+  .ph h2{position:absolute;left:12px;right:12px;bottom:12px;z-index:1;color:var(--cream);font:900 clamp(28px,7vw,36px)/.95 'Playfair Display',Georgia,serif;letter-spacing:-.5px;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+  .ph h2 em{display:block;font:italic 700 15px/1.3 'Playfair Display',Georgia,serif;margin-top:6px;letter-spacing:0}
+  .bd{padding:12px 14px 14px}
+  .bd p{font:500 14.5px/1.45 Barlow,Arial,sans-serif;color:var(--ink2);margin-bottom:12px}
+  .go{display:flex;justify-content:space-between;align-items:center;background:var(--c);color:#fff;font:800 15px 'Barlow Condensed',Arial;letter-spacing:2px;text-transform:uppercase;padding:10px 12px;border-radius:2px}
+
+  .how{background:var(--paper);color:var(--ink);border-radius:3px;padding:16px 18px;margin-top:26px;border-top:5px solid var(--gold)}
+  .how h3{font:900 24px 'Playfair Display',Georgia,serif;margin-bottom:6px}
+  .how ol{margin-left:20px;font:500 15px/1.6 Barlow,Arial,sans-serif;color:var(--ink2)}
+  .how b{color:var(--ink)}
+  footer{text-align:center;font:600 12.5px Barlow,Arial,sans-serif;color:#9C9078;margin-top:26px;letter-spacing:.5px}
+  @media (min-width:760px){ .cover{margin:0;border-radius:0 0 3px 3px} .burst{width:130px;height:130px;right:30px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="cover">
+    <div>
+      <div class="topline"><span>Texas Edition</span><span>2026–27 Season</span></div>
+      <div class="mast">MY SPOT APPS</div>
+      <div class="rule">Fishing · Deer · Birds — Week by Week, All Year</div>
+    </div>
+    <svg class="burst" viewBox="0 0 100 100" aria-hidden="true"><polygon points="100.0,50.0 89.4,56.9 97.0,67.1 84.6,70.0 88.3,82.1 75.7,80.6 75.0,93.3 63.7,87.6 58.7,99.2 50.0,90.0 41.3,99.2 36.3,87.6 25.0,93.3 24.3,80.6 11.7,82.1 15.4,70.0 3.0,67.1 10.6,56.9 0.0,50.0 10.6,43.1 3.0,32.9 15.4,30.0 11.7,17.9 24.3,19.4 25.0,6.7 36.3,12.4 41.3,0.8 50.0,10.0 58.7,0.8 63.7,12.4 75.0,6.7 75.7,19.4 88.3,17.9 84.6,30.0 97.0,32.9 89.4,43.1" fill="#E8A93A" stroke="#1C1A16" stroke-width="1.2"/><circle cx="50" cy="50" r="36" fill="none" stroke="#1C1A16" stroke-width=".8" stroke-dasharray="2 2"/><text x="50" y="38" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="11" fill="#1C1A16" letter-spacing="1">ONE CODE</text><text x="50" y="66" text-anchor="middle" font-family="Playfair Display,Georgia,serif" font-weight="900" font-size="30" fill="#C4361C">3</text><text x="50" y="79" text-anchor="middle" font-family="Barlow Condensed,Arial" font-weight="800" font-size="11" fill="#1C1A16" letter-spacing="1">APPS INSIDE</text></svg>
+    <div class="lines">
+      <span class="tag">Your Copy</span>
+      <div class="head">Every Season, One Place</div>
+      <div class="dek">Hotspots, tides and the bite. The rut and the season clock. Dove fields to duck blinds.</div>
+      <div class="who">Licensed to Sample Buyer · Personal use only</div>
+    </div>
+  </header>
+
+  <div class="sec"><b>In This Issue</b></div>
+  <div class="row">
+    <a class="app" href="fish/" style="--c:#1E5A68"><div class="ph" style="background-image:url(../../tools/tiles/fish.jpg)"><small><span>Salt &amp; Fresh</span><span>Tides · Wind · Bite</span></small><h2>My Fishing Spot<em>The weekly hotspots</em></h2></div><div class="bd"><p>48 weeks of Texas hotspots, salt and fresh, with live tides, wind and the best bite times. Log your catches on the Brag Board.</p><span class="go">Open <span>&rarr;</span></span></div></a>
+    <a class="app" href="deer/" style="--c:#C4361C"><div class="ph" style="background-image:url(../../tools/tiles/deer.jpg)"><small><span>Whitetail</span><span>Rut · Season · Stands</span></small><h2>My Deer Spot<em>Read the rut</em></h2></div><div class="bd"><p>Rut report for 8 Texas regions, the 2026–27 season clock, and a stand map that picks the right stand for the wind.</p><span class="go">Open <span>&rarr;</span></span></div></a>
+    <a class="app" href="bird/" style="--c:#8A6FB0"><div class="ph" style="background-image:url(../../tools/tiles/bird.jpg)"><small><span>Game Birds</span><span>Dove · Duck · Goose</span></small><h2>My Bird Spot<em>Every bird, every week</em></h2></div><div class="bd"><p>Dove, ducks, geese, quail, turkey and more — season dates, zones and live weather for the hunt.</p><span class="go">Open <span>&rarr;</span></span></div></a>
+  </div>
+
+  <div class="how">
+    <h3>Put it on your home screen</h3>
+    <ol>
+      <li>Open any app above in <b>Safari</b> (iPhone) or <b>Chrome</b> (Android).</li>
+      <li>Enter your 4-digit code once — it opens every app you own.</li>
+      <li><b>iPhone:</b> tap Share (square with the arrow) → <b>Add to Home Screen</b> → Add.<br><b>Android:</b> tap the menu (three dots) → <b>Add to Home screen</b>.</li>
+      <li>Inside any app, the <b>Apps</b> tab on the right side switches between them.</li>
+    </ol>
+  </div>
+  <footer>Texas Edition · Always check current TPWD regulations before you hunt or fish</footer>
+</div>
+</body>
+</html>

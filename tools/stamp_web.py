@@ -53,6 +53,29 @@ def stamp(html, lic):
     return out
 
 
+TILE = {
+    'fish': ('#1E5A68', 'Salt &amp; Fresh', 'Tides · Wind · Bite', 'The weekly hotspots', '48 weeks of Texas hotspots, salt and fresh, with live tides, wind and the best bite times. Log your catches on the Brag Board.'),
+    'deer': ('#C4361C', 'Whitetail', 'Rut · Season · Stands', 'Read the rut', 'Rut report for 8 Texas regions, the 2026–27 season clock, and a stand map that picks the right stand for the wind.'),
+    'bird': ('#8A6FB0', 'Game Birds', 'Dove · Duck · Goose', 'Every bird, every week', 'Dove, ducks, geese, quail, turkey and more — season dates, zones and live weather for the hunt.'),
+}
+
+
+def start_page(name, apps):
+    import html, math
+    t = open(os.path.join(ROOT, 'tools', 'start.html'), encoding='utf8').read()
+    tiles = ''
+    for a in apps:
+        c, kick, right, em, blurb = TILE[a]
+        tiles += (f'    <a class="app" href="{a}/" style="--c:{c}"><div class="ph" style="background-image:url(../../tools/tiles/{a}.jpg)">'
+                  f'<small><span>{kick}</span><span>{right}</span></small><h2>{NAMES[a]}<em>{em}</em></h2></div>'
+                  f'<div class="bd"><p>{blurb}</p><span class="go">Open <span>&rarr;</span></span></div></a>\n')
+    pts = ' '.join(f'{50 + (40 if i % 2 else 50) * math.cos(math.pi * i / 18):.1f},{50 + (40 if i % 2 else 50) * math.sin(math.pi * i / 18):.1f}' for i in range(36))
+    words = {2: 'TWO', 3: 'THREE'}
+    return (t.replace('TILES_HTML', tiles.rstrip('\n')).replace('TILES/', '../../tools/tiles/')
+             .replace('BURST', pts).replace('>COUNT<', '>' + str(len(apps)) + '<')
+             .replace('NAME', html.escape(name)))
+
+
 def main():
     if len(sys.argv) < 4:
         print(__doc__); sys.exit(1)
@@ -67,16 +90,8 @@ def main():
         d = os.path.join(ROOT, 'b', folder, a)
         os.makedirs(d, exist_ok=True)
         open(os.path.join(d, 'index.html'), 'w', encoding='utf8').write(stamp(src, lic))
-    if len(apps) > 1:   # bundle: a small start page with all their apps
-        links = ''.join(f'<a href="{a}/">{NAMES[a]} →</a>' for a in apps)
-        page = ('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="robots" content="noindex,nofollow">'
-                '<meta name="viewport" content="width=device-width,initial-scale=1"><title>Your Spot Apps</title><style>'
-                'body{margin:0;min-height:100vh;background:#14110D;color:#F4EDDD;font:17px/1.5 Georgia,serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}'
-                '.w{max-width:420px;width:100%;text-align:center}h1{font-size:34px;margin:0 0 4px}p{color:#CBBF9F;margin:0 0 18px}'
-                'a{display:block;margin:10px 0;padding:14px;border-radius:4px;background:#F4EDDD;color:#1C1A16;text-decoration:none;font-weight:700}'
-                '</style></head><body><div class="w"><h1>Your Spot Apps</h1>'
-                f'<p>Licensed to {name}. One code opens all of them.</p>{links}</div></body></html>')
-        open(os.path.join(ROOT, 'b', folder, 'index.html'), 'w', encoding='utf8').write(page)
+    if len(apps) > 1:   # bundle: a magazine-cover start page with all their apps
+        open(os.path.join(ROOT, 'b', folder, 'index.html'), 'w', encoding='utf8').write(start_page(name, apps))
     link = SITE + f'b/{folder}/' + ('' if len(apps) > 1 else apps[0] + '/')
     print(json.dumps({'name': name, 'code': code, 'link': link, 'folder': folder, 'apps': apps}))
 
