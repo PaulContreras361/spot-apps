@@ -1000,12 +1000,17 @@ function findMeal(id){ const m=day.meals.find(x=>x.id===id); if(m) return m;
   for(const k of sKeys().filter(k=>k.startsWith(NS+'day:'))){ const d=Engine.cleanDay(readJSON(k)); const x=d.meals.find(y=>y.id===id); if(x) return x; } return null; }
 function loadImg(src){ return new Promise(r=>{ if(!src) return r(null); const i=new Image(); i.onload=()=>r(i); i.onerror=()=>r(null); i.src=src; }); }
 function wrapText(ctx,text,maxW){ const words=String(text).split(/\s+/); const lines=[]; let line='';
-  for(const w of words){ const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){ lines.push(line); line=w; } else line=t; } if(line) lines.push(line); return lines.slice(0,2); }
+  for(const w of words){ const t=line?line+' '+w:w; if(ctx.measureText(t).width>maxW&&line){ lines.push(line); line=w; } else line=t; } if(line) lines.push(line);
+  if(lines.length>2){ let l2=lines[1]+' '+lines.slice(2).join(' '); while(l2.length>1&&ctx.measureText(l2+'…').width>maxW) l2=l2.slice(0,-1); return [lines[0],l2.trimEnd()+'…']; }
+  return lines; }
 async function makePlateCard(m){
   const W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
   x.fillStyle='#071211'; x.fillRect(0,0,W,H);
   const photo=await loadImg(Plates.get(m.id)||m.img);
-  const PH=900;
+  x.font=`850 68px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
+  const nLines=wrapText(x,m.name,W-128).length;
+  // text block height: label 44 + name lines 76 each + calories 124 + macros 50 + footer 150
+  const PH=Math.min(900, H-(44+84+nLines*76+40+(m.macros?60:0)+170));
   if(photo){ const s=Math.max(W/photo.width,PH/photo.height), w=photo.width*s, h=photo.height*s; x.drawImage(photo,(W-w)/2,(PH-h)/2,w,h); }
   const g=x.createLinearGradient(0,PH-260,0,PH+40); g.addColorStop(0,'rgba(7,18,17,0)'); g.addColorStop(1,'rgba(7,18,17,1)'); x.fillStyle=g; x.fillRect(0,PH-260,W,300);
   const glow=x.createRadialGradient(W/2,PH+120,10,W/2,PH+120,620); glow.addColorStop(0,'rgba(24,217,154,.18)'); glow.addColorStop(1,'rgba(24,217,154,0)'); x.fillStyle=glow; x.fillRect(0,PH,W,H-PH);
