@@ -25,6 +25,8 @@
   NEW    Camera: "Take a photo" opens the camera, "Pick a photo" opens the library
   NEW    Show off my plate: share card (photo + meal + calories) to text, Facebook, Instagram
   NEW    Full-screen Add to Home Screen with the walkers icon (manifest + apple-touch-icon)
+  NEW    Rev 5 fun pack (Oct 22 2026): celebrations (confetti on milestones), gentle badges that are
+         never taken away, Coast Walk virtual trip (Point Comfort to Galveston), Share my day card
   NEW    Rev 4.1: Photo scan key in Profile — key kept only on this phone; photo goes straight to Anthropic and comes back as name, calories, macros
   Eat and Move — Rev 3 (merged build, Sept 25 2026)
   Paul's new UI on top of the Eat for Food engine.
@@ -184,6 +186,24 @@
   .card.tap{cursor:pointer}
   nav .nav{padding:8px 6px}
   .modal-actions[hidden]{display:none}
+  #confetti{position:fixed;inset:0;z-index:25;pointer-events:none}
+  .trip-svg{width:100%;height:auto;display:block;margin:6px 0 2px}
+  .trip-next{font-size:14px;color:#c8d8d6;margin-top:6px}
+  .trip-next b{color:var(--green)}
+  .badges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .badge{background:rgba(9,25,28,.75);border:1px solid rgba(127,255,218,.1);border-radius:14px;padding:10px 6px;text-align:center}
+  .badge .e{font-size:28px;line-height:1.2;display:block}
+  .badge .n{font-size:11.5px;font-weight:800;margin-top:4px;display:block}
+  .badge .w{font-size:10.5px;color:var(--muted);display:block;margin-top:2px;line-height:1.3}
+  .badge.off{opacity:.38;filter:grayscale(1)}
+  .badge.off .w{color:#8ba6a3}
+  #funLine{cursor:pointer;max-width:calc(100vw - 110px);line-height:1.35;margin-bottom:2px;transition:opacity .25s}
+  #funLine b{color:var(--green);font-weight:800}
+  .burn-note{margin:12px auto 0;max-width:420px;border:1px solid #6b5a2a;background:rgba(60,48,10,.6);color:#f4e2a8;border-radius:14px;padding:10px 13px;font-size:13.5px;line-height:1.45}
+  .burn-note b{color:#fff}
+  .burn-note.roast{border-color:#8a3d6b;background:rgba(70,14,48,.62);color:#ffd3ea;cursor:pointer}
+  .trip-mini{display:flex;align-items:center;gap:12px}
+  .trip-mini .big{font-size:22px;font-weight:850}
   .cam-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
   .cam-row .button{padding:13px 8px}
   .cam-shot{display:none;margin:0 0 12px}.cam-shot.on{display:block}
@@ -205,7 +225,7 @@
 <div class="backdrop" id="backdrop"></div><div class="grain"></div>
 <main>
   <header class="top">
-    <div><div class="brand">Eat and <span>Move</span></div><div class="tagline">Every step you take adds a little more to enjoy.</div><div class="date" id="today"></div></div>
+    <div><div class="brand">Eat and <span>Move</span></div><div class="tagline" id="funLine" role="button" tabindex="0" title="Tap for another">Every step you take adds a little more to enjoy.</div><div class="date" id="today"></div></div>
     <button class="icon-btn" id="historyTopBtn" title="Last 7 days" aria-label="Last 7 days">📅</button>
   </header>
 
@@ -216,12 +236,14 @@
       <div class="eyebrow" id="heroEyebrow">YOUR FOOD FOR TODAY</div>
       <div class="left" id="leftCalories">0 <small>kcal to enjoy</small></div>
       <p class="sub" id="goalText"></p>
+      <div class="burn-note" id="burnNote" hidden></div>
     </section>
     <section class="grid">
       <div class="card"><div class="label">Daily amount</div><div class="num" id="base">0 <span class="unit">kcal</span></div></div>
       <div class="card"><div class="label">Extra from moving</div><div class="num" id="earned">0 <span class="unit">kcal</span></div></div>
       <div class="card wide"><div class="label">Enjoyed so far</div><div class="num" id="eaten">0</div><div class="progress"><i id="bar"></i></div></div>
       <div class="card wide tap" id="homeWater" role="button" tabindex="0" aria-label="Open water page"><div class="label">💧 Water today</div><div class="num" id="homeWaterNum">0</div><div class="wprog"><i id="homeWaterBar"></i></div></div>
+      <div class="card wide tap" id="homeTrip" role="button" tabindex="0" aria-label="Open your Coast Walk trip"><div class="label">🚶 Coast Walk</div><div class="trip-mini"><div class="big" id="homeTripMi">0 mi</div><div class="hint" id="homeTripNext" style="margin:0"></div></div><div class="progress"><i id="homeTripBar"></i></div></div>
     </section>
     <div class="section-head"><h2>Latest meal</h2><button class="link" id="historyBtn">History</button></div>
     <section class="card meal" id="latestMeal"></section>
@@ -257,6 +279,16 @@
     </section>
     <div class="section-head"><h2>Activities today</h2><button class="link" id="activityBtn2">＋ Log activity</button></div>
     <section class="list" id="activityList"></section>
+    <section class="actions" style="grid-template-columns:1fr"><button class="button alt" id="shareDayBtn">📤 Share my day</button></section>
+    <div class="section-head"><h2>🚶 Coast Walk</h2><span class="date" id="tripName"></span></div>
+    <section class="card">
+      <div id="tripMap"></div>
+      <div class="trip-next" id="tripNext"></div>
+      <div class="hint" id="tripHint">Every step moves you along the coast — about 2,000 steps per mile. Town distances are approximate.</div>
+    </section>
+    <div class="section-head"><h2>🏅 Badges</h2><span class="date" id="badgeCount"></span></div>
+    <section class="badges" id="badgeGrid"></section>
+    <p class="hint" style="text-align:center;margin-top:10px">Badges are yours to keep — a missed day never takes one away.</p>
   </section>
 
   <!-- WATER -->
@@ -339,6 +371,11 @@
       <div class="stat-line"><span>Your daily amount (never below 1,200)</span><b id="sBase">–</b></div>
       <div class="stat-line"><span>Saved on this phone</span><b id="sStore">–</b></div>
     </section>
+    <section class="card" style="margin-top:10px" id="roastCard">
+      <label style="display:flex;align-items:center;gap:12px;cursor:pointer"><input type="checkbox" id="roastToggle" style="width:24px;height:24px;accent-color:#18d99a;flex:none">
+      <span><b>😂 Roast mode</b><br><span class="hint" style="margin:0">Funny tough-love jokes when you go past today’s plan. Your phone only. Adults only.</span></span></label>
+      <p class="hint" id="roastKid" hidden style="margin-top:8px">Roast mode is for grown-ups — it stays off under 18.</p>
+    </section>
     <section class="card" style="margin-top:10px" id="keyCard">
       <div class="label">Photo scan</div>
       <p class="hint" id="keyStatus" style="font-size:13px;margin:6px 0 10px">Paste your Anthropic API key so the camera can tell what your food is. It stays on this phone only.</p>
@@ -365,6 +402,7 @@
   <p id="shareTip">Press and hold the picture to save or share it.</p>
   <div class="row-btns"><button class="button" id="shareSend">Share</button><a class="button alt" id="shareDl" download="my-plate.jpg">Save</a><button class="button alt" id="shareClose">Close</button></div>
 </div>
+<canvas id="confetti" aria-hidden="true"></canvas>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="mealDialog"><div class="modal">
@@ -1041,7 +1079,7 @@ async function openShare(id){
   const canShare=!!(navigator.canShare&&navigator.canShare({files:[file]}));
   $('shareSend').hidden=!canShare;
   $('shareTip').textContent=canShare?'Tap Share to text it or post it. You can also press and hold the picture.':'Press and hold the picture to save or share it.';
-  $('shareView').classList.add('open');
+  $('shareView').classList.add('open'); if(typeof Fun!=='undefined') Fun.award('share');
 }
 $('shareSend').onclick=async()=>{ if(!shareBlob) return; const file=new File([shareBlob],'my-plate.jpg',{type:'image/jpeg'});
   try{ await navigator.share({files:[file],title:'My plate',text:'Made with Eat and Move'}); }catch(e){} };
@@ -1096,6 +1134,267 @@ function keyMsg(c){ return c==='bad_key'?'That key wasn’t accepted. Check you 
   :c==='rate_limited'?'Too many scans this hour. Try again later, or type the calories.'
   :c==='offline'?'No internet connection right now.':'Something went wrong. Try again in a minute.'; }
 useKeyIfSet();
+
+
+/* ================= FUN PACK (Rev 5) ================= */
+const Fun=(()=>{
+  const STEPS_PER_MI=2000;
+  const ROUTES=[
+    {name:'Point Comfort → Galveston', stops:[['Point Comfort',0],['Palacios',30],['Bay City',55],['Sargent',75],['Freeport',100],['Surfside Beach',105],['San Luis Pass',125],['Galveston',150]]},
+    {name:'Galveston → home', stops:[['Galveston',0],['San Luis Pass',25],['Surfside Beach',45],['Freeport',50],['Sargent',75],['Bay City',95],['Palacios',120],['Point Comfort',150]]}
+  ];
+  const BADGES=[
+    ['firstMeal','🍽','First Bite','Log your first meal'],
+    ['snap','📸','Snap Happy','Save a meal with a photo'],
+    ['water1','💧','Hydration Hero','Reach your water goal'],
+    ['water3','🌊','Water Wave','Water goal 3 days in a row'],
+    ['steps5k','👟','First 5K','5,000 steps in a day'],
+    ['steps10k','🔟','Ten Thousand Club','10,000 steps in a day'],
+    ['walk3','🔥','On a Roll','3,000+ steps 3 days in a row'],
+    ['walk7','🌟','Week Walker','3,000+ steps 7 days in a row'],
+    ['mile10','🛣','10 Miles','Walk 10 miles on the Coast Walk'],
+    ['town','🏘','Town Visitor','Reach your first town'],
+    ['trip','🏖','Beach Bound','Finish a whole Coast Walk'],
+    ['share','📤','Show-Off','Share a plate or day card']
+  ];
+  const K={trip:NS+'trip', badges:NS+'badges', cheers:NS+'cheers'};
+  const rj=k=>{ try{ return JSON.parse(sGet(k)||'null'); }catch(e){ return null; } };
+  let trip=rj(K.trip); if(!trip||typeof trip!=='object'||!trip.days) trip={route:0,done:0,start:today,days:{}};
+  let badges=rj(K.badges)||{};
+  let cheers=rj(K.cheers); if(!cheers||cheers.day!==today) cheers={day:today,done:[]};
+  let lastTripSave=0, lastSteps=-1;
+
+  function tripSteps(){ const sum=Object.entries(trip.days).filter(([k])=>k>=trip.start).reduce((a,[,v])=>a+(Number(v)||0),0); return Math.max(0,sum-(Number(trip.base)||0)); }
+  function tripState(){
+    const R=ROUTES[trip.route%ROUTES.length], total=R.stops[R.stops.length-1][1];
+    const mi=tripSteps()/STEPS_PER_MI;
+    const at=Math.min(mi,total); let reached=R.stops.filter(s=>s[1]<=at+1e-9); let next=R.stops.find(s=>s[1]>at+1e-9)||null;
+    return {R,total,mi:at,rawMi:mi,reached,next,done:mi>=total};
+  }
+  function saveTrip(force){ const now=Date.now(); if(force||now-lastTripSave>4000){ lastTripSave=now; sSet(K.trip,JSON.stringify(trip)); } }
+
+  // ---- confetti ----
+  function confetti(){
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const c=$('confetti'), x=c.getContext('2d'); const W=c.width=innerWidth*devicePixelRatio, H=c.height=innerHeight*devicePixelRatio;
+    c.style.width=innerWidth+'px'; c.style.height=innerHeight+'px';
+    const cols=['#18d99a','#4cc3ff','#f5b651','#ff8fab','#ffffff','#b48cff'];
+    const P=Array.from({length:140},()=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.35,vx:(Math.random()-.5)*18*devicePixelRatio,vy:(-Math.random()*16-6)*devicePixelRatio,
+      g:.45*devicePixelRatio,s:(5+Math.random()*6)*devicePixelRatio,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)]}));
+    const t0=performance.now();
+    (function f(t){ const el=t-t0; x.clearRect(0,0,W,H);
+      for(const p of P){ p.vy+=p.g; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.globalAlpha=Math.max(0,1-el/2600); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66); x.restore(); }
+      if(el<2600) requestAnimationFrame(f); else x.clearRect(0,0,W,H); })(t0);
+  }
+  const queue=[]; let showing=false;
+  function cheer(msg){ queue.push(msg); if(!showing) next(); }
+  function next(){ const m=queue.shift(); if(!m){ showing=false; return; } showing=true; confetti(); toast(m); setTimeout(next,2900); }
+  function once(id,msg){ if(cheers.day!==today) cheers={day:today,done:[]}; if(cheers.done.includes(id)) return; cheers.done.push(id); sSet(K.cheers,JSON.stringify(cheers)); cheer(msg); }
+
+  // ---- history helpers ----
+  function dayData(k){ return k===today?day:Engine.cleanDay(readJSON(NS+'day:'+k)); }
+  function lastNDays(n){ const out=[]; for(let i=0;i<n;i++){ const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()-i); out.push(dayKey(d)); } return out; }
+  function streak(test,n){ const ks=lastNDays(n); return ks.every(k=>test(dayData(k))); }
+  function anyDay(test){ if(test(day)) return true; return sKeys().filter(k=>k.startsWith(NS+'day:')).some(k=>test(Engine.cleanDay(readJSON(k)))); }
+
+  function award(id){ if(badges[id]) return; badges[id]=today; sSet(K.badges,JSON.stringify(badges)); const b=BADGES.find(x=>x[0]===id); if(b) cheer(`New badge${nmComma()}: ${b[1]} ${b[2]}!`); }
+
+  function tick(){
+    if(cheers.day!==today) cheers={day:today,done:[]};
+    // trip bookkeeping (only today's count changes)
+    if(day.steps!==lastSteps){ lastSteps=day.steps; trip.days[today]=day.steps; saveTrip(false); }
+    let T=tripState();
+    if(T.done){ award('trip'); once('tripdone',`You made it to ${T.R.stops[T.R.stops.length-1][0]}${nmComma()}! 🏖 Next trip starts now.`);
+      trip.done++; trip.route++; trip.start=today; trip.days={[today]:day.steps}; trip.base=day.steps; saveTrip(true); T=tripState(); }
+    // milestones today
+    if(day.steps>=5000) once('s5','5,000 steps today — wonderful! 👟');
+    if(day.steps>=10000) once('s10','10,000 steps today — what a day! 🎉');
+    if(waterTotal(day)>=waterGoal) once('w',`Water goal reached${nmComma()}! 💧`);
+    if(T.reached.length>1){ const last=T.reached[T.reached.length-1]; once('town:'+trip.route+':'+trip.done+':'+last[0],`You reached ${last[0]}! 🏘`); }
+    // badges
+    const heavy=Date.now()-(tick.last||0)>10000; if(heavy) tick.last=Date.now();
+    if(day.meals.length||(heavy&&!badges.firstMeal&&anyDay(d=>d.meals.length>0))) award('firstMeal');
+    if(day.meals.some(m=>m.img)) award('snap');
+    if(waterTotal(day)>=waterGoal) award('water1');
+    if(day.steps>=5000) award('steps5k');
+    if(day.steps>=10000) award('steps10k');
+    if(heavy&&!badges.water3&&streak(d=>waterTotal(d)>=waterGoal,3)) award('water3');
+    if(heavy&&!badges.walk3&&streak(d=>d.steps>=3000,3)) award('walk3');
+    if(heavy&&!badges.walk7&&streak(d=>d.steps>=3000,7)) award('walk7');
+    if(T.mi>=10||trip.done>0) award('mile10');
+    if(T.reached.length>1||trip.done>0) award('town');
+    paint(T);
+  }
+
+  // ---- drawing ----
+  const PATH='M20,150 C70,140 95,112 140,118 S215,96 250,84 S320,70 345,58 S392,40 420,26';
+  function paint(T){
+    const pct=T.mi/T.total;
+    $('homeTripMi').textContent=`${(Math.round(T.mi*10)/10).toLocaleString('en-US')} mi`;
+    $('homeTripNext').textContent=T.next?`${(Math.round((T.next[1]-T.mi)*10)/10)} mi to ${T.next[0]}`:'Trip complete!';
+    $('homeTripBar').style.width=(pct*100)+'%';
+    $('tripName').textContent=T.R.name+(trip.done?` · trip ${trip.done+1}`:'');
+    if(!$('tripMap').firstChild){
+      $('tripMap').innerHTML=`<svg class="trip-svg" viewBox="0 0 440 175" role="img" aria-label="Coast Walk map">
+        <defs><linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c2c3a"/><stop offset="1" stop-color="#0a3d55"/></linearGradient></defs>
+        <path d="M0,175 L0,165 C70,158 95,130 140,136 S215,114 250,102 S320,88 345,76 S392,58 440,40 L440,175 Z" fill="url(#sea)"/>
+        <text x="300" y="150" fill="#4cc3ff" opacity=".55" font-size="12" font-weight="700">Gulf of Mexico</text>
+        <path id="tripRoad" d="${PATH}" fill="none" stroke="#244543" stroke-width="7" stroke-linecap="round"/>
+        <path id="tripDone" d="${PATH}" fill="none" stroke="#18d99a" stroke-width="7" stroke-linecap="round"/>
+        <g id="tripStops"></g><g id="tripMe"><circle r="11" fill="#071211" stroke="#18d99a" stroke-width="3"/><text y="5" text-anchor="middle" font-size="13">🚶</text></g></svg>`;
+    }
+    const road=$('tripRoad'); if(!road||!road.getTotalLength) return;
+    const L=road.getTotalLength(), rev=trip.route%2===1, at=f=>rev?1-f:f;
+    $('tripDone').setAttribute('stroke-dasharray',rev?`0 ${L*(1-pct)} ${L*pct} ${L}`:`${L*pct} ${L}`);
+    $('tripStops').innerHTML=T.R.stops.map((st,i)=>{ const p=road.getPointAtLength(L*at(st[1]/T.total)); const got=st[1]<=T.mi+1e-9;
+      const up=(rev?T.R.stops.length-1-i:i)%2===1; const edge=rev?(i===0?'end':i===T.R.stops.length-1?'start':'middle'):(i===0?'start':i===T.R.stops.length-1?'end':'middle'); const dx=edge==='start'?-8:edge==='end'?8:0; return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${got?'#18d99a':'#0a191d'}" stroke="${got?'#18d99a':'#6f8b87'}" stroke-width="2"/>
+      <text x="${(p.x+dx).toFixed(1)}" y="${(p.y+(up?-12:20)).toFixed(1)}" text-anchor="${edge}" font-size="10" font-weight="700" fill="${got?'#edf6f5':'#7f9794'}">${esc(st[0])}</text>`; }).join('');
+    const me=road.getPointAtLength(L*at(pct)); $('tripMe').setAttribute('transform',`translate(${me.x.toFixed(1)},${me.y.toFixed(1)})`);
+    $('tripNext').innerHTML=T.next?`<b>${(Math.round(T.mi*10)/10)} of ${T.total} miles.</b> Next stop: ${esc(T.next[0])} in ${(Math.round((T.next[1]-T.mi)*10)/10)} mi (about ${fmt((T.next[1]-T.mi)*STEPS_PER_MI)} steps).`:'<b>Trip complete!</b>';
+    const got=BADGES.filter(b=>badges[b[0]]).length;
+    $('badgeCount').textContent=`${got} of ${BADGES.length}`;
+    $('badgeGrid').innerHTML=BADGES.map(b=>{ const d=badges[b[0]]; return `<div class="badge${d?'':' off'}"><span class="e">${b[1]}</span><span class="n">${esc(b[2])}</span><span class="w">${d?'Earned '+new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):esc(b[3])}</span></div>`; }).join('');
+  }
+
+  // ---- share my day card ----
+  async function dayCard(){
+    const W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    const F='Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b2a26'); g.addColorStop(1,'#071211'); x.fillStyle=g; x.fillRect(0,0,W,H);
+    const glow=x.createRadialGradient(W/2,380,20,W/2,380,560); glow.addColorStop(0,'rgba(24,217,154,.28)'); glow.addColorStop(1,'rgba(24,217,154,0)'); x.fillStyle=glow; x.fillRect(0,0,W,H);
+    x.textAlign='center'; x.fillStyle='#18d99a'; x.font=`800 34px ${F}`;
+    x.fillText(profile.name?`${profile.name.toUpperCase()}’S DAY`:'MY DAY',W/2,150);
+    x.fillStyle='#9bb3b0'; x.font=`600 30px ${F}`; x.fillText(new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),W/2,200);
+    x.fillStyle='#edf6f5'; x.font=`850 200px ${F}`; x.fillText(fmt(day.steps),W/2,450);
+    x.fillStyle='#9bb3b0'; x.font=`700 40px ${F}`; x.fillText('steps',W/2,515);
+    const T=tripState(), oz=waterTotal(day), got=BADGES.filter(b=>badges[b[0]]).length;
+    const tiles=[['💧',`${fmtOz(oz)} oz`,'water'],['🚶',`${Math.round(T.mi*10)/10} mi`,'Coast Walk'],['🏅',`${got}`,'badges']];
+    tiles.forEach((t,i)=>{ const cx=W/2+(i-1)*320, y=640;
+      x.fillStyle='rgba(9,25,28,.85)'; x.strokeStyle='rgba(127,255,218,.2)'; x.lineWidth=2;
+      if(x.roundRect){ x.beginPath(); x.roundRect(cx-140,y,280,230,28); x.fill(); x.stroke(); } else x.fillRect(cx-140,y,280,230);
+      x.font=`64px ${F}`; x.fillText(t[0],cx,y+90); x.fillStyle='#edf6f5'; x.font=`850 54px ${F}`; x.fillText(t[1],cx,y+160); x.fillStyle='#9bb3b0'; x.font=`600 28px ${F}`; x.fillText(t[2],cx,y+200); });
+    x.fillStyle='#c8d8d6'; x.font=`600 34px ${F}`;
+    x.fillText(T.next?`${Math.round((T.next[1]-T.mi)*10)/10} mi to ${T.next[0]} on the Coast Walk`:'Coast Walk complete! 🏖',W/2,980);
+    x.fillStyle='rgba(127,255,218,.18)'; x.fillRect(64,H-112,W-128,2);
+    x.textAlign='left'; x.font=`800 36px ${F}`; x.fillStyle='#edf6f5'; x.fillText('Eat and ',64,H-52); const ew=x.measureText('Eat and ').width; x.fillStyle='#18d99a'; x.fillText('Move',64+ew,H-52);
+    x.textAlign='right'; x.font=`600 26px ${F}`; x.fillStyle='#9bb3b0'; x.fillText('Every step adds a little more to enjoy.',W-64,H-52);
+    return new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',0.9));
+  }
+  return {tick,dayCard,award,tripState,BADGES,get badges(){return badges;},get trip(){return trip;},confetti};
+})();
+async function showCard(blob,name){
+  if(!blob){ toast('Couldn’t make the card. Try again.'); return; }
+  shareBlob=blob; if(shareUrl) URL.revokeObjectURL(shareUrl); shareUrl=URL.createObjectURL(blob);
+  $('shareImg').src=shareUrl; $('shareDl').href=shareUrl; $('shareDl').setAttribute('download',name);
+  const file=new File([blob],name,{type:'image/jpeg'}); const can=!!(navigator.canShare&&navigator.canShare({files:[file]}));
+  $('shareSend').hidden=!can; $('shareTip').textContent=can?'Tap Share to text it or post it. You can also press and hold the picture.':'Press and hold the picture to save or share it.';
+  $('shareView').classList.add('open'); Fun.award('share');
+}
+$('shareDayBtn').onclick=async()=>{ toast('Making your day card…'); showCard(await Fun.dayCard(),'my-day.jpg'); };
+$('homeTrip').onclick=()=>go('move');
+$('homeTrip').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go('move'); } };
+
+/* ================= FUN LINE under the name (Rev 5) ================= */
+// Turns "extra from moving" into treats. Calories are rough, friendly estimates.
+const TREATS=[
+  ['gummy bear','gummy bears','🐻',9],['Oreo','Oreos','🍪',53],['scoop of ice cream','scoops of ice cream','🍦',140],
+  ['taco','tacos','🌮',170],['kolache','kolaches','🥐',200],['glazed donut','glazed donuts','🍩',240],
+  ['slice of pizza','slices of pizza','🍕',285],['breakfast taco','breakfast tacos','🌯',300],['slice of pecan pie','slices of pecan pie','🥧',500]
+];
+const QUIPS=[
+  (n,f)=>`You walked off ${n} ${f} — keep it moving!`,
+  (n,f)=>`Those steps paid for ${n} ${f}. Treat yourself!`,
+  (n,f)=>`Your legs just earned ${n} ${f}. Legs are generous.`,
+  (n,f,one)=>`${cap1(n)} ${f} ${one?'has':'have'} entered the chat. You earned ${one?'it':'them'}.`,
+  (n,f)=>`Step math: you’re ${n} ${f} richer.`,
+  (n,f,one)=>`That’s ${n} ${f} worth of walking. The ${f} ${one?'is':'are'} proud.`
+];
+let funShuffle=0;
+function numWord(x){ const w=['zero','one','two','three','four','five','six','seven','eight','nine','ten']; return x<=10&&Number.isInteger(x)?w[x]:(Number.isInteger(x)?fmt(x):String(x).replace('.5','½')); }
+function funLineText(earned){
+  if(!(earned>=5)) return null;
+  const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+funShuffle;
+  // treats that give a nice count between 1 and 12
+  const fits=TREATS.filter(t=>earned/t[3]>=1&&earned/t[3]<=12);
+  const pool=fits.length?fits:[TREATS[0]];
+  const t=pool[seed%pool.length];
+  let n=earned/t[3]; n=n>=3?Math.round(n):Math.round(n*2)/2; if(n<1) n=1;
+  const name=n===1?t[0]:t[1], word=n===1?(/^[aeiou]/i.test(t[0])?'an':'a'):numWord(n);
+  const q=QUIPS[(seed+Math.floor(earned/50))%QUIPS.length];
+  return `${q(word,`<b>${esc(name)}</b>`,n===1)} ${t[2]}`;
+}
+function paintFunLine(){
+  const T=Engine.totals(day,profile), el=$('funLine'), html=funLineText(T.earned);
+  el.innerHTML=html||'Every step you take adds a little more to enjoy.';
+  el.title=html?'Tap for another treat':'';
+}
+$('funLine').onclick=()=>{ funShuffle++; const el=$('funLine'); el.style.opacity=.2; setTimeout(()=>{ paintFunLine(); el.style.opacity=1; },180); };
+$('funLine').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('funLine').click(); } };
+
+/* ================= BURN-A-LITTLE NOTE (Rev 5) ================= */
+// Shows when today's food is close to or past the plan. Off for under 18.
+const NEAR_KCAL=150, TREAT_KCAL=100;
+const NEAR_LINES=[
+  (l,st)=>`Heads up${nmComma()}: only <b>${l} kcal</b> left today. Want that snack or drink? Burn a little first — about <b>${st} steps</b> earns ~${TREAT_KCAL} more. 🚶🍪`,
+  (l,st)=>`Snack budget running low (<b>${l} kcal</b> left). Your sneakers have an idea: <b>${st} steps</b> ≈ one more little treat. 👟`,
+  (l,st)=>`<b>${l} kcal</b> to go. That soda is calling… but your walking shoes are calling louder. <b>${st} steps</b> buys ~${TREAT_KCAL} kcal. 🥤`
+];
+const PAST_LINES=[
+  (st)=>`You’re past today’s plan${nmComma()}. Still want to eat or drink that? Better burn a little first — <b>${st} steps</b> earns about ${TREAT_KCAL} kcal. 🚶`,
+  (st)=>`The kitchen called: it said “walk first.” 😄 <b>${st} steps</b> ≈ ${TREAT_KCAL} kcal of wiggle room.`,
+  (st)=>`Plate’s full for today! A walk around the block (about <b>${st} steps</b>) makes room for ~${TREAT_KCAL} kcal more. 🌙`
+];
+
+/* ================= ROAST MODE (Rev 5, opt-in, adults only) ================= */
+const ROAST_K=NS+'roast';
+const ROAST={
+  f:[
+    'Girl, you ain’t gonna fit in those jeans… and those jeans ain’t got no elastic, girl. 👖',
+    'Girl, the zipper on those jeans is praying for you right now. 🙏👖',
+    'Those skinny jeans just filed a complaint. Go walk it off, girl. 🚶‍♀️',
+    'Your jeans called. They said “not tonight, girl.” 📞👖',
+    'Girl, put the fork down and pick the sneakers up. 👟',
+    'Don’t you DARE step on that scale today, girl. LOL 🙈',
+    'Girl, that little black dress just hid in the back of the closet. 👗😬',
+    'Those leggings are stretching harder than you did today, girl. 😂',
+    'Girl, Spanx can only do so much. Go walk. 🚶‍♀️'
+  ],
+  m:[
+    'Those jeans don’t have elastic, man — and you’re about to rip that tight shirt. 👕💥',
+    'Bro, your belt just moved to the last hole and asked for a raise. 😅',
+    'That shirt’s buttons are holding on for dear life, man. 🫣',
+    'Your gym shirt is about to become a crop top. Go walk, bro. 🚶‍♂️',
+    'Those jeans are doing squats just to stay buttoned. 👖',
+    'Bro, do NOT weigh yourself today. LOL Trust me. 🙈',
+    'Your recliner is getting worried, man. Go for a walk. 🛋️',
+    'That button on your pants just texted “911.” 📱😂',
+    'Bro, your truck seat already knows. Go walk it off. 🛻'
+  ]
+};
+let roastShuffle=0;
+function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
+function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
+$('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.checked=false; return; } sSet(ROAST_K,e.target.checked?'1':'0'); render();
+  toast(e.target.checked?'Roast mode is on. Don’t say we didn’t warn you 😂':'Roast mode off — back to gentle.'); };
+function roastLine(st){
+  const list=ROAST[profile.sex==='m'?'m':'f'];
+  const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+day.meals.length+roastShuffle;
+  return `${list[seed%list.length]}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>`;
+}
+function paintBurnNote(){
+  const el=$('burnNote'), kid=profile.age>0&&profile.age<18;
+  if(kid||!Engine.ready(profile)){ el.hidden=true; return; }
+  const T=Engine.totals(day,profile);
+  const per=Engine.stepKcal(profile,105); const st=fmt(Math.ceil(TREAT_KCAL/per/100)*100);
+  const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0);
+  el.classList.toggle('roast',T.left<=0&&roastOn());
+  if(T.left<=0){ el.innerHTML=roastOn()?roastLine(st):PAST_LINES[seed%PAST_LINES.length](st); el.hidden=false; }
+  else if(T.left<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(T.left),st); el.hidden=false; }
+  else el.hidden=true;
+}
+$('burnNote').onclick=()=>{ if(!$('burnNote').classList.contains('roast')) return; roastShuffle++; paintBurnNote(); };
+{ const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); }catch(e){ console.error(e); } }; }
+render();
 
 // Photo estimates light up only where Claude is reachable (claude.ai viewer)
 (async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use('sample'); if(!s) return;
