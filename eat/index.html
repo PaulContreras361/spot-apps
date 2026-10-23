@@ -377,6 +377,9 @@
       <span><b>😂 Roast mode</b><br><span class="hint" style="margin:0">Funny tough-love jokes when you go past today’s plan. Your phone only. Adults only.</span></span></label>
       <div id="roastStyleWrap" style="margin-top:10px"><label for="roastStyle" style="font-size:12px;color:#b2c6c4;font-weight:700">Who’s roasting you?</label>
       <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #244543;border-radius:12px;background:#09191b;color:#fff;padding:11px"><option value="gp">👵👴 Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer" id="roastVoiceWrap"><input type="checkbox" id="roastVoice" style="width:20px;height:20px;accent-color:#18d99a"><span style="font-size:13.5px">Say roasts out loud</span></label>
+      <button class="button alt" id="voiceTest" style="margin-top:10px;width:100%;padding:11px">🔊 Test the voice</button>
+      <p class="hint" id="voiceName" style="margin-top:6px"></p>
       <p class="hint" id="roastKid" hidden style="margin-top:8px">Roast mode is for grown-ups — it stays off under 18.</p>
     </section>
     <section class="card" style="margin-top:10px" id="keyCard">
@@ -406,6 +409,14 @@
   <div class="row-btns"><button class="button" id="shareSend">Share</button><a class="button alt" id="shareDl" download="my-plate.jpg">Save</a><button class="button alt" id="shareClose">Close</button></div>
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
+<dialog id="roastDlg"><div class="modal" style="text-align:center">
+  <div style="font-size:54px;line-height:1" id="roastFace">👵</div>
+  <h2 id="roastHead" style="margin-top:8px">Uh-oh…</h2>
+  <p id="roastText" style="font-size:18px;color:#ffd3ea;line-height:1.45;margin:12px 0"></p>
+  <p id="roastSteps" class="hint" style="font-size:13.5px"></p>
+  <div class="modal-actions"><button class="button alt" id="roastAgain">🔊 Again</button><button class="button alt" id="roastNext">😂 Another</button></div>
+  <div class="modal-actions" style="margin-top:10px"><button class="button" id="roastOk">I hear you…</button></div>
+</div></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="mealDialog"><div class="modal">
@@ -773,10 +784,12 @@ $('saveMeal').onclick=()=>{
   const name=$('mealName').value.trim()||'Meal';
   checkRollover();
   const meal={id:uid(),name,cal,type:$('mealType').value,t:Date.now(),img:pickedThumb,macros:$('mealDialog').dataset.macros||''};
+  const leftBefore=Engine.totals(day,profile).left;
   day.meals.push(meal);
   delete $('mealDialog').dataset.macros;
   if(pickedPlate) Plates.put(meal.id,pickedPlate);
   saveDay(); $('mealDialog').close(); render();
+  if(typeof autoRoast==='function') autoRoast(leftBefore);
   if(pickedPlate){ toast(`${name} saved — enjoy! Tap 📤 to show it off.`); }
   else toast(`${name} saved — enjoy!`);
 };
@@ -1402,18 +1415,22 @@ let roastShuffle=0, lastRoast='';
 const ROAST_STYLE_K=NS+'roastStyle';
 function roastStyle(){ return sGet(ROAST_STYLE_K)==='std'?'std':'gp'; }
 $('roastStyle').onchange=e=>{ sSet(ROAST_STYLE_K,e.target.value); roastShuffle=0; render(); toast(e.target.value==='gp'?'Grandma & Grandpa are watching you now 👀':'Regular roasts are back.'); };
-function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)); if(!vs.length) return null;
-  if(roastStyle()==='gp'){ const g=vs.find(v=>(profile.sex==='m'?/grandpa/i:/grandma/i).test(v.name)); if(g) return g; }
-  const want=profile.sex==='m'?/(aaron|daniel|fred|alex|arthur|gordon|rishi|male)/i:/(samantha|ava|allison|susan|karen|moira|tessa|zoe|nicky|female)/i;
-  return vs.find(v=>want.test(v.name)&&/en-US/i.test(v.lang))||vs.find(v=>want.test(v.name))||vs.find(v=>/en-US/i.test(v.lang))||vs[0]; }
-function sayRoast(){ if(!('speechSynthesis' in window)||!lastRoast) return;
-  const text=lastRoast.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/LOL/g,'L O L').trim();
-  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v) u.voice=v;
-  const gp=roastStyle()==='gp', gv=u.voice&&/grand/i.test(u.voice.name);
-  u.rate=gp?(gv?0.95:0.82):1.02; u.pitch=gp?(gv?1:(profile.sex==='m'?0.7:0.95)):(profile.sex==='m'?0.9:1.12); speechSynthesis.speak(u); }
+// Natural voices only: Premium > Enhanced > regular. Novelty/robot voices (Grandma, Grandpa, Eddy, Zarvox...) are never used.
+const ROBOT=/(grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|kathy|ralph|\bfred\b)/i;
+const FEMALE=/(samantha|ava|allison|susan|zoe|nicky|karen|moira|tessa|serena|kate|joelle|noelle|victoria|female)/i;
+const MALE=/(aaron|daniel|nathan|evan|tom|alex|arthur|gordon|rishi|oliver|lee|male)/i;
+function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)&&!ROBOT.test(v.name)); if(!vs.length) return null;
+  const want=profile.sex==='m'?MALE:FEMALE, avoid=profile.sex==='m'?FEMALE:MALE;
+  const score=v=>(/premium/i.test(v.name)?6:/enhanced/i.test(v.name)?4:0)+(want.test(v.name)?2:avoid.test(v.name)?-3:0)+(/en-US/i.test(v.lang)?0.5:0)+(v.localService?0.2:0);
+  return vs.slice().sort((a,b)=>score(b)-score(a))[0]; }
+function speak(text){ if(!('speechSynthesis' in window)||!text||sGet(NS+'roastVoice')==='0') return null;
+  text=text.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\bLOL\b/g,'L O L').replace(/’/g,"'").trim();
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){ u.voice=v; u.lang=v.lang; }
+    u.rate=roastStyle()==='gp'?0.92:1; u.pitch=1; speechSynthesis.speak(u); return v; }catch(e){ return null; } }
+function sayRoast(){ if(lastRoast) speak(lastRoast); }
 if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
 function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
-function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; if(document.activeElement!==$('roastStyle')) $('roastStyle').value=roastStyle(); $('roastStyleWrap').hidden=kid; $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
+function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; if(document.activeElement!==$('roastStyle')) $('roastStyle').value=roastStyle(); $('roastStyleWrap').hidden=kid; $('roastVoice').checked=sGet(NS+'roastVoice')!=='0'; $('roastVoiceWrap').hidden=kid; $('voiceTest').hidden=kid||!('speechSynthesis' in window); $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
 $('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.checked=false; return; } sSet(ROAST_K,e.target.checked?'1':'0'); render();
   toast(e.target.checked?'Roast mode is on. Don’t say we didn’t warn you 😂':'Roast mode off — back to gentle.'); };
 function roastLine(st){
@@ -1433,6 +1450,31 @@ function paintBurnNote(){
   else if(T.left<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(T.left),st); el.hidden=false; }
   else el.hidden=true;
 }
+
+/* ===== Auto roast: pops up and talks the moment a saved meal puts you close to or past the plan ===== */
+function roastStepsText(){ const per=Engine.stepKcal(profile,105); return `About <b>${fmt(Math.ceil(TREAT_KCAL/per/100)*100)} steps</b> earns ~${TREAT_KCAL} kcal back.`; }
+function showRoast(head){
+  const gp=roastStyle()==='gp';
+  $('roastFace').textContent=gp?(profile.sex==='m'?'👴':'👵'):'😂';
+  $('roastHead').textContent=head;
+  roastShuffle++; roastLine('');      // picks a fresh line into lastRoast
+  popRoast=lastRoast; $('roastText').textContent=popRoast; $('roastSteps').innerHTML=roastStepsText();
+  if(!$('roastDlg').open) $('roastDlg').showModal();
+  speak(popRoast);
+}
+function autoRoast(leftBefore){
+  if(!roastOn()||!Engine.ready(profile)) return;
+  const left=Engine.totals(day,profile).left;
+  if(left<=0) showRoast(leftBefore>0?`You just passed today’s plan!`:`Still past today’s plan…`);
+  else if(left<=NEAR_KCAL) showRoast(`Only ${fmt(left)} kcal left!`);
+}
+let popRoast='';
+$('roastAgain').onclick=()=>speak(popRoast);
+$('roastNext').onclick=()=>{ roastShuffle++; roastLine(''); popRoast=lastRoast; $('roastText').textContent=popRoast; speak(popRoast); };
+$('roastOk').onclick=()=>{ try{ speechSynthesis.cancel(); }catch(e){} $('roastDlg').close(); };
+$('roastVoice').onchange=e=>{ sSet(NS+'roastVoice',e.target.checked?'1':'0'); };
+$('voiceTest').onclick=()=>{ const v=speak(roastStyle()==='gp'?(profile.sex==='m'?'Boy, go walk to the mailbox and back.':'Baby, go walk around the block. I’ll wait.'):'Testing, testing. Go take a walk!');
+  $('voiceName').textContent=v?`Using: ${v.name}${/premium|enhanced/i.test(v.name)?' — natural voice ✓':' — download a Premium voice for a more natural sound (see below)'}`:'No voice found on this phone.'; };
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); }catch(e){ console.error(e); } }; }
 render();
