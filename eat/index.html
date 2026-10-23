@@ -201,6 +201,7 @@
   #funLine b{color:var(--green);font-weight:800}
   .burn-note{margin:12px auto 0;max-width:420px;border:1px solid #6b5a2a;background:rgba(60,48,10,.6);color:#f4e2a8;border-radius:14px;padding:10px 13px;font-size:13.5px;line-height:1.45}
   .burn-note b{color:#fff}
+  .say-btn{margin-top:8px;border:1px solid #c45a96;background:rgba(255,143,200,.16);color:#ffd3ea;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer}
   .burn-note.roast{border-color:#8a3d6b;background:rgba(70,14,48,.62);color:#ffd3ea;cursor:pointer}
   .trip-mini{display:flex;align-items:center;gap:12px}
   .trip-mini .big{font-size:22px;font-weight:850}
@@ -1371,7 +1372,15 @@ const ROAST={
     'Bro, your truck seat already knows. Go walk it off. 🛻'
   ]
 };
-let roastShuffle=0;
+let roastShuffle=0, lastRoast='';
+function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)); if(!vs.length) return null;
+  const want=profile.sex==='m'?/(aaron|daniel|fred|alex|arthur|gordon|rishi|male)/i:/(samantha|ava|allison|susan|karen|moira|tessa|zoe|nicky|female)/i;
+  return vs.find(v=>want.test(v.name)&&/en-US/i.test(v.lang))||vs.find(v=>want.test(v.name))||vs.find(v=>/en-US/i.test(v.lang))||vs[0]; }
+function sayRoast(){ if(!('speechSynthesis' in window)||!lastRoast) return;
+  const text=lastRoast.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/LOL/g,'L O L').trim();
+  speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v) u.voice=v;
+  u.rate=1.02; u.pitch=profile.sex==='m'?0.9:1.12; speechSynthesis.speak(u); }
+if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
 function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
 function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
 $('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.checked=false; return; } sSet(ROAST_K,e.target.checked?'1':'0'); render();
@@ -1379,7 +1388,8 @@ $('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.check
 function roastLine(st){
   const list=ROAST[profile.sex==='m'?'m':'f'];
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+day.meals.length+roastShuffle;
-  return `${list[seed%list.length]}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>`;
+  lastRoast=list[seed%list.length];
+  return `${lastRoast}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>${'speechSynthesis' in window?'<br><button class="say-btn" data-say="1" aria-label="Say it out loud">🔊 Say it</button>':''}`;
 }
 function paintBurnNote(){
   const el=$('burnNote'), kid=profile.age>0&&profile.age<18;
@@ -1392,7 +1402,7 @@ function paintBurnNote(){
   else if(T.left<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(T.left),st); el.hidden=false; }
   else el.hidden=true;
 }
-$('burnNote').onclick=()=>{ if(!$('burnNote').classList.contains('roast')) return; roastShuffle++; paintBurnNote(); };
+$('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); }catch(e){ console.error(e); } }; }
 render();
 
