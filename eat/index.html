@@ -375,6 +375,8 @@
     <section class="card" style="margin-top:10px" id="roastCard">
       <label style="display:flex;align-items:center;gap:12px;cursor:pointer"><input type="checkbox" id="roastToggle" style="width:24px;height:24px;accent-color:#18d99a;flex:none">
       <span><b>😂 Roast mode</b><br><span class="hint" style="margin:0">Funny tough-love jokes when you go past today’s plan. Your phone only. Adults only.</span></span></label>
+      <div id="roastStyleWrap" style="margin-top:10px"><label for="roastStyle" style="font-size:12px;color:#b2c6c4;font-weight:700">Who’s roasting you?</label>
+      <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #244543;border-radius:12px;background:#09191b;color:#fff;padding:11px"><option value="gp">👵👴 Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
       <p class="hint" id="roastKid" hidden style="margin-top:8px">Roast mode is for grown-ups — it stays off under 18.</p>
     </section>
     <section class="card" style="margin-top:10px" id="keyCard">
@@ -1348,6 +1350,30 @@ const PAST_LINES=[
 
 /* ================= ROAST MODE (Rev 5, opt-in, adults only) ================= */
 const ROAST_K=NS+'roast';
+const ROAST_GP={
+  f:[
+    'Baby, you know good and well them jeans ain’t got no stretch in ’em.',
+    'Child, put that fork down before I come over there.',
+    'Mm-mm-mm. Honey, that zipper is hollering for help.',
+    'Sugar, I love you, but that dress is not gonna love you back tonight.',
+    'Baby, go walk around the block. Twice. I’ll wait.',
+    'Lord have mercy, don’t you get on that scale today, child.',
+    'Girl, them jeans already told me they ain’t coming to church Sunday.',
+    'Honey, you keep eating like that, you gonna need my muumuu.',
+    'Child, I didn’t raise you to argue with a zipper. Go walk.'
+  ],
+  m:[
+    'Boy, you keep eating like that, them britches gonna bust wide open.',
+    'Son, that belt is on its last hole and its last nerve.',
+    'Get up off that couch, boy. Them legs work, use ’em.',
+    'Boy, that shirt is begging for mercy.',
+    'When I was your age we walked everywhere. Now go walk!',
+    'Don’t you touch that scale today, son. Ain’t nobody ready for that.',
+    'Boy, them buttons on your shirt are fixing to shoot somebody’s eye out.',
+    'Son, you ate like it was Thanksgiving and it’s a Tuesday.',
+    'Boy, go walk to the mailbox and back. Then do it again.'
+  ]
+};
 const ROAST={
   f:[
     'Girl, you ain’t gonna fit in those jeans… and those jeans ain’t got no elastic, girl. 👖',
@@ -1373,20 +1399,25 @@ const ROAST={
   ]
 };
 let roastShuffle=0, lastRoast='';
+const ROAST_STYLE_K=NS+'roastStyle';
+function roastStyle(){ return sGet(ROAST_STYLE_K)==='std'?'std':'gp'; }
+$('roastStyle').onchange=e=>{ sSet(ROAST_STYLE_K,e.target.value); roastShuffle=0; render(); toast(e.target.value==='gp'?'Grandma & Grandpa are watching you now 👀':'Regular roasts are back.'); };
 function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)); if(!vs.length) return null;
+  if(roastStyle()==='gp'){ const g=vs.find(v=>(profile.sex==='m'?/grandpa/i:/grandma/i).test(v.name)); if(g) return g; }
   const want=profile.sex==='m'?/(aaron|daniel|fred|alex|arthur|gordon|rishi|male)/i:/(samantha|ava|allison|susan|karen|moira|tessa|zoe|nicky|female)/i;
   return vs.find(v=>want.test(v.name)&&/en-US/i.test(v.lang))||vs.find(v=>want.test(v.name))||vs.find(v=>/en-US/i.test(v.lang))||vs[0]; }
 function sayRoast(){ if(!('speechSynthesis' in window)||!lastRoast) return;
   const text=lastRoast.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/LOL/g,'L O L').trim();
   speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v) u.voice=v;
-  u.rate=1.02; u.pitch=profile.sex==='m'?0.9:1.12; speechSynthesis.speak(u); }
+  const gp=roastStyle()==='gp', gv=u.voice&&/grand/i.test(u.voice.name);
+  u.rate=gp?(gv?0.95:0.82):1.02; u.pitch=gp?(gv?1:(profile.sex==='m'?0.7:0.95)):(profile.sex==='m'?0.9:1.12); speechSynthesis.speak(u); }
 if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
 function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
-function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
+function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; if(document.activeElement!==$('roastStyle')) $('roastStyle').value=roastStyle(); $('roastStyleWrap').hidden=kid; $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
 $('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.checked=false; return; } sSet(ROAST_K,e.target.checked?'1':'0'); render();
   toast(e.target.checked?'Roast mode is on. Don’t say we didn’t warn you 😂':'Roast mode off — back to gentle.'); };
 function roastLine(st){
-  const list=ROAST[profile.sex==='m'?'m':'f'];
+  const list=(roastStyle()==='gp'?ROAST_GP:ROAST)[profile.sex==='m'?'m':'f'];
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+day.meals.length+roastShuffle;
   lastRoast=list[seed%list.length];
   return `${lastRoast}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>${'speechSynthesis' in window?'<br><button class="say-btn" data-say="1" aria-label="Say it out loud">🔊 Say it</button>':''}`;
