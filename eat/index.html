@@ -25,7 +25,7 @@
   NEW    Camera: "Take a photo" opens the camera, "Pick a photo" opens the library
   NEW    Show off my plate: share card (photo + meal + calories) to text, Facebook, Instagram
   NEW    Full-screen Add to Home Screen with the walkers icon (manifest + apple-touch-icon)
-  NOTE   Off Claude, "Estimate calories" stays hidden (needs an API key later); type calories or tap a recent meal
+  NEW    Rev 4.1: Photo scan key in Profile — key kept only on this phone; photo goes straight to Anthropic and comes back as name, calories, macros
   Eat and Move — Rev 3 (merged build, Sept 25 2026)
   Paul's new UI on top of the Eat for Food engine.
 
@@ -338,6 +338,12 @@
       <div class="stat-line"><span>For your goal</span><b id="sGoal">–</b></div>
       <div class="stat-line"><span>Your daily amount (never below 1,200)</span><b id="sBase">–</b></div>
       <div class="stat-line"><span>Saved on this phone</span><b id="sStore">–</b></div>
+    </section>
+    <section class="card" style="margin-top:10px" id="keyCard">
+      <div class="label">Photo scan</div>
+      <p class="hint" id="keyStatus" style="font-size:13px;margin:6px 0 10px">Paste your Anthropic API key so the camera can tell what your food is. It stays on this phone only.</p>
+      <div class="form"><div class="inline"><input id="keyInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-…"><button class="button" id="keySave" style="padding:12px 14px">Save</button></div></div>
+      <div class="actions" style="grid-template-columns:1fr 1fr"><button class="button alt" id="keyTest">Test key</button><button class="button alt" id="keyRemove">Remove key</button></div>
     </section>
     <section class="actions" style="grid-template-columns:1fr">
       <button class="button danger" id="clearBtn">Clear today</button>
@@ -713,6 +719,7 @@ $('estimateBtn').onclick=async()=>{
     else if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(c)){
       sampleFn=null; $('estimateRow').hidden=true; box.textContent='Estimates aren’t available here. Type the calories yourself.'; }
     else if(c==='rate_limited') box.textContent='Too many estimates right now. Try again in a few minutes, or type the calories.';
+    else if(['bad_key','no_credit','offline'].includes(c)) box.textContent=keyMsg(c);
     else if(c==='image_rejected') box.textContent='That photo couldn’t be used. Type what it is in Meal name and tap Estimate.';
     else box.textContent='The estimate didn’t come through. Try again, or type the calories.';
     if(c&&c!=='cancelled') box.insertAdjacentHTML('beforeend',`<br><span style="color:var(--muted);font-size:11px">Code: ${esc(c)}</span>`);
@@ -1035,6 +1042,55 @@ $('shareSend').onclick=async()=>{ if(!shareBlob) return; const file=new File([sh
   try{ await navigator.share({files:[file],title:'My plate',text:'Made with Eat and Move'}); }catch(e){} };
 $('shareClose').onclick=()=>$('shareView').classList.remove('open');
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-share]'); if(b) openShare(b.dataset.share); });
+
+/* ================= PHOTO SCAN WITH YOUR OWN KEY (Rev 4.1) ================= */
+// The key is stored only in this phone's storage. Photos go straight from the phone to
+// Anthropic's API (no server in between). 30 scans per hour per phone as a bill guard.
+const KEY_K=NS+'apikey', SCAN_LOG=NS+'scanlog', SCAN_MODEL='claude-haiku-5-5', SCAN_CAP=30;
+function getKey(){ return (sGet(KEY_K)||'').trim(); }
+function blobToB64(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=rej; r.readAsDataURL(b); }); }
+function scanErr(code,message){ const e=new Error(message); e.code=code; return e; }
+function underCap(){ const now=Date.now(); let log=[]; try{ log=JSON.parse(sGet(SCAN_LOG)||'[]'); }catch(e){}
+  log=log.filter(t=>now-t<3600e3); if(log.length>=SCAN_CAP) return false; log.push(now); sSet(SCAN_LOG,JSON.stringify(log)); return true; }
+async function askAnthropic(prompt,opts={}){
+  const key=getKey(); if(!key) throw scanErr('no_key','No key');
+  if(!underCap()) throw scanErr('rate_limited','Hourly limit');
+  const content=[];
+  const imgs=opts.images?(Array.isArray(opts.images)?opts.images:[opts.images]):[];
+  for(const b of imgs){ if(b) content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:await blobToB64(b)}}); }
+  content.push({type:'text',text:prompt});
+  let r;
+  try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:opts.signal,headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:SCAN_MODEL,max_tokens:400,messages:[{role:'user',content}]})}); }
+  catch(e){ if(e&&e.name==='AbortError') throw scanErr('cancelled','Stopped'); throw scanErr('offline','No connection'); }
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok){ const m=(j&&j.error&&j.error.message)||''; 
+    if(r.status===401||r.status===403) throw scanErr('bad_key',m);
+    if(r.status===429) throw scanErr('rate_limited',m);
+    if(/credit/i.test(m)) throw scanErr('no_credit',m);
+    if(r.status===400&&imgs.length) throw scanErr('image_rejected',m);
+    throw scanErr('api_error',m||('HTTP '+r.status)); }
+  const text=((j&&j.content)||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
+  const m=text.match(/\{[\s\S]*\}/); if(!m) throw scanErr('api_error','No JSON');
+  return JSON.parse(m[0]);
+}
+const keySample={ json:askAnthropic, limits:async()=>({images:true}) };
+function useKeyIfSet(){ if(getKey()&&(!sampleFn||sampleFn===keySample)){ sampleFn=keySample; canImages=true; imagesOK=null; } else if(!getKey()&&sampleFn===keySample){ sampleFn=null; } renderKey(); }
+function renderKey(){ const k=getKey();
+  $('keyStatus').innerHTML=k?`<b style="color:var(--green)">Photo scan is on.</b> Key ending …${esc(k.slice(-4))} is saved on this phone only.`:'Paste your Anthropic API key so the camera can tell what your food is. It stays on this phone only.';
+  $('keyRemove').disabled=!k; $('keyTest').disabled=!k; }
+$('keySave').onclick=()=>{ const v=$('keyInput').value.trim();
+  if(!/^sk-ant-[A-Za-z0-9_\-]{20,}$/.test(v)){ toast('That doesn’t look like a key. It starts with sk-ant-'); return; }
+  sSet(KEY_K,v); $('keyInput').value=''; useKeyIfSet(); toast('Key saved. Tap Test key to check it.'); };
+$('keyRemove').onclick=()=>{ if(!confirm('Remove the photo scan key from this phone?')) return; sDel(KEY_K); useKeyIfSet(); toast('Key removed.'); };
+$('keyTest').onclick=async()=>{ $('keyTest').disabled=true; $('keyStatus').textContent='Testing…';
+  try{ const r=await askAnthropic('Reply with only this JSON: {"ok":true}'); renderKey(); toast(r&&r.ok?'Key works! Photo scan is ready.':'Key answered — photo scan is ready.'); }
+  catch(e){ renderKey(); toast(keyMsg(e&&e.code)); } finally{ $('keyTest').disabled=!getKey(); } };
+function keyMsg(c){ return c==='bad_key'?'That key wasn’t accepted. Check you copied the whole key.'
+  :c==='no_credit'?'The key works but the account needs credits. Add them at console.anthropic.com.'
+  :c==='rate_limited'?'Too many scans this hour. Try again later, or type the calories.'
+  :c==='offline'?'No internet connection right now.':'Something went wrong. Try again in a minute.'; }
+useKeyIfSet();
 
 // Photo estimates light up only where Claude is reachable (claude.ai viewer)
 (async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use('sample'); if(!s) return;
