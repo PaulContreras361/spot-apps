@@ -1427,7 +1427,12 @@ function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/
 function speak(text){ if(!('speechSynthesis' in window)||!text||sGet(NS+'roastVoice')==='0') return null;
   text=text.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\bLOL\b/g,'L O L').replace(/’/g,"'").trim();
   try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){ u.voice=v; u.lang=v.lang; }
-    u.rate=roastStyle()==='gp'?0.92:1; u.pitch=1; speechSynthesis.speak(u); return v; }catch(e){ return null; } }
+    u.rate=roastStyle()==='gp'?0.92:1; u.pitch=1;
+    let started=false; u.onstart=()=>{ started=true; pendingSay=''; };
+    pendingSay=text; speechSynthesis.speak(u);   // iPhone may hold speech until the first touch; pendingSay covers that
+    return v; }catch(e){ return null; } }
+let pendingSay='';
+document.addEventListener('pointerdown',()=>{ if(pendingSay&&!speechSynthesis.speaking){ const t=pendingSay; pendingSay=''; speak(t); } },true);
 function sayRoast(){ if(lastRoast) speak(lastRoast); }
 if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
 function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
@@ -1438,7 +1443,7 @@ function roastLine(st){
   const list=(roastStyle()==='gp'?ROAST_GP:ROAST)[profile.sex==='m'?'m':'f'];
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+day.meals.length+roastShuffle;
   lastRoast=list[seed%list.length];
-  return `${lastRoast}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>${'speechSynthesis' in window?'<br><button class="say-btn" data-say="1" aria-label="Say it out loud">🔊 Say it</button>':''}`;
+  return `${lastRoast}<br><span style="opacity:.85;font-size:12.5px">About <b>${st} steps</b> earns ~${TREAT_KCAL} kcal back. Tap for another 😂</span>`;
 }
 function paintBurnNote(){
   const el=$('burnNote'), kid=profile.age>0&&profile.age<18;
@@ -1463,9 +1468,16 @@ function showRoast(head){
   if(!$('roastDlg').open) $('roastDlg').showModal();
   speak(popRoast);
 }
+function roastOnOpen(){
+  if(!roastOn()||!Engine.ready(profile)) return;
+  const left=Engine.totals(day,profile).left, state=left<=0?'past':left<=NEAR_KCAL?'near':''; if(!state) return;
+  const k=NS+'roastOpen', seen=sGet(k)||''; if(seen===today+':'+state) return; sSet(k,today+':'+state);
+  showRoast(state==='past'?'You’re past today’s plan…':`Only ${fmt(left)} kcal left!`);
+}
 function autoRoast(leftBefore){
   if(!roastOn()||!Engine.ready(profile)) return;
   const left=Engine.totals(day,profile).left;
+  sSet(NS+'roastOpen',today+':'+(left<=0?'past':left<=NEAR_KCAL?'near':''));
   if(left<=0) showRoast(leftBefore>0?`You just passed today’s plan!`:`Still past today’s plan…`);
   else if(left<=NEAR_KCAL) showRoast(`Only ${fmt(left)} kcal left!`);
 }
@@ -1479,6 +1491,7 @@ $('voiceTest').onclick=()=>{ const v=speak(roastStyle()==='gp'?(profile.sex==='m
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); }catch(e){ console.error(e); } }; }
 render();
+setTimeout(()=>{ try{ roastOnOpen(); }catch(e){} },600);
 
 // Photo estimates light up only where Claude is reachable (claude.ai viewer)
 (async()=>{ try{ if(!window.claude||!window.claude.use) return; const s=await window.claude.use('sample'); if(!s) return;
