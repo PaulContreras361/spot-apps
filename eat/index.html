@@ -185,6 +185,9 @@
   .k.water{color:var(--water)}
   .card.tap{cursor:pointer}
   nav .nav{padding:8px 6px}
+  nav .nav-home{position:relative;top:-16px;width:64px;height:64px;border-radius:50%;background:#0f2a26;border:2px solid rgba(24,217,154,.45);color:#9bb3b0;box-shadow:0 8px 22px rgba(0,0,0,.55);place-content:center;padding:0;font-size:10.5px}
+  nav .nav-home.active{background:var(--green);border-color:var(--green);color:#022019;box-shadow:0 8px 24px rgba(24,217,154,.45)}
+  nav .nav-home b{font-size:24px}
   .modal-actions[hidden]{display:none}
   #confetti{position:fixed;inset:0;z-index:25;pointer-events:none}
   .trip-svg{width:100%;height:auto;display:block;margin:6px 0 2px}
@@ -205,6 +208,17 @@
   .app.water-mode header.top,.app.move-mode header.top{display:none}
   .app.move-mode .backdrop,.app.move-mode .grain{display:none}
   .app.scan-mode header.top{display:none}
+  .app.home-mode header.top,.app.home-mode .backdrop,.app.home-mode .grain{display:none}
+  .app.home-mode .hero{margin-top:6px}
+  html[data-cover="home"]{background:#ebd6b7}
+  .hcover img{background:#ebd6b7}
+  .hcover .wc-mast{color:#3b2412;font-size:13.5cqw;letter-spacing:.04em;text-shadow:0 2px 0 rgba(255,255,255,.35)}
+  .hcover .wc-mast span{color:#0b7a55}
+  .hcover .wc-dek{top:17.5cqw;color:#6b3d17;font-size:4.2cqw}
+  .hcover .wc-lines{bottom:3.5cqw;text-align:center}
+  .hc-fun{font:600 3.9cqw/1.35 Inter,system-ui,sans-serif;color:#fff;cursor:pointer;text-shadow:0 1px 3px #000,0 0 12px rgba(0,0,0,.8)}
+  .hc-fun b{color:#18d99a;font-weight:800}
+  .hc-date{font:500 3.2cqw/1.3 Inter,system-ui,sans-serif;color:#c8d8d6;margin-top:1.2cqw;text-shadow:0 1px 3px #000}
   .app.scan-mode .backdrop,.app.scan-mode .grain{display:none}
   .scover img{background:#0d1a1c}
   .scover .wc-mast{color:#fff;font-size:22cqw;letter-spacing:.12em;text-shadow:0 4px 24px rgba(0,0,0,.5)}
@@ -272,6 +286,12 @@
 
   <!-- HOME -->
   <section class="page" id="page-home">
+    <figure class="wcover hcover" aria-label="Eat and Move cover">
+      <img src="home-cover.jpg" alt="Four friends walking a park path at sunset" width="1179" height="1002">
+      <div class="wc-mast">EAT &amp; <span>MOVE</span></div>
+      <div class="wc-dek">Burn calories so you can eat</div>
+      <div class="wc-lines"><div class="hc-fun" id="funLine2" role="button" tabindex="0" title="Tap for another treat">Every step you take adds a little more to enjoy.</div><div class="hc-date" id="today2"></div></div>
+    </figure>
     <div class="banner" id="setupBanner" hidden><span>Tell us a little about you so the numbers fit you.</span><button id="setupBtn">Set up</button></div>
     <section class="hero">
       <div class="eyebrow" id="heroEyebrow">YOUR FOOD FOR TODAY</div>
@@ -456,9 +476,9 @@
   </section>
 </main>
 <nav>
-  <button class="nav active" data-page="home"><b>⌂</b>Home</button>
   <button class="nav" data-page="food"><b>⌁</b>Scan</button>
   <button class="nav" data-page="move"><b>⚡</b>Activity</button>
+  <button class="nav nav-home active" data-page="home" aria-label="Home"><b>⌂</b>Home</button>
   <button class="nav" data-page="water"><b>💧</b>Water</button>
   <button class="nav" data-page="profile"><b>◉</b>Profile</button>
 </nav>
@@ -726,7 +746,8 @@ function go(page){
   document.querySelector('.app').classList.toggle('move-mode',page==='move');
   document.querySelector('.app').classList.toggle('scan-mode',page==='food');
   document.querySelector('.app').classList.toggle('profile-mode',page==='profile');
-  document.documentElement.dataset.cover=['water','move','food'].includes(page)?page:'';
+  document.querySelector('.app').classList.toggle('home-mode',page==='home');
+  document.documentElement.dataset.cover=['water','move','food','home'].includes(page)?page:'';
   $('mastTitle').innerHTML=page==='profile'?'Y<span>O</span>U':'EAT &amp; <span>MOVE</span>';
   document.querySelector('header.top .purpose').textContent=page==='profile'?'Your numbers. Your pace. No guilt.':'🔥 Burn calories so you can eat 🍽';
   document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!=='page-'+page);
@@ -1410,7 +1431,9 @@ function paintFunLine(){
   const T=Engine.totals(day,profile), el=$('funLine'), html=funLineText(T.earned);
   el.innerHTML=html||'Every step you take adds a little more to enjoy.';
   el.title=html?'Tap for another treat':'';
+  if($('funLine2')){ $('funLine2').innerHTML=el.innerHTML; $('today2').textContent=$('today').textContent; }
 }
+$('funLine2').onclick=()=>$('funLine').onclick();
 $('funLine').onclick=()=>{ funShuffle++; const el=$('funLine'); el.style.opacity=.2; setTimeout(()=>{ paintFunLine(); el.style.opacity=1; },180); };
 $('funLine').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('funLine').click(); } };
 
@@ -1559,6 +1582,7 @@ function paintWaterCover(){}
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); paintWaterCover(); }catch(e){ console.error(e); } }; }
 render();
+go('home');
 setTimeout(()=>{ try{ roastOnOpen(); }catch(e){} },600);
 
 // Photo estimates light up only where Claude is reachable (claude.ai viewer)
