@@ -222,6 +222,17 @@
   .wc-head{white-space:nowrap;font:700 8.4cqw/1.02 "Bodoni 72","Didot",Georgia,serif;margin-top:0;color:#ffd23f}
   .wc-sub{font:800 3.7cqw/1.25 Inter,system-ui,sans-serif;margin-top:2cqw;padding-right:14cqw}
   .wc-sub2{font:600 3cqw/1.35 Inter,system-ui,sans-serif;margin-top:1.6cqw;color:#d6e6f2}
+  /* Magazine masthead header (Home + Profile) */
+  header.top{position:relative;display:block;text-align:center;margin:-20px -18px 0;padding:22px 18px 14px;background:radial-gradient(ellipse 80% 100% at 50% 35%,rgba(3,10,10,.82),rgba(3,10,10,.45) 60%,rgba(3,10,10,0) 100%)}
+  header.top .mast-wrap{display:flex;flex-direction:column;align-items:center;padding:0 46px}
+  header.top .brand{font-family:"Bodoni 72","Didot","Bodoni Moda","Playfair Display",Georgia,serif;font-weight:700;font-size:clamp(28px,9vw,46px);line-height:1;letter-spacing:.02em;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.6)}
+  header.top .brand span{color:var(--green)}
+  header.top .purpose{font-family:"Bodoni 72","Didot",Georgia,serif;font-style:italic;font-weight:700;font-size:15.5px;margin-top:8px;text-shadow:0 1px 3px #000,0 0 14px rgba(0,0,0,.9)}
+  header.top #funLine,header.top .date{text-shadow:0 1px 3px #000,0 0 12px rgba(0,0,0,.9)}
+  header.top #funLine{margin:6px auto 0;text-align:center}
+  header.top .mast-cal{position:absolute;top:18px;right:14px}
+  header.top .date{text-align:center}
+  .app.profile-mode #funLine{display:none}
   .purpose{font-size:13px;font-weight:800;color:#18d99a;letter-spacing:.2px;margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
   #funLine{cursor:pointer;max-width:calc(100vw - 110px);line-height:1.35;margin-bottom:2px;transition:opacity .25s}
   #funLine b{color:var(--green);font-weight:800}
@@ -252,8 +263,8 @@
 <div class="backdrop" id="backdrop"></div><div class="grain"></div>
 <main>
   <header class="top">
-    <div><div class="brand">Eat and <span>Move</span></div><div class="purpose">🔥 Burn calories so you can eat 🍽</div><div class="tagline" id="funLine" role="button" tabindex="0" title="Tap for another">Every step you take adds a little more to enjoy.</div><div class="date" id="today"></div></div>
-    <button class="icon-btn" id="historyTopBtn" title="Last 7 days" aria-label="Last 7 days">📅</button>
+    <div class="mast-wrap"><div class="brand" id="mastTitle">EAT &amp; <span>MOVE</span></div><div class="purpose">🔥 Burn calories so you can eat 🍽</div><div class="tagline" id="funLine" role="button" tabindex="0" title="Tap for another">Every step you take adds a little more to enjoy.</div><div class="date" id="today"></div></div>
+    <button class="icon-btn mast-cal" id="historyTopBtn" title="Last 7 days" aria-label="Last 7 days">📅</button>
   </header>
 
   <!-- HOME -->
@@ -711,6 +722,9 @@ function go(page){
   document.querySelector('.app').classList.toggle('water-mode',page==='water');
   document.querySelector('.app').classList.toggle('move-mode',page==='move');
   document.querySelector('.app').classList.toggle('scan-mode',page==='food');
+  document.querySelector('.app').classList.toggle('profile-mode',page==='profile');
+  $('mastTitle').innerHTML=page==='profile'?'Y<span>O</span>U':'EAT &amp; <span>MOVE</span>';
+  document.querySelector('header.top .purpose').textContent=page==='profile'?'Your numbers. Your pace. No guilt.':'🔥 Burn calories so you can eat 🍽';
   document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!=='page-'+page);
   document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
   if(page==='profile') fillProfileForm();
