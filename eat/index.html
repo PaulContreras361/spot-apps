@@ -1519,7 +1519,7 @@ function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/
 function speak(text){ if(!('speechSynthesis' in window)||!text||sGet(NS+'roastVoice')==='0') return null;
   text=text.replace(/<[^>]+>/g,'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/\bLOL\b/g,'L O L').replace(/’/g,"'").trim();
   try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){ u.voice=v; u.lang=v.lang; }
-    u.rate=roastStyle()==='gp'?0.92:1; u.pitch=1;
+    u.rate=roastStyle()==='gp'?1.06:1.03; u.pitch=1;
     let started=false; u.onstart=()=>{ started=true; pendingSay=''; };
     pendingSay=text; speechSynthesis.speak(u);   // iPhone may hold speech until the first touch; pendingSay covers that
     return v; }catch(e){ return null; } }
