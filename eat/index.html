@@ -197,20 +197,22 @@
   .badge .w{font-size:10.5px;color:var(--muted);display:block;margin-top:2px;line-height:1.3}
   .badge.off{opacity:.38;filter:grayscale(1)}
   .badge.off .w{color:#8ba6a3}
-  .wcover{position:relative;margin:18px 0 0;border-radius:16px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);container-type:inline-size}
-  .wcover img{display:block;width:100%;height:auto}
-  .wcover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(3,12,22,.6) 80%,rgba(3,12,22,.94) 100%);pointer-events:none}
+  .wcover{position:relative;margin:-20px -18px 0;overflow:hidden;container-type:inline-size}
+  .wcover img{display:block;width:100%;height:auto;padding-top:env(safe-area-inset-top,0px);background:#94bce0}
+  .app.water-mode header.top{display:none}
+  .app.water-mode .backdrop{display:none}
+  .app.water-mode .grain{display:none}
+  .wcover::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,18,17,0) 58%,rgba(7,18,17,.55) 76%,rgba(7,18,17,.92) 90%,rgba(7,18,17,1) 100%);pointer-events:none}
   .wc-top{position:absolute;top:3.2cqw;left:4cqw;right:4cqw;display:flex;justify-content:space-between;font:800 2.9cqw/1 Inter,system-ui,sans-serif;letter-spacing:.35em;color:#0b2a4a;z-index:2}
-  .wc-mast{position:absolute;top:5.5cqw;left:0;right:0;text-align:center;font-family:"Bodoni 72","Didot","Bodoni Moda","Playfair Display",Georgia,"Times New Roman",serif;font-weight:700;font-size:18.5cqw;line-height:1;letter-spacing:-.005em;color:#0b2a4a;text-shadow:0 2px 0 rgba(255,255,255,.35);z-index:1}
-  .wc-dek{position:absolute;top:26cqw;left:0;right:0;text-align:center;font:italic 600 3.6cqw/1 "Bodoni 72",Didot,Georgia,serif;color:#16406b;z-index:2}
-  .wc-sticker{position:absolute;top:33cqw;right:4cqw;width:17cqw;height:17cqw;border-radius:50%;background:#ffd23f;color:#0b2a4a;display:grid;place-content:center;text-align:center;transform:rotate(-12deg);box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:2}
+  .wc-mast{position:absolute;top:calc(3cqw + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font-family:"Bodoni 72","Didot","Bodoni Moda","Playfair Display",Georgia,"Times New Roman",serif;font-weight:700;font-size:18.5cqw;line-height:1;letter-spacing:-.005em;color:#0b2a4a;text-shadow:0 2px 0 rgba(255,255,255,.35);z-index:1}
+  .wc-dek{position:absolute;top:calc(23.5cqw + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font:italic 600 3.6cqw/1 "Bodoni 72",Didot,Georgia,serif;color:#16406b;z-index:2}
+  .wc-sticker{position:absolute;top:calc(31cqw + env(safe-area-inset-top,0px));right:4cqw;width:17cqw;height:17cqw;border-radius:50%;background:#ffd23f;color:#0b2a4a;display:grid;place-content:center;text-align:center;transform:rotate(-12deg);box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:2}
   .wc-sticker b{font:900 6.4cqw/1 Inter,system-ui,sans-serif}.wc-sticker span{font:800 2.3cqw/1.1 Inter,system-ui,sans-serif;text-transform:uppercase}
-  .wc-lines{position:absolute;left:5cqw;right:5cqw;bottom:4.5cqw;z-index:2;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  .wc-lines{position:absolute;left:5cqw;right:5cqw;bottom:5cqw;z-index:2;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
   .wc-kicker{display:inline-block;background:#4cc3ff;color:#031a28;font:900 2.6cqw/1 Inter,system-ui,sans-serif;letter-spacing:.2em;padding:1.2cqw 2cqw;border-radius:1cqw;text-shadow:none}
   .wc-head{white-space:nowrap;font:700 8.4cqw/1.02 "Bodoni 72","Didot",Georgia,serif;margin-top:2cqw;color:#ffd23f}
   .wc-sub{font:800 3.7cqw/1.25 Inter,system-ui,sans-serif;margin-top:2cqw;padding-right:14cqw}
   .wc-sub2{font:600 3cqw/1.35 Inter,system-ui,sans-serif;margin-top:1.6cqw;color:#d6e6f2}
-  .wc-bar{position:absolute;right:4cqw;bottom:1.6cqw;width:12cqw;height:3cqw;z-index:2;opacity:.75;background:repeating-linear-gradient(90deg,#fff 0 1px,transparent 1px 3px,#fff 3px 5px,transparent 5px 6px)}
   .purpose{font-size:13px;font-weight:800;color:#18d99a;letter-spacing:.2px;margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
   #funLine{cursor:pointer;max-width:calc(100vw - 110px);line-height:1.35;margin-bottom:2px;transition:opacity .25s}
   #funLine b{color:var(--green);font-weight:800}
@@ -311,16 +313,13 @@
   <section class="page" id="page-water" hidden>
     <figure class="wcover" aria-label="The Water Issue cover">
       <img src="water-cover.jpg" alt="People drinking water outdoors" width="1049" height="875">
-      <div class="wc-top"><span>EAT &amp; MOVE</span><span id="wcIssue">THE WATER ISSUE</span></div>
       <div class="wc-mast">HYDRATE</div>
       <div class="wc-dek">Sip by sip, all day long</div>
       <div class="wc-sticker"><b id="wcGoal">64</b><span>oz a day</span></div>
       <div class="wc-lines">
         <div class="wc-kicker">COVER STORY</div>
         <div class="wc-head">Drink plenty of water</div>
-        <div class="wc-sub" id="wcToday">Today: 0 oz — your first glass starts the story</div>
       </div>
-      <div class="wc-bar" aria-hidden="true"></div>
     </figure>
     <div class="section-head" style="margin-top:16px"><h2>Water today</h2><span class="date" id="waterPct"></span></div>
     <section class="card water-card">
@@ -690,6 +689,7 @@ document.addEventListener('click',e=>{
 
 /* Navigation (FIX 10) */
 function go(page){
+  document.querySelector('.app').classList.toggle('water-mode',page==='water');
   document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!=='page-'+page);
   document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
   if(page==='profile') fillProfileForm();
@@ -1516,14 +1516,7 @@ $('roastVoice').onchange=e=>{ sSet(NS+'roastVoice',e.target.checked?'1':'0'); };
 $('voiceTest').onclick=()=>{ const v=speak(roastStyle()==='gp'?(profile.sex==='m'?'Boy, go walk to the mailbox and back.':'Baby, go walk around the block. I’ll wait.'):'Testing, testing. Go take a walk!');
   $('voiceName').textContent=v?`Using: ${v.name}${/premium|enhanced/i.test(v.name)?' — natural voice ✓':' — download a Premium voice for a more natural sound (see below)'}`:'No voice found on this phone.'; };
 
-function paintWaterCover(){
-  const oz=waterTotal(day), left=Math.max(0,waterGoal-oz);
-  $('wcGoal').textContent=fmtOz(waterGoal);
-  $('wcIssue').textContent=new Date().toLocaleDateString('en-US',{month:'short',year:'numeric'}).toUpperCase()+' · WATER ISSUE';
-  $('wcToday').textContent= oz===0?`Today: 0 oz${nmComma()} — your first glass starts the story`
-    : oz>=waterGoal?`Today: ${fmtOz(oz)} oz — goal reached${nmComma()}! 🏆`
-    : `Today: ${fmtOz(oz)} oz — just ${fmtOz(left)} oz to go${nmComma()}`;
-}
+function paintWaterCover(){ $('wcGoal').textContent=fmtOz(waterGoal); }
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); paintWaterCover(); }catch(e){ console.error(e); } }; }
 render();
