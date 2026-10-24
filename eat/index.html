@@ -767,7 +767,7 @@ function openMeal(){
   const h=new Date().getHours(); $('mealType').value=h<10?'Breakfast':h<15?'Lunch':h<21?'Dinner':'Snack';
   $('estimateRow').hidden=!sampleFn; $('estimateBtn').disabled=false; $('estimateBtn').textContent='Estimate calories';
   $('scanHint').textContent = sampleFn ? (imagesOK===false?'Type what you ate (for example "banana") and tap Estimate. Check the number before saving.':'Add a photo or type what you ate, then tap Estimate. Check the number before saving.')
-                                        : 'Take a photo of your plate if you like, then type the name and calories.';
+                                        : 'Photo scan is off on this phone. Add your key in Profile → Photo scan, or type the name and calories.';
   renderRecent();
   $('mealDialog').showModal();
 }
@@ -811,6 +811,9 @@ async function onPhoto(e){
   if(pickedThumb){ $('preview').src=pickedPlate||pickedThumb; $('camShot').classList.add('on'); $('uploadLabel').textContent='📷 Retake'; }
   else { toast('That photo could not be read. Try another.'); pickedFile=null; pickedPlate=''; }
   $('estimateRow').hidden=!sampleFn;
+  if(!pickedThumb) return;
+  if(sampleFn){ if(!estimateCtl) $('estimateBtn').click(); }          // photo taken → estimate right away
+  else { const box=$('aiBox'); box.hidden=false; box.innerHTML='Photo scan is off on this phone, so the calories can’t be read from the picture. Add your key in <b>Profile → Photo scan</b>, or type the name and calories below.'; }
 }
 $('photoInput').onchange=onPhoto; $('cameraInput').onchange=onPhoto;
 // FIX 12: the Claude phone app can't send photos (images_unavailable), so fall back to
