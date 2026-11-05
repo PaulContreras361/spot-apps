@@ -19,6 +19,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Eat and Move">
+<meta name="app-version" content="2026-11-05b">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <!--
   Eat and Move — Rev 4 web edition (Oct 22 2026), hosted on GitHub Pages /eat/
@@ -1655,6 +1656,25 @@ $('poundToggle').onchange=e=>{ if(!poundAllowed()){ e.target.checked=false; retu
 $('poundTargetSave').onclick=()=>{ const v=Math.round(Number($('poundTarget').value)); if(!(v>=1000&&v<=60000)){ toast('Pick a goal between 1,000 and 60,000 steps.'); return; }
   pound.target=v; savePound(); paintPound(); toast(`Daily step goal set to ${fmt(v)}.`); };
 $('poundReset').onclick=()=>{ if(!confirm('Start a new pound count from today?')) return; pound.days={}; pound.start=today; pound.cheered=0; savePound(); render(); toast('New pound count started.'); };
+/* ================= AUTO-UPDATE (Nov 5 2026) =================
+   Phones may keep a saved copy of the page for a while. On open (and when the app comes back
+   to the front) ask the site for the newest version, bypassing the saved copy; if it's newer, load it. */
+(function(){
+  const mine=(document.querySelector('meta[name="app-version"]')||{}).content||'';
+  async function check(){
+    try{
+      const r=await fetch('./?check='+Date.now(),{cache:'no-store'}); if(!r.ok) return;
+      const m=(await r.text()).match(/name="app-version" content="([^"]+)"/); if(!m||m[1]===mine) return;
+      let tried=''; try{ tried=sessionStorage.getItem('em-upd')||''; }catch(e){}
+      if(tried===m[1]) return;                                   // already tried this version once: no loop
+      try{ sessionStorage.setItem('em-upd',m[1]); }catch(e){}
+      try{ saveDay(); }catch(e){}
+      location.replace('./?v='+encodeURIComponent(m[1]));        // new address = never served from the saved copy
+    }catch(e){}
+  }
+  setTimeout(check,1500);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') check(); });
+})();
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
 { const _render=render; render=function(){ try{ poundSync(); }catch(e){} _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); paintWaterCover(); paintPound(); paintPoundHome(); }catch(e){ console.error(e); } }; }
 render();
