@@ -250,6 +250,14 @@
   header.top .mast-cal{position:absolute;top:18px;right:14px}
   header.top .date{text-align:center}
   .app.profile-mode #funLine{display:none}
+  .pound-card{margin-top:16px}
+  .pound-switch{display:flex;align-items:center;gap:12px;cursor:pointer}
+  .pound-switch input{width:24px;height:24px;accent-color:#18d99a;flex:none}
+  .pound-row{display:flex;align-items:center;gap:16px;margin-top:14px}
+  .pound-ring{width:118px;height:118px;flex:none}
+  .pound-big{font-size:17px;font-weight:800}
+  .pound-pace{margin:12px 0 0;font-size:14px;line-height:1.45;color:#c8d8d6}
+  .pound-pace b{color:var(--green)}
   .purpose{font-size:13px;font-weight:800;color:#18d99a;letter-spacing:.2px;margin-top:3px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
   #funLine{cursor:pointer;max-width:calc(100vw - 110px);line-height:1.35;margin-bottom:2px;transition:opacity .25s}
   #funLine b{color:var(--green);font-weight:800}
@@ -301,7 +309,7 @@
     </section>
     <section class="grid">
       <div class="card"><div class="label">Daily amount</div><div class="num" id="base">0 <span class="unit">kcal</span></div></div>
-      <div class="card"><div class="label">Extra from moving</div><div class="num" id="earned">0 <span class="unit">kcal</span></div></div>
+      <div class="card"><div class="label" id="earnedLabel">Extra from moving</div><div class="num" id="earned">0 <span class="unit">kcal</span></div></div>
       <div class="card wide"><div class="label">Enjoyed so far</div><div class="num" id="eaten">0</div><div class="progress"><i id="bar"></i></div></div>
       <div class="card wide tap" id="homeWater" role="button" tabindex="0" aria-label="Open water page"><div class="label">💧 Water today</div><div class="num" id="homeWaterNum">0</div><div class="wprog"><i id="homeWaterBar"></i></div></div>
       <div class="card wide tap" id="homeTrip" role="button" tabindex="0" aria-label="Open your Coast Walk trip"><div class="label">🚶 Coast Walk</div><div class="trip-mini"><div class="big" id="homeTripMi">0 mi</div><div class="hint" id="homeTripNext" style="margin:0"></div></div><div class="progress"><i id="homeTripBar"></i></div></div>
@@ -335,6 +343,19 @@
       <div class="wc-dek">Every step adds a little more to enjoy</div>
       <div class="wc-lines"><div class="wc-head">Walk it off, then dig in</div></div>
     </figure>
+    <section class="card pound-card" id="poundCard" hidden>
+      <label class="pound-switch"><input type="checkbox" id="poundToggle"><span><b>Pound Mode</b><br><span class="hint" style="margin:0">Walking goes toward losing a pound instead of earning extra food.</span></span></label>
+      <div id="poundBody" hidden>
+        <div class="pound-row">
+          <svg class="pound-ring" viewBox="0 0 120 120" role="img" aria-label="Progress toward your next pound"><circle cx="60" cy="60" r="50" fill="none" stroke="#17302f" stroke-width="12"></circle><circle id="poundArc" cx="60" cy="60" r="50" fill="none" stroke="#18d99a" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 314.16" transform="rotate(-90 60 60)"></circle><text id="poundPct" x="60" y="58" text-anchor="middle" font-size="24" font-weight="800" fill="#edf6f5">0.00</text><text x="60" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#9bb3b0">of 1 lb</text></svg>
+          <div class="pound-text"><div class="pound-big" id="poundToday">Today: 0 kcal</div><div class="hint" id="poundTotal" style="margin-top:4px"></div><div class="hint" id="poundDone" style="margin-top:4px"></div></div>
+        </div>
+        <div class="form" style="margin-top:12px"><label for="poundTarget">My daily step goal</label><div class="inline"><input id="poundTarget" type="number" inputmode="numeric" min="1000" max="60000" step="500" placeholder="10000"><button class="button alt" id="poundTargetSave" style="padding:12px 14px">Set</button></div></div>
+        <p class="pound-pace" id="poundPace"></p>
+        <p class="hint" style="margin-top:6px">About 3,500 calories = 1 lb, worked out from your weight. Counts only the walking calories you don’t eat back. Real weight goes up and down day to day with water and food.</p>
+        <button class="small-link" id="poundReset" style="margin-top:8px">Start a new pound count</button>
+      </div>
+    </section>
     <div class="section-head" style="margin-top:16px"><h2>Step tracker</h2><span class="date" id="stepKcal"></span></div>
     <section class="card">
       <div class="steps-big" id="stepCount">0</div>
@@ -571,8 +592,11 @@ const Engine = {
     const acts = day.acts.reduce((s,a)=>s+a.cal,0);
     const earned = Math.round(day.stepKcal + acts);
     const base = Engine.base(p);
-    const budget = base + earned;
-    return {eaten, acts, earned, base, budget, left: budget-eaten, pct: budget>0 ? eaten/budget*100 : 0};
+    const pm = !!day.pm;                       // Pound Mode day: walking is banked toward a pound, not added as food
+    const budget = base + (pm ? 0 : earned);
+    const over = Math.max(0, eaten - base);
+    const banked = pm ? Math.max(0, earned - over) : 0;   // walking calories NOT eaten back
+    return {eaten, acts, earned, base, budget, pm, banked, left: budget-eaten, pct: budget>0 ? eaten/budget*100 : 0};
   },
   cleanProfile(p){
     // FIX 15: 0 means "not filled in yet"; any real value is kept in a sensible range
@@ -596,7 +620,7 @@ const Engine = {
     return {
       meals: Array.isArray(d.meals) ? d.meals.filter(m=>m&&typeof m==='object').map(m=>({id:String(m.id||uid()),name:String(m.name||'Meal').slice(0,80),cal:Math.round(num(m.cal)),type:String(m.type||'Snack'),t:num(m.t),img:typeof m.img==='string'&&m.img.startsWith('data:image/')?m.img:'',macros:typeof m.macros==='string'?m.macros.slice(0,80):''})) : [],
       acts: Array.isArray(d.acts) ? d.acts.filter(a=>a&&typeof a==='object').map(a=>({id:String(a.id||uid()),name:String(a.name||'Activity').slice(0,60),cal:Math.round(num(a.cal)),t:num(a.t)})) : [],
-      steps: Math.round(num(d.steps)), stepKcal: num(d.stepKcal),
+      steps: Math.round(num(d.steps)), stepKcal: num(d.stepKcal), pm: d.pm===true,
       water: Array.isArray(d.water) ? d.water.filter(w=>w&&typeof w==='object'&&num(w.oz)>0).map(w=>({id:String(w.id||uid()),oz:Math.min(200,Math.round(num(w.oz)*10)/10),t:num(w.t)})) : []
     };
   }
@@ -714,7 +738,7 @@ function render(){
 
   // Steps
   $('stepCount').textContent=fmt(day.steps);
-  $('stepKcal').textContent=`+${fmt(day.stepKcal)} kcal earned`;
+  $('stepKcal').textContent=day.pm?`${fmt(day.stepKcal)} kcal walked off`:`+${fmt(day.stepKcal)} kcal earned`;
   const cad=tracker.det&&Number.isFinite(tracker.det.cadence)?Math.round(tracker.det.cadence):null;
   $('stepSub').textContent=tracker.on&&cad?`steps today · ${cad} steps/min`:'steps today';
 
@@ -1420,6 +1444,7 @@ let funShuffle=0;
 function numWord(x){ const w=['zero','one','two','three','four','five','six','seven','eight','nine','ten']; return x<=10&&Number.isInteger(x)?w[x]:(Number.isInteger(x)?fmt(x):String(x).replace('.5','½')); }
 function funLineText(earned){
   if(!(earned>=5)) return null;
+  if(day.pm){ const b=Engine.totals(day,profile).banked; return `Pound Mode: <b>${fmt(b)} kcal</b> walked off today — that’s ${lbText(b/LB_KCAL)} of a pound. 👟`; }
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0)+funShuffle;
   // treats that give a nice count between 1 and 12
   const fits=TREATS.filter(t=>earned/t[3]>=1&&earned/t[3]<=12);
@@ -1582,8 +1607,54 @@ $('voiceTest').onclick=()=>{ const v=speak(roastStyle()==='gp'?(profile.sex==='m
   $('voiceName').textContent=v?`Using: ${v.name}${/premium|enhanced/i.test(v.name)?' — natural voice ✓':' — download a Premium voice for a more natural sound (see below)'}`:'No voice found on this phone.'; };
 
 function paintWaterCover(){}
+
+/* ================= POUND MODE (Nov 5 2026) — adults only ================= */
+// While on, the day is flagged pm: walking calories are NOT added to the food budget.
+// Each day's banked calories (walking not eaten back) go into a ledger; ~3,500 kcal ≈ 1 lb.
+const POUND_K=NS+'pound', LB_KCAL=3500;
+let pound=(()=>{ try{ const v=JSON.parse(sGet(POUND_K)||'null'); if(v&&typeof v==='object'&&v.days) return v; }catch(e){} return {on:false,target:10000,days:{},cheered:0,start:today}; })();
+function poundAllowed(){ return Engine.ready(profile) && !(profile.age>0&&profile.age<18); }
+function poundOn(){ return pound.on && poundAllowed(); }
+function savePound(){ sSet(POUND_K,JSON.stringify(pound)); }
+function poundSync(){            // keep today's flag and ledger entry in step with the switch
+  const want=poundOn();
+  if(!!day.pm!==want){ day.pm=want; saveDay(); }
+  if(day.pm){ const b=Math.round(Engine.totals(day,profile).banked); if(pound.days[today]!==b){ pound.days[today]=b; savePound(); } }
+}
+function poundTotal(){ return Object.entries(pound.days).filter(([k])=>k>=pound.start).reduce((a,[,v])=>a+(Number(v)||0),0); }
+function lbText(x){ return (Math.round(x*100)/100).toFixed(2); }
+function paintPoundHome(){
+  const T=Engine.totals(day,profile);
+  $('earnedLabel').textContent=T.pm?'Walked off (Pound Mode)':'Extra from moving';
+  if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent=`Pound Mode${nmComma()}: ${fmt(T.banked)} kcal walked off today toward your next pound.`;
+}
+function paintPound(){
+  const ok=poundAllowed();
+  $('poundCard').hidden=!ok;
+  if(!ok) return;
+  $('poundToggle').checked=poundOn(); $('poundBody').hidden=!poundOn();
+  if(document.activeElement!==$('poundTarget')) $('poundTarget').value=pound.target||10000;
+  const perStep=Engine.stepKcal(profile,105), tgt=pound.target||10000, perDay=tgt*perStep;
+  const stepsPerLb=Math.round(LB_KCAL/perStep/1000)*1000, days=Math.max(1,Math.ceil(LB_KCAL/perDay));
+  $('poundPace').innerHTML=`At <b>${fmt(tgt)} steps a day</b>, that’s about <b>${fmt(perDay)} kcal</b> a day — about <b>1 lb every ${days} day${days>1?'s':''}</b>, if you don’t eat it back. (1 lb ≈ ${fmt(stepsPerLb)} steps for you.)`;
+  if(!poundOn()) return;
+  const T=Engine.totals(day,profile), total=poundTotal(), whole=Math.floor(total/LB_KCAL), part=(total%LB_KCAL)/LB_KCAL;
+  $('poundArc').setAttribute('stroke-dasharray',`${(part*314.16).toFixed(1)} 314.16`);
+  $('poundPct').textContent=lbText(part);
+  $('poundToday').textContent=`Today: ${fmt(T.banked)} kcal walked off (${lbText(T.banked/LB_KCAL)} lb)`;
+  const eatenBack=Math.max(0,T.earned-T.banked);
+  $('poundTotal').textContent= eatenBack>0 ? `${fmt(eatenBack)} kcal of today’s walking was eaten back, so it doesn’t count.` : `Steps today: ${fmt(day.steps)} of ${fmt(tgt)} goal.`;
+  $('poundDone').textContent= whole>0 ? `🏆 About ${whole} lb walked off since ${new Date(pound.start+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}.` : `Since ${new Date(pound.start+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}: ${fmt(total)} of ${fmt(LB_KCAL)} kcal toward your first pound.`;
+  if(whole>(pound.cheered||0)){ pound.cheered=whole; savePound(); try{ Fun.confetti(); }catch(e){} toast(`About ${whole===1?'1 pound':whole+' pounds'} walked off${nmComma()}! 🏆`); }
+}
+$('poundToggle').onchange=e=>{ if(!poundAllowed()){ e.target.checked=false; return; }
+  pound.on=e.target.checked; if(pound.on&&!Object.keys(pound.days).length) pound.start=today; savePound(); render();
+  toast(pound.on?'Pound Mode on — your walking now counts toward a pound.':'Classic mode — your walking earns extra food again.'); };
+$('poundTargetSave').onclick=()=>{ const v=Math.round(Number($('poundTarget').value)); if(!(v>=1000&&v<=60000)){ toast('Pick a goal between 1,000 and 60,000 steps.'); return; }
+  pound.target=v; savePound(); paintPound(); toast(`Daily step goal set to ${fmt(v)}.`); };
+$('poundReset').onclick=()=>{ if(!confirm('Start a new pound count from today?')) return; pound.days={}; pound.start=today; pound.cheered=0; savePound(); render(); toast('New pound count started.'); };
 $('burnNote').onclick=e=>{ if(!$('burnNote').classList.contains('roast')) return; if(e.target.closest('[data-say]')){ e.stopPropagation(); sayRoast(); return; } roastShuffle++; paintBurnNote(); };
-{ const _render=render; render=function(){ _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); paintWaterCover(); }catch(e){ console.error(e); } }; }
+{ const _render=render; render=function(){ try{ poundSync(); }catch(e){} _render(); try{ Fun.tick(); paintFunLine(); paintBurnNote(); paintRoastToggle(); paintWaterCover(); paintPound(); paintPoundHome(); }catch(e){ console.error(e); } }; }
 render();
 go('home');
 setTimeout(()=>{ try{ roastOnOpen(); }catch(e){} },600);
