@@ -345,6 +345,7 @@
     </figure>
     <section class="card pound-card" id="poundCard" hidden>
       <label class="pound-switch"><input type="checkbox" id="poundToggle"><span><b>Pound Mode</b><br><span class="hint" style="margin:0">Walking goes toward losing a pound instead of earning extra food.</span></span></label>
+      <p class="hint" id="poundNeed" hidden style="margin-top:10px">Fill in your age, height and weight in <b>Profile</b> first — Pound Mode uses your weight to do the math.</p>
       <div id="poundBody" hidden>
         <div class="pound-row">
           <svg class="pound-ring" viewBox="0 0 120 120" role="img" aria-label="Progress toward your next pound"><circle cx="60" cy="60" r="50" fill="none" stroke="#17302f" stroke-width="12"></circle><circle id="poundArc" cx="60" cy="60" r="50" fill="none" stroke="#18d99a" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 314.16" transform="rotate(-90 60 60)"></circle><text id="poundPct" x="60" y="58" text-anchor="middle" font-size="24" font-weight="800" fill="#edf6f5">0.00</text><text x="60" y="78" text-anchor="middle" font-size="11" font-weight="700" fill="#9bb3b0">of 1 lb</text></svg>
@@ -1629,9 +1630,10 @@ function paintPoundHome(){
   if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent=`Pound Mode${nmComma()}: ${fmt(T.banked)} kcal walked off today toward your next pound.`;
 }
 function paintPound(){
-  const ok=poundAllowed();
-  $('poundCard').hidden=!ok;
-  if(!ok) return;
+  const kid=profile.age>0&&profile.age<18, ok=poundAllowed();
+  $('poundCard').hidden=kid;
+  $('poundNeed').hidden=ok||kid; $('poundToggle').disabled=!ok;
+  if(!ok){ $('poundToggle').checked=false; $('poundBody').hidden=true; return; }
   $('poundToggle').checked=poundOn(); $('poundBody').hidden=!poundOn();
   if(document.activeElement!==$('poundTarget')) $('poundTarget').value=pound.target||10000;
   const perStep=Engine.stepKcal(profile,105), tgt=pound.target||10000, perDay=tgt*perStep;
