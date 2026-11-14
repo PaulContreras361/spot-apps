@@ -129,6 +129,11 @@
   .nutri{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;text-align:center}
   .nutri b{display:block;font-size:24px;font-weight:800}.nutri span{font-size:12px;color:var(--muted);font-weight:600}
   .nutri div:nth-child(1) b{color:#ff9f7a}.nutri div:nth-child(2) b{color:#ffd166}.nutri div:nth-child(3) b{color:#7cc8ff}.nutri div:nth-child(4) b{color:#ff8fc7}
+  .score{display:grid;gap:8px;margin-top:10px}
+  .srow{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;font-weight:700;font-size:16px}
+  .srow .e{font-size:22px;text-align:center}.srow small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+  .srow .g{min-width:58px;text-align:center;font-size:20px;font-weight:850;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.08)}
+  .g.ga{color:#18d99a}.g.gb{color:#7cc8ff}.g.gc{color:#ffd166}.g.gk{color:#ffb24d;font-size:13px}.g.gn{color:var(--muted)}
   .sugarbox{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
   .sugartop{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:14px}
   .sugartop b{font-size:22px;color:#ff8fc7}
@@ -336,6 +341,11 @@
         <div class="hint" id="nNote" style="margin-top:8px"></div>
         <div class="sugarbox" id="nSugarBox"><div class="sugartop"><span>🍬 Added sugar</span><span><b id="nAdd">0</b> of <span id="nLim">36</span> g</span></div>
           <div class="sbar"><i id="nSugarBar"></i></div><div class="hint" id="nSugarMsg" style="margin-top:6px"></div></div></div>
+      <div class="card wide" id="homeScore"><div class="label" style="display:flex;justify-content:space-between;align-items:center"><span>📝 My score today</span><button class="link" id="scoreHow" style="font-size:12px">How it works</button></div>
+        <div class="score" id="scoreList"></div>
+        <div class="hint" id="scoreNote" style="margin-top:8px"></div>
+        <div class="hint" id="scoreRules" hidden style="margin-top:8px;line-height:1.5"></div>
+        <button class="button alt" id="scoreShare" style="margin-top:10px;width:100%;padding:11px">📤 Share my score</button></div>
       <div class="card wide tap" id="homeWater" role="button" tabindex="0" aria-label="Open water page"><div class="label">💧 Water today</div><div class="num" id="homeWaterNum">0</div><div class="wprog"><i id="homeWaterBar"></i></div></div>
       <div class="card wide tap" id="homeTrip" role="button" tabindex="0" aria-label="Open your Coast Walk trip"><div class="label">🚶 Coast Walk</div><div class="trip-mini"><div class="big" id="homeTripMi">0 mi</div><div class="hint" id="homeTripNext" style="margin:0"></div></div><div class="progress"><i id="homeTripBar"></i></div></div>
     </section>
@@ -486,6 +496,11 @@
         <div class="rate" id="rateBox" hidden><label for="pRate" id="rateLabel">About how many lb per week?</label>
           <input id="pRate" placeholder="0" type="number" inputmode="decimal" min="0" step="0.25">
           <div class="hint" id="rateHint"></div></div>
+        <div class="two">
+          <div><label for="pStepGoal">Daily step goal</label><input id="pStepGoal" placeholder="8000" type="number" inputmode="numeric" min="0" max="50000"></div>
+          <div><label for="pProtein">Protein goal (g)</label><input id="pProtein" placeholder="0" type="number" inputmode="numeric" min="0" max="400"></div>
+        </div>
+        <div class="hint" style="margin-top:-4px">Used by “My score today.” Leave blank for a starting point based on your weight.</div>
         <div><label for="pSugar">Daily added sugar limit (g)</label><input id="pSugar" placeholder="36" type="number" inputmode="numeric" min="0" max="200">
           <div class="hint">Heart Association guide: 36 g for men, 25 g for women and kids. Leave blank to use that. Ask your doctor what’s right for you.</div></div>
         <button class="button" id="saveProfile">Save profile</button>
@@ -642,7 +657,7 @@ const Engine = {
     if(!type){ const g=Number(p.goal)||0; type=g<0?'lose':g>0?'gain':'stay'; rate=Math.abs(g)/500; } // older saved profiles
     rate=Number.isFinite(rate)&&rate>0?Math.round(Math.min(10,rate)*100)/100:0; // FIX 19: person's choice kept; 10 = typo guard
     const out = {sex: p.sex==='m'?'m':'f', age:Math.round(z(p.age,13,100)), ft:Math.round(z(p.ft,3,8)),
-      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), startLb:z(p.startLb,50,600), sugarLimit:z(p.sugarLimit,1,200), goalType:type, rate, saved:!!p.saved,
+      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), startLb:z(p.startLb,50,600), sugarLimit:z(p.sugarLimit,1,200), stepGoal:z(p.stepGoal,500,50000), proteinGoal:z(p.proteinGoal,10,400), goalType:type, rate, saved:!!p.saved,
       name: typeof p.name==='string' ? p.name.replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,30) : ''}; // FIX 20
     if(out.ft===0) out.inch=0;
     if(out.age>0 && out.age<18 && out.goalType==='lose'){ out.goalType='stay'; out.rate=0; } // FIX 14
@@ -1033,7 +1048,7 @@ function renderWater(){
   $('waterCheer').textContent= done ? 'Goal reached — nicely done! 🎉' : oz===0 ? 'A glass of water is a great way to start.' : pct>=50 ? `Over halfway! ${fmtOz(waterGoal-oz)} oz to go.` : `Good start! ${fmtOz(waterGoal-oz)} oz to go.`;
   $('homeWaterNum').innerHTML=`${fmtOz(oz)} <span class="unit">of ${fmtOz(waterGoal)} oz</span>`;
   $('homeWaterBar').style.width=pct+'%';
-  renderNutrition();
+  renderNutrition(); renderScore();
   $('waterList').innerHTML = day.water.length ? [...day.water].reverse().map(w=>`<div class="row"><div class="thumb" aria-hidden="true">💧</div><div><div class="t">Water</div><div class="d">${timeOf(w.t)}</div></div><div class="k water">${fmtOz(w.oz)} oz</div><button class="del" data-del="water:${w.id}" aria-label="Delete ${fmtOz(w.oz)} oz">×</button></div>`).join('') : `<div class="empty">No water logged yet today — tap a cup above.</div>`;
   $('waterUndo').hidden=!day.water.length;
   if(document.activeElement!==$('waterGoalIn')) $('waterGoalIn').value=waterGoal;
@@ -1088,6 +1103,59 @@ function renderNutrition(){
   if(n&&na<n) $('nSugarMsg').textContent+=' (Counts meals scanned from now on.)';
 }
 
+/* ================= MY SCORE TODAY ================= */
+function stepGoal(){ return profile.stepGoal>0?profile.stepGoal:8000; }
+// Protein starting point: 1.2 g per kg of body weight (2025–2030 Dietary Guidelines low end), capped at 160 g
+function proteinGoal(){ if(profile.proteinGoal>0) return profile.proteinGoal; return profile.lb>0?Math.min(160,Math.round(profile.lb*0.4536*1.2)):0; }
+// How far through the day we are (7 am → 9 pm), so a 3 pm score is fair
+function dayPace(d=new Date()){ const h=d.getHours()+d.getMinutes()/60; return Math.min(1,Math.max(0.15,(h-7)/14)); }
+// Higher-is-better grade from a ratio (1 = on pace). Never lower than "Keep going" — no D's or F's.
+function gradeUp(r){ return r>=1.1?'A+':r>=1?'A':r>=.93?'A-':r>=.87?'B+':r>=.8?'B':r>=.73?'B-':r>=.67?'C+':r>=.6?'C':r>=.5?'C-':'K'; }
+function gradeDown(r){ return r<=.5?'A+':r<=.7?'A':r<=.85?'A-':r<=1?'B+':r<=1.1?'B':r<=1.25?'C+':'K'; }   // lower is better (sugar)
+function gradeCarb(sh){ return sh<=.4?'A+':sh<=.5?'A':sh<=.55?'A-':sh<=.6?'B':sh<=.65?'B-':sh<=.7?'C+':'K'; } // carbs as share of calories
+const KID_WORD={'A+':'🔥 On fire','A':'🔥 On fire','A-':'⭐ Great','B+':'⭐ Great','B':'👍 Good','B-':'👍 Good','C+':'💪 Keep going','C':'💪 Keep going','C-':'💪 Keep going','K':'💪 Keep going'};
+function scoreData(){
+  const pace=dayPace(), kid=profile.age>0&&profile.age<18;
+  let P=0,C=0,F=0,A=0,nm=0,na=0; day.meals.forEach(m=>{ const x=parseMacros(m.macros); if(x){ P+=x.p; C+=x.c; F+=x.f; nm++; if(x.a!==null){ A+=x.a; na++; } } });
+  const oz=waterTotal(day), pg=proteinGoal(), sg=stepGoal(), lim=sugarLimit(), kc=P*4+C*4+F*9;
+  const rows=[
+    ['🥩','Protein', nm&&pg ? gradeUp(P/(pg*pace)) : null, nm?`${Math.round(P)} of ${pg||'?'} g`:'Scan a meal to grade'],
+    ['🍬','Added sugar', na ? gradeDown(A/lim) : null, na?`${Math.round(A)} of ${lim} g limit`:'Scan a meal to grade'],
+    ['🍞','Carbs', nm&&kc ? gradeCarb(C*4/kc) : null, nm&&kc?`${Math.round(C)} g · ${Math.round(C*4/kc*100)}% of calories`:'Scan a meal to grade'],
+    ['💧','Water', gradeUp(oz/(waterGoal*pace)), `${fmtOz(oz)} of ${fmtOz(waterGoal)} oz`],
+    ['🚶','Activity', gradeUp(day.steps/(sg*pace)), `${fmt(day.steps)} of ${fmt(sg)} steps`],
+  ];
+  const did=[day.meals.length>0, oz>0, day.steps>=1000, nm>0].filter(Boolean).length;
+  rows.push(['😁','Effort', ['K','C+','B+','A','A+'][did], `Logged ${did} of 4: meals, water, steps, a scan`]);
+  return {rows,kid,pace};
+}
+function gradeLabel(g,kid){ if(g===null) return ['—','gn']; if(kid) return [KID_WORD[g],'gk']; if(g==='K') return ['Keep going','gk']; return [g, g[0]==='A'?'ga':g[0]==='B'?'gb':'gc']; }
+function renderScore(){
+  const {rows,kid,pace}=scoreData();
+  $('scoreList').innerHTML=rows.map(r=>{ const [t,c]=gradeLabel(r[2],kid); return `<div class="srow"><span class="e">${r[0]}</span><span>${esc(r[1])}<small>${esc(r[3])}</small></span><span class="g ${c}">${esc(t)}</span></div>`; }).join('');
+  $('scoreNote').textContent = pace<1 ? 'Graded on pace for this time of day — there’s still time to raise any score.' : 'Final score for today. Tomorrow’s a fresh start!';
+  $('scoreRules').innerHTML=`<b>Water, Activity, Protein:</b> how close you are to your goal for this time of day.<br><b>Added sugar:</b> under half your limit = A+; up to your limit = B+.<br><b>Carbs:</b> share of your calories — 50% or less = A.<br><b>Effort:</b> one step up for each thing you logged today.<br>No D’s or F’s here — just “Keep going.” Change your goals in Profile → My details.`;
+}
+$('scoreHow').onclick=()=>{ $('scoreRules').hidden=!$('scoreRules').hidden; };
+async function scoreCard(){
+  const {rows,kid}=scoreData(), W=1080,H=1350,c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  const F='Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#1f4b46'); g.addColorStop(1,'#123437'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.textAlign='center'; x.fillStyle='#18d99a'; x.font=`800 36px ${F}`; x.fillText(profile.name?`${profile.name.toUpperCase()}’S SCORE TODAY`:'MY SCORE TODAY',W/2,150);
+  x.fillStyle='#cbe0dd'; x.font=`600 30px ${F}`; x.fillText(new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),W/2,200);
+  const col={ga:'#18d99a',gb:'#7cc8ff',gc:'#ffd166',gk:'#ffb24d',gn:'#cbe0dd'};
+  rows.forEach((r,i)=>{ const y=300+i*150, [t,cl]=gradeLabel(r[2],kid);
+    x.fillStyle='rgba(30,74,80,.85)'; if(x.roundRect){ x.beginPath(); x.roundRect(80,y,W-160,124,28); x.fill(); } else x.fillRect(80,y,W-160,124);
+    x.textAlign='left'; x.font=`60px ${F}`; x.fillText(r[0],120,y+84);
+    x.fillStyle='#fff'; x.font=`800 46px ${F}`; x.fillText(r[1],215,y+68); x.fillStyle='#cbe0dd'; x.font=`600 26px ${F}`; x.fillText(r[3],215,y+104);
+    x.textAlign='right'; x.fillStyle=col[cl]; x.font=`850 ${t.length>3?44:70}px ${F}`; x.fillText(t,W-120,y+86); });
+  x.fillStyle='rgba(127,255,218,.25)'; x.fillRect(64,H-112,W-128,2);
+  x.textAlign='left'; x.font=`800 36px ${F}`; x.fillStyle='#fff'; x.fillText('Eat and ',64,H-52); const ew=x.measureText('Eat and ').width; x.fillStyle='#18d99a'; x.fillText('Move',64+ew,H-52);
+  x.textAlign='right'; x.font=`600 26px ${F}`; x.fillStyle='#cbe0dd'; x.fillText('Your numbers. Your pace. No guilt.',W-64,H-52);
+  return new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',0.9));
+}
+$('scoreShare').onclick=async()=>{ toast('Making your score card…'); showCard(await scoreCard(),'my-score.jpg'); };
+
 /* ================= WEIGH-INS ================= */
 function renderWeights(){
   const kid=profile.age>0&&profile.age<18;
@@ -1136,7 +1204,7 @@ function updateRateBox(){
   el.addEventListener('input',()=>{ if(/^0\d/.test(el.value)) el.value=el.value.replace(/^0+(?=\d)/,''); });
 });
 function fillProfileForm(){ $('pName').value=profile.name||''; $('pSex').value=profile.sex; /* FIX 21: a 0 shows as a faint placeholder, not a real digit, so typing replaces it */
-  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb); $('pStart').value=z(profile.startLb); $('pSugar').value=profile.sugarLimit||''; $('pSugar').placeholder=String(sugarLimit());
+  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb); $('pStart').value=z(profile.startLb); $('pSugar').value=profile.sugarLimit||''; $('pSugar').placeholder=String(sugarLimit()); $('pStepGoal').value=profile.stepGoal||''; $('pStepGoal').placeholder=String(stepGoal()); $('pProtein').value=profile.proteinGoal||''; $('pProtein').placeholder=String(proteinGoal()||'');
   $('pGoal').value=profile.goalType; $('pRate').value=z(profile.rate); updateRateBox(); updateLost(); updateFoldSum(); }
 /* Rev: Starting weight → Weight now, with a kind progress line */
 function updateLost(){
@@ -1157,7 +1225,7 @@ function updateFoldSum(){
 $('pFoldBtn').onclick=()=>setFold($('pFold').hidden);
 $('pGoal').onchange=updateRateBox; $('pAge').oninput=updateRateBox; $('pRate').oninput=updateRateBox;
 $('saveProfile').onclick=()=>{
-  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,startLb:$('pStart').value||$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,sugarLimit:$('pSugar').value,saved:true};
+  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,startLb:$('pStart').value||$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,sugarLimit:$('pSugar').value,stepGoal:$('pStepGoal').value,proteinGoal:$('pProtein').value,saved:true};
   const N=v=>Number(v)||0;
   if(N(raw.age)<=0||N(raw.ft)*12+N(raw.inch)<=0||N(raw.lb)<=0){ toast('Just add age, height and weight to finish.'); return; }
   if(raw.goalType!=='stay'&&N(raw.rate)<=0&&!(raw.goalType==='lose'&&N(raw.age)<18)){ toast(`Add how many lb a week you’d like to ${raw.goalType}.`); return; }
@@ -1209,6 +1277,7 @@ function selfCheck(){
   ok(Engine.cleanProfile({...P,goalType:'gain',rate:0.5}).goal===250,'Gain ½ lb/wk → +250 kcal/day');
   ok(Engine.cleanProfile({...P,goal:-250}).goalType==='lose'&&Engine.cleanProfile({...P,goal:-250}).rate===0.5,'Old saved goals carry over');
   { const x=parseMacros('Protein 31 g · Carbs 45 g · Fat 12 g'); ok(x&&x.p===31&&x.c===45&&x.f===12&&x.s===null&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g · Added sugar 4 g').s===9&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g · Added sugar 4 g').a===4&&parseMacros('')===null,'Nutrition reads protein, carbs and fat from a meal'); }
+  ok(gradeUp(1)==='A'&&gradeUp(.2)==='K'&&gradeDown(.4)==='A+'&&gradeCarb(.45)==='A','Score grades work (no D or F)');
   ok(Engine.stepKcal(blank,105)>0,'Steps still earn before the profile is filled in');
   ok(typeof recentMeals==='function'&&Array.isArray(recentMeals()),'Recent meals list builds');
   const wd=Engine.cleanDay({water:[{oz:8},{oz:16.9},{oz:-3},null]}); ok(wd.water.length===2&&waterTotal(wd)===24.9,'Water entries cleaned and totaled');
