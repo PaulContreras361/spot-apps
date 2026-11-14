@@ -501,6 +501,9 @@
       <div id="roastStyleWrap" style="margin-top:10px"><label for="roastStyle" style="font-size:12px;color:#b2c6c4;font-weight:700">Who’s roasting you?</label>
       <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="gp">Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
       <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer" id="roastVoiceWrap"><input type="checkbox" id="roastVoice" style="width:20px;height:20px;accent-color:#18d99a"><span style="font-size:13.5px">Say roasts out loud</span></label>
+      <div id="voicePickWrap" style="margin-top:12px"><label for="voicePick" style="font-size:12px;color:var(--muted);font-weight:700">Pick a voice</label>
+      <select id="voicePick" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="">Auto (best one found)</option></select>
+      <p class="hint" id="voiceCount" style="margin-top:4px"></p></div>
       <button class="button alt" id="voiceTest" style="margin-top:10px;width:100%;padding:11px">🔊 Test the voice</button>
       <p class="hint" id="voiceName" style="margin-top:6px"></p>
       <p class="hint" id="roastKid" hidden style="margin-top:8px">Roast mode is for grown-ups — it stays off under 18.</p>
@@ -1595,7 +1598,9 @@ $('roastStyle').onchange=e=>{ sSet(ROAST_STYLE_K,e.target.value); roastShuffle=0
 const ROBOT=/(grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|kathy|ralph|\bfred\b)/i;
 const FEMALE=/(samantha|ava|allison|susan|zoe|nicky|karen|moira|tessa|serena|kate|joelle|noelle|victoria|female)/i;
 const MALE=/(aaron|daniel|nathan|evan|tom|alex|arthur|gordon|rishi|oliver|lee|male)/i;
-function pickVoice(){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)&&!ROBOT.test(v.name)); if(!vs.length) return null;
+function niceVoices(){ return (speechSynthesis.getVoices()||[]).filter(v=>/^en/i.test(v.lang)&&!ROBOT.test(v.name)); }
+function pickVoice(){ const vs=niceVoices(); if(!vs.length) return null;
+  const chosen=sGet(NS+'voiceURI'); if(chosen){ const c=vs.find(v=>v.voiceURI===chosen); if(c) return c; }
   const want=profile.sex==='m'?MALE:FEMALE, avoid=profile.sex==='m'?FEMALE:MALE;
   const score=v=>(/premium/i.test(v.name)?6:/enhanced/i.test(v.name)?4:0)+(want.test(v.name)?2:avoid.test(v.name)?-3:0)+(/en-US/i.test(v.lang)?0.5:0)+(v.localService?0.2:0);
   return vs.slice().sort((a,b)=>score(b)-score(a))[0]; }
@@ -1609,9 +1614,19 @@ function speak(text){ if(!('speechSynthesis' in window)||!text||sGet(NS+'roastVo
 let pendingSay='';
 document.addEventListener('pointerdown',()=>{ if(pendingSay&&!speechSynthesis.speaking){ const t=pendingSay; pendingSay=''; speak(t); } },true);
 function sayRoast(){ if(lastRoast) speak(lastRoast); }
-if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>{}; }catch(e){} }
+/* Voice list: every English voice the iPhone lets the app use, best first */
+function fillVoicePick(){ if(!('speechSynthesis' in window)) return; const sel=$('voicePick'); if(!sel) return;
+  const q=v=>/premium/i.test(v.name)?' ★ Premium':/enhanced/i.test(v.name)?' ★ Enhanced':'';
+  const vs=niceVoices().sort((a,b)=>(/premium/i.test(b.name)*2+/enhanced/i.test(b.name))-(/premium/i.test(a.name)*2+/enhanced/i.test(a.name))||a.name.localeCompare(b.name));
+  const cur=sGet(NS+'voiceURI')||'';
+  sel.innerHTML='<option value="">Auto (best one found)</option>'+vs.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name.replace(/\s*\((premium|enhanced)\)/i,''))}${q(v)} · ${esc(v.lang)}</option>`).join('');
+  sel.value=vs.some(v=>v.voiceURI===cur)?cur:'';
+  $('voiceCount').textContent=vs.length?`${vs.length} voices on this phone the app can use. Pick one, then tap Test.`:'';
+}
+if('speechSynthesis' in window){ try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=fillVoicePick; setTimeout(fillVoicePick,300); }catch(e){} }
+$('voicePick').onchange=e=>{ sSet(NS+'voiceURI',e.target.value); $('voiceTest').click(); };
 function roastOn(){ return sGet(ROAST_K)==='1'&&!(profile.age>0&&profile.age<18); }
-function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; if(document.activeElement!==$('roastStyle')) $('roastStyle').value=roastStyle(); $('roastStyleWrap').hidden=kid; $('roastVoice').checked=sGet(NS+'roastVoice')!=='0'; $('roastVoiceWrap').hidden=kid; $('voiceTest').hidden=kid||!('speechSynthesis' in window); $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
+function paintRoastToggle(){ const kid=profile.age>0&&profile.age<18; if(document.activeElement!==$('roastStyle')) $('roastStyle').value=roastStyle(); $('roastStyleWrap').hidden=kid; $('roastVoice').checked=sGet(NS+'roastVoice')!=='0'; $('roastVoiceWrap').hidden=kid; $('voicePickWrap').hidden=kid||!('speechSynthesis' in window); $('voiceTest').hidden=kid||!('speechSynthesis' in window); $('roastToggle').checked=sGet(ROAST_K)==='1'&&!kid; $('roastToggle').disabled=kid; $('roastKid').hidden=!kid; }
 $('roastToggle').onchange=e=>{ if(profile.age>0&&profile.age<18){ e.target.checked=false; return; } sSet(ROAST_K,e.target.checked?'1':'0'); render();
   toast(e.target.checked?'Roast mode is on. Don’t say we didn’t warn you 😂':'Roast mode off — back to gentle.'); };
 function roastLine(st){
@@ -1662,7 +1677,7 @@ $('roastNext').onclick=()=>{ roastShuffle++; roastLine(''); popRoast=lastRoast; 
 $('roastOk').onclick=()=>{ try{ speechSynthesis.cancel(); }catch(e){} $('roastDlg').close(); };
 $('roastVoice').onchange=e=>{ sSet(NS+'roastVoice',e.target.checked?'1':'0'); };
 $('voiceTest').onclick=()=>{ const v=speak(roastStyle()==='gp'?(profile.sex==='m'?'Boy, go walk to the mailbox and back.':'Baby, go walk around the block. I’ll wait.'):'Testing, testing. Go take a walk!');
-  $('voiceName').textContent=v?`Using: ${v.name}${/premium|enhanced/i.test(v.name)?' — natural voice ✓':' — download a Premium voice for a more natural sound (see below)'}`:'No voice found on this phone.'; };
+  $('voiceName').textContent=v?`Using: ${v.name}${/premium|enhanced/i.test(v.name)?' — natural voice ✓':''}`:'No voice found on this phone.'; };
 
 function paintWaterCover(){}
 
