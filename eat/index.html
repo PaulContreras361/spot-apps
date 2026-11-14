@@ -534,7 +534,7 @@
       <label style="display:flex;align-items:center;gap:12px;cursor:pointer"><input type="checkbox" id="roastToggle" style="width:24px;height:24px;accent-color:#18d99a;flex:none">
       <span><b>😂 Roast mode</b><br><span class="hint" style="margin:0">Funny tough-love jokes when you go past today’s plan. Your phone only. Adults only.</span></span></label>
       <div id="roastStyleWrap" style="margin-top:10px"><label for="roastStyle" style="font-size:12px;color:#b2c6c4;font-weight:700">Who’s roasting you?</label>
-      <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="gp">Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
+      <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="gp">Front Porch (old-school Southern)</option><option value="std">😂 Regular</option></select></div>
       <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer" id="roastVoiceWrap"><input type="checkbox" id="roastVoice" style="width:20px;height:20px;accent-color:#18d99a"><span style="font-size:13.5px">Say roasts out loud</span></label>
       <div id="voicePickWrap" style="margin-top:12px"><label for="voicePick" style="font-size:12px;color:var(--muted);font-weight:700">Pick a voice</label>
       <select id="voicePick" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="">Auto (best one found)</option></select>
@@ -1739,7 +1739,7 @@ const ROAST={
 let roastShuffle=0, lastRoast='';
 const ROAST_STYLE_K=NS+'roastStyle';
 function roastStyle(){ return sGet(ROAST_STYLE_K)==='std'?'std':'gp'; }
-$('roastStyle').onchange=e=>{ sSet(ROAST_STYLE_K,e.target.value); roastShuffle=0; render(); toast(e.target.value==='gp'?'Grandma & Grandpa are watching you now 👀':'Regular roasts are back.'); };
+$('roastStyle').onchange=e=>{ sSet(ROAST_STYLE_K,e.target.value); roastShuffle=0; render(); toast(e.target.value==='gp'?'The front porch is watching you now 👀':'Regular roasts are back.'); };
 // Natural voices only: Premium > Enhanced > regular. Novelty/robot voices (Grandma, Grandpa, Eddy, Zarvox...) are never used.
 const ROBOT=/(grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|kathy|ralph|\bfred\b)/i;
 const FEMALE=/(samantha|ava|allison|susan|zoe|nicky|karen|moira|tessa|serena|kate|joelle|noelle|victoria|female)/i;
