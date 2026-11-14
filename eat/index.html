@@ -1103,9 +1103,7 @@ function updateLost(){
 function setFold(open){ $('pFold').hidden=!open; $('pFoldBtn').setAttribute('aria-expanded',open?'true':'false'); }
 function updateFoldSum(){
   if(!profile.saved){ $('pFoldSum').textContent='Tap to fill in'; return; }
-  const g=profile.goalType==='lose'?`Lose ${profile.rate} lb/wk`:profile.goalType==='gain'?`Gain ${profile.rate} lb/wk`:'Stay where I am';
-  const w=profile.startLb&&profile.startLb!==profile.lb?`${profile.startLb} → ${profile.lb} lb`:`${profile.lb} lb`;
-  $('pFoldSum').textContent=`${profile.age} · ${profile.ft}′${profile.inch}″ · ${w} · ${g}`;
+  $('pFoldSum').textContent='Private · tap to view or change'; // numbers stay hidden until tapped
 }
 $('pFoldBtn').onclick=()=>setFold($('pFold').hidden);
 $('pGoal').onchange=updateRateBox; $('pAge').oninput=updateRateBox; $('pRate').oninput=updateRateBox;
