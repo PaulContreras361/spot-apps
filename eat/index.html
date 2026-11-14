@@ -126,9 +126,9 @@
   .form input,.form select{width:100%;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:13px}
   .form label{font-size:12px;color:#b2c6c4;font-weight:700;display:block;margin-bottom:4px}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .nutri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;text-align:center}
+  .nutri{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;text-align:center}
   .nutri b{display:block;font-size:24px;font-weight:800}.nutri span{font-size:12px;color:var(--muted);font-weight:600}
-  .nutri div:nth-child(1) b{color:#ff9f7a}.nutri div:nth-child(2) b{color:#ffd166}.nutri div:nth-child(3) b{color:#7cc8ff}
+  .nutri div:nth-child(1) b{color:#ff9f7a}.nutri div:nth-child(2) b{color:#ffd166}.nutri div:nth-child(3) b{color:#7cc8ff}.nutri div:nth-child(4) b{color:#ff8fc7}
   .nbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.12);margin-top:10px}
   .nbar i{display:block;height:100%;width:0;transition:width .4s}.nbar .p{background:#ff9f7a}.nbar .c{background:#ffd166}.nbar .f{background:#7cc8ff}
   #pFold[hidden]{display:none}
@@ -324,7 +324,7 @@
       <div class="card"><div class="label" id="earnedLabel">Extra from moving</div><div class="num" id="earned">0 <span class="unit">kcal</span></div></div>
       <div class="card wide"><div class="label">Enjoyed so far</div><div class="num" id="eaten">0</div><div class="progress"><i id="bar"></i></div></div>
       <div class="card wide" id="homeNutri"><div class="label">🥗 Nutrition today</div>
-        <div class="nutri"><div><b id="nP">0</b><span>g protein</span></div><div><b id="nC">0</b><span>g carbs</span></div><div><b id="nF">0</b><span>g fat</span></div></div>
+        <div class="nutri"><div><b id="nP">0</b><span>g protein</span></div><div><b id="nC">0</b><span>g carbs</span></div><div><b id="nF">0</b><span>g fat</span></div><div><b id="nS">0</b><span>g sugar</span></div></div>
         <div class="nbar" id="nBar"><i class="p"></i><i class="c"></i><i class="f"></i></div>
         <div class="hint" id="nNote" style="margin-top:8px"></div></div>
       <div class="card wide tap" id="homeWater" role="button" tabindex="0" aria-label="Open water page"><div class="label">💧 Water today</div><div class="num" id="homeWaterNum">0</div><div class="wprog"><i id="homeWaterBar"></i></div></div>
@@ -873,8 +873,8 @@ function estimatePrompt(withPhoto){
 ${name?`The person describes it as: "${name}".`:''}
 Always give your best estimate, even if unsure.
 Reply with only a JSON object, no other text:
-{"name": short food name (max 40 chars), "calories": integer total kcal, "protein_g": integer, "carbs_g": integer, "fat_g": integer, "confidence": "low"|"medium"|"high", "note": one short sentence on the portion you assumed}
-Only if it is clearly not food or drink at all, return {"name":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"confidence":"low","note":"No food recognized."}`;
+{"name": short food name (max 40 chars), "calories": integer total kcal, "protein_g": integer, "carbs_g": integer, "fat_g": integer, "sugar_g": integer (total sugars), "confidence": "low"|"medium"|"high", "note": one short sentence on the portion you assumed}
+Only if it is clearly not food or drink at all, return {"name":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"sugar_g":0,"confidence":"low","note":"No food recognized."}`;
 }
 $('estimateBtn').onclick=async()=>{
   if(!sampleFn) return;
@@ -901,7 +901,7 @@ $('estimateBtn').onclick=async()=>{
     if(!r||!Number.isFinite(cal)||cal<=0){ box.textContent=(r&&r.note)||'Couldn’t tell what that is. Type the calories and it’ll save just fine.'; return; }
     if(!$('mealName').value.trim()) $('mealName').value=String(r.name||'Meal').slice(0,80);
     $('mealCalories').value=Math.min(5000,cal);
-    const macros=`Protein ${Math.round(r.protein_g)||0} g · Carbs ${Math.round(r.carbs_g)||0} g · Fat ${Math.round(r.fat_g)||0} g`;
+    const macros=`Protein ${Math.round(r.protein_g)||0} g · Carbs ${Math.round(r.carbs_g)||0} g · Fat ${Math.round(r.fat_g)||0} g · Sugar ${Math.round(r.sugar_g)||0} g`;
     $('mealDialog').dataset.macros=macros;
     box.innerHTML=`<b>Estimate: ${fmt(cal)} kcal</b> (${esc(r.confidence||'low')} confidence)<br>${esc(macros)}<br><span style="color:var(--muted)">${esc(r.note||'')}</span><br>Adjust the number if your portion is different, then save.`;
   }catch(e){
@@ -1051,16 +1051,17 @@ $('homeWater').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault
 
 /* ================= NUTRITION (Home card) ================= */
 function parseMacros(str){ const g=k=>{ const m=String(str||'').match(new RegExp(k+'\\s+(\\d+(?:\\.\\d+)?)\\s*g','i')); return m?Number(m[1]):null; };
-  const p=g('Protein'), c=g('Carbs'), f=g('Fat'); return (p===null&&c===null&&f===null)?null:{p:p||0,c:c||0,f:f||0}; }
+  const p=g('Protein'), c=g('Carbs'), f=g('Fat'), su=g('Sugar'); return (p===null&&c===null&&f===null)?null:{p:p||0,c:c||0,f:f||0,s:su}; }
 function renderNutrition(){
-  let P=0,C=0,F=0,n=0; const all=day.meals.length;
-  day.meals.forEach(m=>{ const x=parseMacros(m.macros); if(x){ P+=x.p; C+=x.c; F+=x.f; n++; } });
-  $('nP').textContent=fmt(Math.round(P)); $('nC').textContent=fmt(Math.round(C)); $('nF').textContent=fmt(Math.round(F));
+  let P=0,C=0,F=0,S=0,n=0,ns=0; const all=day.meals.length;
+  day.meals.forEach(m=>{ const x=parseMacros(m.macros); if(x){ P+=x.p; C+=x.c; F+=x.f; n++; if(x.s!==null){ S+=x.s; ns++; } } });
+  $('nP').textContent=fmt(Math.round(P)); $('nC').textContent=fmt(Math.round(C)); $('nF').textContent=fmt(Math.round(F)); $('nS').textContent=fmt(Math.round(S));
   const kp=P*4,kc=C*4,kf=F*9,tot=kp+kc+kf, bar=$('nBar').children;
   [kp,kc,kf].forEach((v,i)=>bar[i].style.width=tot?(v/tot*100).toFixed(1)+'%':'0');
   $('nNote').textContent = !all ? 'Scan or estimate a meal and its protein, carbs and fat add up here.'
     : n===all ? (tot?`Split of your calories: ${Math.round(kp/tot*100)}% protein · ${Math.round(kc/tot*100)}% carbs · ${Math.round(kf/tot*100)}% fat`:'')
     : `From ${n} of ${all} meals — meals typed in by hand don’t have nutrition numbers.`;
+  if(n&&ns<n) $('nNote').textContent+=` Sugar counts meals scanned from today on.`;
 }
 
 /* ================= WEIGH-INS ================= */
@@ -1183,7 +1184,7 @@ function selfCheck(){
   ok(Engine.base({...P,goal:Engine.cleanProfile({...P,goalType:'lose',rate:3}).goal})>=1200,'Big loss choice still never below 1,200');
   ok(Engine.cleanProfile({...P,goalType:'gain',rate:0.5}).goal===250,'Gain ½ lb/wk → +250 kcal/day');
   ok(Engine.cleanProfile({...P,goal:-250}).goalType==='lose'&&Engine.cleanProfile({...P,goal:-250}).rate===0.5,'Old saved goals carry over');
-  { const x=parseMacros('Protein 31 g · Carbs 45 g · Fat 12 g'); ok(x&&x.p===31&&x.c===45&&x.f===12&&parseMacros('')===null,'Nutrition reads protein, carbs and fat from a meal'); }
+  { const x=parseMacros('Protein 31 g · Carbs 45 g · Fat 12 g'); ok(x&&x.p===31&&x.c===45&&x.f===12&&x.s===null&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g').s===9&&parseMacros('')===null,'Nutrition reads protein, carbs and fat from a meal'); }
   ok(Engine.stepKcal(blank,105)>0,'Steps still earn before the profile is filled in');
   ok(typeof recentMeals==='function'&&Array.isArray(recentMeals()),'Recent meals list builds');
   const wd=Engine.cleanDay({water:[{oz:8},{oz:16.9},{oz:-3},null]}); ok(wd.water.length===2&&waterTotal(wd)===24.9,'Water entries cleaned and totaled');
