@@ -129,6 +129,13 @@
   .nutri{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;text-align:center}
   .nutri b{display:block;font-size:24px;font-weight:800}.nutri span{font-size:12px;color:var(--muted);font-weight:600}
   .nutri div:nth-child(1) b{color:#ff9f7a}.nutri div:nth-child(2) b{color:#ffd166}.nutri div:nth-child(3) b{color:#7cc8ff}.nutri div:nth-child(4) b{color:#ff8fc7}
+  .sugarbox{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .sugartop{display:flex;justify-content:space-between;align-items:baseline;font-weight:700;font-size:14px}
+  .sugartop b{font-size:22px;color:#ff8fc7}
+  .sbar{height:10px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}
+  .sbar i{display:block;height:100%;width:0;background:#ff8fc7;transition:width .4s}
+  .sugarbox.near .sbar i{background:#ffd166}.sugarbox.near .sugartop b{color:#ffd166}
+  .sugarbox.over .sbar i{background:#ffb24d}.sugarbox.over .sugartop b{color:#ffb24d}
   .nbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.12);margin-top:10px}
   .nbar i{display:block;height:100%;width:0;transition:width .4s}.nbar .p{background:#ff9f7a}.nbar .c{background:#ffd166}.nbar .f{background:#7cc8ff}
   #pFold[hidden]{display:none}
@@ -326,7 +333,9 @@
       <div class="card wide" id="homeNutri"><div class="label">🥗 Nutrition today</div>
         <div class="nutri"><div><b id="nP">0</b><span>g protein</span></div><div><b id="nC">0</b><span>g carbs</span></div><div><b id="nF">0</b><span>g fat</span></div><div><b id="nS">0</b><span>g sugar</span></div></div>
         <div class="nbar" id="nBar"><i class="p"></i><i class="c"></i><i class="f"></i></div>
-        <div class="hint" id="nNote" style="margin-top:8px"></div></div>
+        <div class="hint" id="nNote" style="margin-top:8px"></div>
+        <div class="sugarbox" id="nSugarBox"><div class="sugartop"><span>🍬 Added sugar</span><span><b id="nAdd">0</b> of <span id="nLim">36</span> g</span></div>
+          <div class="sbar"><i id="nSugarBar"></i></div><div class="hint" id="nSugarMsg" style="margin-top:6px"></div></div></div>
       <div class="card wide tap" id="homeWater" role="button" tabindex="0" aria-label="Open water page"><div class="label">💧 Water today</div><div class="num" id="homeWaterNum">0</div><div class="wprog"><i id="homeWaterBar"></i></div></div>
       <div class="card wide tap" id="homeTrip" role="button" tabindex="0" aria-label="Open your Coast Walk trip"><div class="label">🚶 Coast Walk</div><div class="trip-mini"><div class="big" id="homeTripMi">0 mi</div><div class="hint" id="homeTripNext" style="margin:0"></div></div><div class="progress"><i id="homeTripBar"></i></div></div>
     </section>
@@ -477,6 +486,8 @@
         <div class="rate" id="rateBox" hidden><label for="pRate" id="rateLabel">About how many lb per week?</label>
           <input id="pRate" placeholder="0" type="number" inputmode="decimal" min="0" step="0.25">
           <div class="hint" id="rateHint"></div></div>
+        <div><label for="pSugar">Daily added sugar limit (g)</label><input id="pSugar" placeholder="36" type="number" inputmode="numeric" min="0" max="200">
+          <div class="hint">Heart Association guide: 36 g for men, 25 g for women and kids. Leave blank to use that. Ask your doctor what’s right for you.</div></div>
         <button class="button" id="saveProfile">Save profile</button>
       </div>
     </section>
@@ -631,7 +642,7 @@ const Engine = {
     if(!type){ const g=Number(p.goal)||0; type=g<0?'lose':g>0?'gain':'stay'; rate=Math.abs(g)/500; } // older saved profiles
     rate=Number.isFinite(rate)&&rate>0?Math.round(Math.min(10,rate)*100)/100:0; // FIX 19: person's choice kept; 10 = typo guard
     const out = {sex: p.sex==='m'?'m':'f', age:Math.round(z(p.age,13,100)), ft:Math.round(z(p.ft,3,8)),
-      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), startLb:z(p.startLb,50,600), goalType:type, rate, saved:!!p.saved,
+      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), startLb:z(p.startLb,50,600), sugarLimit:z(p.sugarLimit,1,200), goalType:type, rate, saved:!!p.saved,
       name: typeof p.name==='string' ? p.name.replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,30) : ''}; // FIX 20
     if(out.ft===0) out.inch=0;
     if(out.age>0 && out.age<18 && out.goalType==='lose'){ out.goalType='stay'; out.rate=0; } // FIX 14
@@ -876,8 +887,8 @@ function estimatePrompt(withPhoto){
 ${name?`The person describes it as: "${name}".`:''}
 Always give your best estimate, even if unsure.
 Reply with only a JSON object, no other text:
-{"name": short food name (max 40 chars), "calories": integer total kcal, "protein_g": integer, "carbs_g": integer, "fat_g": integer, "sugar_g": integer (total sugars), "confidence": "low"|"medium"|"high", "note": one short sentence on the portion you assumed}
-Only if it is clearly not food or drink at all, return {"name":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"sugar_g":0,"confidence":"low","note":"No food recognized."}`;
+{"name": short food name (max 40 chars), "calories": integer total kcal, "protein_g": integer, "carbs_g": integer, "fat_g": integer, "sugar_g": integer (total sugars), "added_sugar_g": integer (only sugars added in processing, cooking or at the table: syrups, sweetened drinks, desserts, sweetened sauces; 0 for plain fruit, vegetables, plain milk, meat), "confidence": "low"|"medium"|"high", "note": one short sentence on the portion you assumed}
+Only if it is clearly not food or drink at all, return {"name":"","calories":0,"protein_g":0,"carbs_g":0,"fat_g":0,"sugar_g":0,"added_sugar_g":0,"confidence":"low","note":"No food recognized."}`;
 }
 $('estimateBtn').onclick=async()=>{
   if(!sampleFn) return;
@@ -904,7 +915,7 @@ $('estimateBtn').onclick=async()=>{
     if(!r||!Number.isFinite(cal)||cal<=0){ box.textContent=(r&&r.note)||'Couldn’t tell what that is. Type the calories and it’ll save just fine.'; return; }
     if(!$('mealName').value.trim()) $('mealName').value=String(r.name||'Meal').slice(0,80);
     $('mealCalories').value=Math.min(5000,cal);
-    const macros=`Protein ${Math.round(r.protein_g)||0} g · Carbs ${Math.round(r.carbs_g)||0} g · Fat ${Math.round(r.fat_g)||0} g · Sugar ${Math.round(r.sugar_g)||0} g`;
+    const macros=`Protein ${Math.round(r.protein_g)||0} g · Carbs ${Math.round(r.carbs_g)||0} g · Fat ${Math.round(r.fat_g)||0} g · Sugar ${Math.round(r.sugar_g)||0} g · Added sugar ${Math.round(r.added_sugar_g)||0} g`;
     $('mealDialog').dataset.macros=macros;
     box.innerHTML=`<b>Estimate: ${fmt(cal)} kcal</b> (${esc(r.confidence||'low')} confidence)<br>${esc(macros)}<br><span style="color:var(--muted)">${esc(r.note||'')}</span><br>Adjust the number if your portion is different, then save.`;
   }catch(e){
@@ -1053,11 +1064,12 @@ $('homeWater').onclick=()=>go('water');
 $('homeWater').onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go('water'); } };
 
 /* ================= NUTRITION (Home card) ================= */
-function parseMacros(str){ const g=k=>{ const m=String(str||'').match(new RegExp(k+'\\s+(\\d+(?:\\.\\d+)?)\\s*g','i')); return m?Number(m[1]):null; };
-  const p=g('Protein'), c=g('Carbs'), f=g('Fat'), su=g('Sugar'); return (p===null&&c===null&&f===null)?null:{p:p||0,c:c||0,f:f||0,s:su}; }
+function parseMacros(str){ const g=k=>{ const m=String(str||'').match(new RegExp('(?:^|·)\\s*'+k+'\\s+(\\d+(?:\\.\\d+)?)\\s*g','i')); return m?Number(m[1]):null; };
+  const p=g('Protein'), c=g('Carbs'), f=g('Fat'), su=g('Sugar'), ad=g('Added sugar'); return (p===null&&c===null&&f===null)?null:{p:p||0,c:c||0,f:f||0,s:su,a:ad}; }
+function sugarLimit(){ if(profile.sugarLimit>0) return profile.sugarLimit; return (profile.sex==='m'&&!(profile.age>0&&profile.age<18))?36:25; }
 function renderNutrition(){
-  let P=0,C=0,F=0,S=0,n=0,ns=0; const all=day.meals.length;
-  day.meals.forEach(m=>{ const x=parseMacros(m.macros); if(x){ P+=x.p; C+=x.c; F+=x.f; n++; if(x.s!==null){ S+=x.s; ns++; } } });
+  let P=0,C=0,F=0,S=0,A=0,n=0,ns=0,na=0; const all=day.meals.length;
+  day.meals.forEach(m=>{ const x=parseMacros(m.macros); if(x){ P+=x.p; C+=x.c; F+=x.f; n++; if(x.s!==null){ S+=x.s; ns++; } if(x.a!==null){ A+=x.a; na++; } } });
   $('nP').textContent=fmt(Math.round(P)); $('nC').textContent=fmt(Math.round(C)); $('nF').textContent=fmt(Math.round(F)); $('nS').textContent=fmt(Math.round(S));
   const kp=P*4,kc=C*4,kf=F*9,tot=kp+kc+kf, bar=$('nBar').children;
   [kp,kc,kf].forEach((v,i)=>bar[i].style.width=tot?(v/tot*100).toFixed(1)+'%':'0');
@@ -1065,6 +1077,15 @@ function renderNutrition(){
     : n===all ? (tot?`Split of your calories: ${Math.round(kp/tot*100)}% protein · ${Math.round(kc/tot*100)}% carbs · ${Math.round(kf/tot*100)}% fat`:'')
     : `From ${n} of ${all} meals — meals typed in by hand don’t have nutrition numbers.`;
   if(n&&ns<n) $('nNote').textContent+=` Sugar counts meals scanned from today on.`;
+  // Added sugar vs daily limit
+  const lim=sugarLimit(), a=Math.round(A), pct=Math.min(100,a/lim*100), left=lim-a;
+  $('nAdd').textContent=a; $('nLim').textContent=lim; $('nSugarBar').style.width=pct+'%';
+  $('nSugarBox').classList.toggle('near',a>=lim*0.8&&a<=lim); $('nSugarBox').classList.toggle('over',a>lim);
+  $('nSugarMsg').textContent = !all ? 'Your added sugar for today shows up here as you scan meals.'
+    : a>lim ? `${a-lim} g over today’s limit. No worries — tomorrow’s a fresh start.`
+    : a>=lim*0.8 ? `Getting close — ${left} g left today. Fruit makes a sweet swap. 🍓`
+    : `${left} g left today. Nice going!`;
+  if(n&&na<n) $('nSugarMsg').textContent+=' (Counts meals scanned from now on.)';
 }
 
 /* ================= WEIGH-INS ================= */
@@ -1115,7 +1136,7 @@ function updateRateBox(){
   el.addEventListener('input',()=>{ if(/^0\d/.test(el.value)) el.value=el.value.replace(/^0+(?=\d)/,''); });
 });
 function fillProfileForm(){ $('pName').value=profile.name||''; $('pSex').value=profile.sex; /* FIX 21: a 0 shows as a faint placeholder, not a real digit, so typing replaces it */
-  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb); $('pStart').value=z(profile.startLb);
+  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb); $('pStart').value=z(profile.startLb); $('pSugar').value=profile.sugarLimit||''; $('pSugar').placeholder=String(sugarLimit());
   $('pGoal').value=profile.goalType; $('pRate').value=z(profile.rate); updateRateBox(); updateLost(); updateFoldSum(); }
 /* Rev: Starting weight → Weight now, with a kind progress line */
 function updateLost(){
@@ -1136,7 +1157,7 @@ function updateFoldSum(){
 $('pFoldBtn').onclick=()=>setFold($('pFold').hidden);
 $('pGoal').onchange=updateRateBox; $('pAge').oninput=updateRateBox; $('pRate').oninput=updateRateBox;
 $('saveProfile').onclick=()=>{
-  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,startLb:$('pStart').value||$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,saved:true};
+  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,startLb:$('pStart').value||$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,sugarLimit:$('pSugar').value,saved:true};
   const N=v=>Number(v)||0;
   if(N(raw.age)<=0||N(raw.ft)*12+N(raw.inch)<=0||N(raw.lb)<=0){ toast('Just add age, height and weight to finish.'); return; }
   if(raw.goalType!=='stay'&&N(raw.rate)<=0&&!(raw.goalType==='lose'&&N(raw.age)<18)){ toast(`Add how many lb a week you’d like to ${raw.goalType}.`); return; }
@@ -1187,7 +1208,7 @@ function selfCheck(){
   ok(Engine.base({...P,goal:Engine.cleanProfile({...P,goalType:'lose',rate:3}).goal})>=1200,'Big loss choice still never below 1,200');
   ok(Engine.cleanProfile({...P,goalType:'gain',rate:0.5}).goal===250,'Gain ½ lb/wk → +250 kcal/day');
   ok(Engine.cleanProfile({...P,goal:-250}).goalType==='lose'&&Engine.cleanProfile({...P,goal:-250}).rate===0.5,'Old saved goals carry over');
-  { const x=parseMacros('Protein 31 g · Carbs 45 g · Fat 12 g'); ok(x&&x.p===31&&x.c===45&&x.f===12&&x.s===null&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g').s===9&&parseMacros('')===null,'Nutrition reads protein, carbs and fat from a meal'); }
+  { const x=parseMacros('Protein 31 g · Carbs 45 g · Fat 12 g'); ok(x&&x.p===31&&x.c===45&&x.f===12&&x.s===null&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g · Added sugar 4 g').s===9&&parseMacros('Protein 1 g · Carbs 2 g · Fat 3 g · Sugar 9 g · Added sugar 4 g').a===4&&parseMacros('')===null,'Nutrition reads protein, carbs and fat from a meal'); }
   ok(Engine.stepKcal(blank,105)>0,'Steps still earn before the profile is filled in');
   ok(typeof recentMeals==='function'&&Array.isArray(recentMeals()),'Recent meals list builds');
   const wd=Engine.cleanDay({water:[{oz:8},{oz:16.9},{oz:-3},null]}); ok(wd.water.length===2&&waterTotal(wd)===24.9,'Water entries cleaned and totaled');
