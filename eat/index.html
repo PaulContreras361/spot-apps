@@ -499,7 +499,7 @@
       <label style="display:flex;align-items:center;gap:12px;cursor:pointer"><input type="checkbox" id="roastToggle" style="width:24px;height:24px;accent-color:#18d99a;flex:none">
       <span><b>😂 Roast mode</b><br><span class="hint" style="margin:0">Funny tough-love jokes when you go past today’s plan. Your phone only. Adults only.</span></span></label>
       <div id="roastStyleWrap" style="margin-top:10px"><label for="roastStyle" style="font-size:12px;color:#b2c6c4;font-weight:700">Who’s roasting you?</label>
-      <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="gp">👵👴 Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
+      <select id="roastStyle" style="width:100%;margin-top:4px;border:1px solid #3f7473;border-radius:12px;background:#1b4448;color:#fff;padding:11px"><option value="gp">Grandma &amp; Grandpa</option><option value="std">😂 Regular</option></select></div>
       <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer" id="roastVoiceWrap"><input type="checkbox" id="roastVoice" style="width:20px;height:20px;accent-color:#18d99a"><span style="font-size:13.5px">Say roasts out loud</span></label>
       <button class="button alt" id="voiceTest" style="margin-top:10px;width:100%;padding:11px">🔊 Test the voice</button>
       <p class="hint" id="voiceName" style="margin-top:6px"></p>
@@ -533,7 +533,7 @@
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 <dialog id="roastDlg"><div class="modal" style="text-align:center">
-  <div style="font-size:54px;line-height:1" id="roastFace">👵</div>
+  <div style="font-size:54px;line-height:1" id="roastFace">😂</div>
   <h2 id="roastHead" style="margin-top:8px">Uh-oh…</h2>
   <p id="roastText" style="font-size:18px;color:#ffd3ea;line-height:1.45;margin:12px 0"></p>
   <p id="roastSteps" class="hint" style="font-size:13.5px"></p>
@@ -1636,7 +1636,7 @@ function paintBurnNote(){
 function roastStepsText(){ const per=Engine.stepKcal(profile,105); return `About <b>${fmt(Math.ceil(TREAT_KCAL/per/100)*100)} steps</b> earns ~${TREAT_KCAL} kcal back.`; }
 function showRoast(head){
   const gp=roastStyle()==='gp';
-  $('roastFace').textContent=gp?(profile.sex==='m'?'👴':'👵'):'😂';
+  $('roastFace').textContent='😂';
   $('roastHead').textContent=head;
   roastShuffle++; roastLine('');      // picks a fresh line into lastRoast
   popRoast=lastRoast; $('roastText').textContent=popRoast; $('roastSteps').innerHTML=roastStepsText();
