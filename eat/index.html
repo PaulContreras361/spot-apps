@@ -1371,7 +1371,7 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-share]');
 /* ================= PHOTO SCAN WITH YOUR OWN KEY (Rev 4.1) ================= */
 // The key is stored only in this phone's storage. Photos go straight from the phone to
 // Anthropic's API (no server in between). 30 scans per hour per phone as a bill guard.
-const KEY_K=NS+'apikey', SCAN_LOG=NS+'scanlog', SCAN_MODEL='claude-haiku-5-5', SCAN_CAP=30;
+const KEY_K=NS+'apikey', SCAN_LOG=NS+'scanlog', SCAN_MODEL='claude-sonnet-5-5', TEXT_MODEL='claude-haiku-5-5', SCAN_CAP=30;
 function getKey(){ return (sGet(KEY_K)||'').trim(); }
 function blobToB64(b){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]); r.onerror=rej; r.readAsDataURL(b); }); }
 function scanErr(code,message){ const e=new Error(message); e.code=code; return e; }
@@ -1384,20 +1384,31 @@ async function askAnthropic(prompt,opts={}){
   const imgs=opts.images?(Array.isArray(opts.images)?opts.images:[opts.images]):[];
   for(const b of imgs){ if(b) content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:await blobToB64(b)}}); }
   content.push({type:'text',text:prompt});
+  // Photos go to the sharper model; typed-name estimates stay on the quick one.
+  const model=imgs.length?SCAN_MODEL:TEXT_MODEL;
+  // One quiet retry when Anthropic is busy or the reply comes back garbled.
+  for(let attempt=1;;attempt++){
+    try{ return await askOnce(key,model,content,imgs,opts); }
+    catch(e){ const busy=['busy','bad_reply'].includes(e.code);
+      if(!busy||attempt>=2||(opts.signal&&opts.signal.aborted)) throw e.code==='busy'?scanErr('api_error','Server busy'):e;
+      await new Promise(res=>setTimeout(res,1500)); }
+  }
+}
+async function askOnce(key,model,content,imgs,opts){
   let r;
   try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',signal:opts.signal,headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:SCAN_MODEL,max_tokens:400,messages:[{role:'user',content}]})}); }
+      body:JSON.stringify({model,max_tokens:1000,messages:[{role:'user',content}]})}); }
   catch(e){ if(e&&e.name==='AbortError') throw scanErr('cancelled','Stopped'); throw scanErr('offline','No connection'); }
   let j=null; try{ j=await r.json(); }catch(e){}
   if(!r.ok){ const m=(j&&j.error&&j.error.message)||''; 
     if(r.status===401||r.status===403) throw scanErr('bad_key',m);
-    if(r.status===429) throw scanErr('rate_limited',m);
+    if(r.status===429||r.status===529||r.status>=500||/overloaded/i.test(m)) throw scanErr('busy',m);
     if(/credit/i.test(m)) throw scanErr('no_credit',m);
     if(r.status===400&&imgs.length) throw scanErr('image_rejected',m);
     throw scanErr('api_error',m||('HTTP '+r.status)); }
   const text=((j&&j.content)||[]).filter(c=>c.type==='text').map(c=>c.text).join('');
-  const m=text.match(/\{[\s\S]*\}/); if(!m) throw scanErr('api_error','No JSON');
-  return JSON.parse(m[0]);
+  const m=text.match(/\{[\s\S]*\}/); if(!m) throw scanErr('bad_reply','No JSON');
+  try{ return JSON.parse(m[0]); }catch(e){ throw scanErr('bad_reply','Bad JSON'); }
 }
 const keySample={ json:askAnthropic, limits:async()=>({images:true}) };
 function useKeyIfSet(){ if(getKey()&&(!sampleFn||sampleFn===keySample)){ sampleFn=keySample; canImages=true; imagesOK=null; } else if(!getKey()&&sampleFn===keySample){ sampleFn=null; } renderKey(); }
