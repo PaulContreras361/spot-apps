@@ -126,6 +126,12 @@
   .form input,.form select{width:100%;border:1px solid #244543;border-radius:12px;background:#09191b;color:#fff;padding:13px}
   .form label{font-size:12px;color:#b2c6c4;font-weight:700;display:block;margin-bottom:4px}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #pFold[hidden]{display:none}
+  .pfold{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:#fff;font-size:16px}
+  .pfold > span{display:flex;flex-direction:column;gap:3px}
+  .pfold-sum{font-size:12.5px;color:var(--muted);font-weight:600}
+  .pfold i{font-style:normal;color:var(--green);font-size:18px;transition:transform .2s}
+  .pfold[aria-expanded="true"] i{transform:rotate(90deg)}
   .inline{display:flex;gap:8px}.inline input{flex:1}
   .stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(127,255,218,.08);font-size:14px}
   .stat-line:last-child{border-bottom:0}.stat-line b{font-weight:800;white-space:nowrap;padding-left:10px}
@@ -437,7 +443,8 @@
   <section class="page" id="page-profile" hidden>
     <div class="section-head" style="margin-top:22px"><h2 id="profileTitle">Profile</h2></div>
     <section class="card">
-      <div class="form">
+      <button type="button" class="pfold" id="pFoldBtn" aria-expanded="false" aria-controls="pFold"><span><b>✏️ My details</b><span class="pfold-sum" id="pFoldSum">Tap to fill in</span></span><i id="pFoldArrow">▸</i></button>
+      <div class="form" id="pFold" hidden style="margin-top:12px">
         <div><label for="pName">Your name</label><input id="pName" type="text" maxlength="30" autocomplete="given-name" placeholder="What should we call you?">
           <div class="hint">So the app knows it’s talking to you.</div></div>
         <div class="two">
@@ -448,7 +455,11 @@
           <div><label for="pFt">Height (ft)</label><input id="pFt" placeholder="0" type="number" inputmode="numeric" min="0" max="8"></div>
           <div><label for="pIn">Height (in)</label><input id="pIn" placeholder="0" type="number" inputmode="numeric" min="0" max="11"></div>
         </div>
-        <div><label for="pLb">Weight (lb)</label><input id="pLb" placeholder="0" type="number" inputmode="decimal" min="0" max="600"></div>
+        <div class="two">
+          <div><label for="pStart">Starting weight (lb)</label><input id="pStart" placeholder="0" type="number" inputmode="decimal" min="0" max="600"></div>
+          <div><label for="pLb">Weight now (lb)</label><input id="pLb" placeholder="0" type="number" inputmode="decimal" min="0" max="600"></div>
+        </div>
+        <div class="hint" id="pLost" hidden></div>
         <div><label for="pGoal">Goal</label><select id="pGoal">
           <option value="stay">Stay where I am</option>
           <option value="lose">Lose weight</option>
@@ -608,7 +619,7 @@ const Engine = {
     if(!type){ const g=Number(p.goal)||0; type=g<0?'lose':g>0?'gain':'stay'; rate=Math.abs(g)/500; } // older saved profiles
     rate=Number.isFinite(rate)&&rate>0?Math.round(Math.min(10,rate)*100)/100:0; // FIX 19: person's choice kept; 10 = typo guard
     const out = {sex: p.sex==='m'?'m':'f', age:Math.round(z(p.age,13,100)), ft:Math.round(z(p.ft,3,8)),
-      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), goalType:type, rate, saved:!!p.saved,
+      inch:Math.round(Math.min(11,Math.max(0,Number(p.inch)||0))), lb:z(p.lb,50,600), startLb:z(p.startLb,50,600), goalType:type, rate, saved:!!p.saved,
       name: typeof p.name==='string' ? p.name.replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,30) : ''}; // FIX 20
     if(out.ft===0) out.inch=0;
     if(out.age>0 && out.age<18 && out.goalType==='lose'){ out.goalType='stay'; out.rate=0; } // FIX 14
@@ -671,6 +682,8 @@ let weights = (()=>{ const a=readJSON(NS+'weights'); return Array.isArray(a)?a.f
 let waterGoal = (()=>{ const v=Number(sGet(NS+'waterGoal')); return Number.isFinite(v)&&v>=16&&v<=200?v:64; })();
 
 function saveProfile(){ sSet(NS+'profile', JSON.stringify(profile)); }
+// Older phones: fill in a starting weight from the first weigh-in (or today's weight)
+if(profile.saved&&!profile.startLb&&profile.lb){ profile=Engine.cleanProfile({...profile,startLb:(weights[0]&&weights[0].lb)||profile.lb}); saveProfile(); }
 function saveDay(){
   const json = JSON.stringify(day);
   if(sSet(NS+'day:'+today, json)) return;
@@ -778,7 +791,7 @@ function go(page){
   document.querySelector('header.top .purpose').textContent=page==='profile'?'Your numbers. Your pace. No guilt.':'🔥 Burn calories so you can eat 🍽';
   document.querySelectorAll('.page').forEach(p=>p.hidden=p.id!=='page-'+page);
   document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
-  if(page==='profile') fillProfileForm();
+  if(page==='profile'){ fillProfileForm(); setFold(!profile.saved); }
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>go(n.dataset.page));
@@ -1053,7 +1066,7 @@ $('weighSave').onclick=()=>{
   const k=dayKey(), i=weights.findIndex(x=>x.k===k);
   if(i>=0) weights[i].lb=v; else weights.push({k,lb:v});
   weights=weights.slice(-90); sSet(NS+'weights',JSON.stringify(weights));
-  if(profile.saved){ profile=Engine.cleanProfile({...profile,lb:v}); saveProfile(); }
+  if(profile.saved){ profile=Engine.cleanProfile({...profile,lb:v,startLb:profile.startLb||v}); saveProfile(); }
   $('weighIn').value=''; fillProfileForm(); render(); toast(i>=0?'Today’s weigh-in updated.':`Weigh-in saved — thanks for checking in${nmComma()}!`);
 };
 
@@ -1069,22 +1082,41 @@ function updateRateBox(){
     ? (age>0&&age<18 ? `${cap1(nmLead()+'for growing bodies we keep it at “Stay where I am” — no weight-loss plan under 18.')}` : `${cap1(nmLead()+'you choose.')} Suggested idea: ½ to 2 lb a week (½ to 1 feels most comfortable).`+over)
     : `${cap1(nmLead()+'you choose.')} Suggested idea: ¼ to 1 lb a week (¼ to ½ feels most comfortable).`+over;
 }
-['pAge','pFt','pIn','pLb','pRate'].forEach(id=>{ const el=$(id); if(!el) return;
+['pAge','pFt','pIn','pLb','pStart','pRate'].forEach(id=>{ const el=$(id); if(!el) return;
   el.addEventListener('focus',()=>{ if(el.value==='0') el.value=''; setTimeout(()=>{ try{el.select();}catch(e){} },0); });
   el.addEventListener('input',()=>{ if(/^0\d/.test(el.value)) el.value=el.value.replace(/^0+(?=\d)/,''); });
 });
 function fillProfileForm(){ $('pName').value=profile.name||''; $('pSex').value=profile.sex; /* FIX 21: a 0 shows as a faint placeholder, not a real digit, so typing replaces it */
-  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb);
-  $('pGoal').value=profile.goalType; $('pRate').value=z(profile.rate); updateRateBox(); }
+  const z=v=>Number(v)>0?v:''; $('pAge').value=z(profile.age); $('pFt').value=z(profile.ft); $('pIn').value=z(profile.inch); $('pLb').value=z(profile.lb); $('pStart').value=z(profile.startLb);
+  $('pGoal').value=profile.goalType; $('pRate').value=z(profile.rate); updateRateBox(); updateLost(); updateFoldSum(); }
+/* Rev: Starting weight → Weight now, with a kind progress line */
+function updateLost(){
+  const st=Number($('pStart').value)||0, now=Number($('pLb').value)||0, age=Number($('pAge').value)||0, el=$('pLost');
+  if(!st||!now||(age>0&&age<18)){ el.hidden=true; return; }
+  const d=Math.round((st-now)*10)/10; el.hidden=false;
+  el.innerHTML = d>0 ? `🎉 <b>${d} lb down</b> since you started${nmComma()} — nice work!`
+    : d<0 ? `<b>${-d} lb up</b> since you started. Every day is a fresh start.`
+    : `Right where you started — steady is good.`;
+}
+['pStart','pLb'].forEach(id=>$(id).addEventListener('input',updateLost));
+/* Rev: profile details fold away behind one tap */
+function setFold(open){ $('pFold').hidden=!open; $('pFoldBtn').setAttribute('aria-expanded',open?'true':'false'); }
+function updateFoldSum(){
+  if(!profile.saved){ $('pFoldSum').textContent='Tap to fill in'; return; }
+  const g=profile.goalType==='lose'?`Lose ${profile.rate} lb/wk`:profile.goalType==='gain'?`Gain ${profile.rate} lb/wk`:'Stay where I am';
+  const w=profile.startLb&&profile.startLb!==profile.lb?`${profile.startLb} → ${profile.lb} lb`:`${profile.lb} lb`;
+  $('pFoldSum').textContent=`${profile.age} · ${profile.ft}′${profile.inch}″ · ${w} · ${g}`;
+}
+$('pFoldBtn').onclick=()=>setFold($('pFold').hidden);
 $('pGoal').onchange=updateRateBox; $('pAge').oninput=updateRateBox; $('pRate').oninput=updateRateBox;
 $('saveProfile').onclick=()=>{
-  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,saved:true};
+  const raw={name:$('pName').value,sex:$('pSex').value,age:$('pAge').value,ft:$('pFt').value,inch:$('pIn').value,lb:$('pLb').value,startLb:$('pStart').value||$('pLb').value,goalType:$('pGoal').value,rate:$('pRate').value,saved:true};
   const N=v=>Number(v)||0;
   if(N(raw.age)<=0||N(raw.ft)*12+N(raw.inch)<=0||N(raw.lb)<=0){ toast('Just add age, height and weight to finish.'); return; }
   if(raw.goalType!=='stay'&&N(raw.rate)<=0&&!(raw.goalType==='lose'&&N(raw.age)<18)){ toast(`Add how many lb a week you’d like to ${raw.goalType}.`); return; }
   const want=N(raw.rate);
   if(raw.goalType!=='stay'&&want>10){ toast('That looks like a typo — please pick 10 lb a week or less.'); $('pRate').focus(); return; }
-  profile=Engine.cleanProfile(raw); saveProfile(); fillProfileForm(); render();
+  profile=Engine.cleanProfile(raw); saveProfile(); fillProfileForm(); render(); setFold(false); window.scrollTo({top:0,behavior:'smooth'});
   toast(raw.goalType==='lose'&&profile.age<18 ? `All set${nmComma()}! For growing bodies we keep it at “Stay where I am.”`
     : profile.name ? `All set, ${profile.name} — this plan is yours!` : 'All set — profile saved.');
 };
