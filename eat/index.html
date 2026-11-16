@@ -1853,6 +1853,12 @@ function paintPoundHome(){
   if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent= T.earned>0
     ? `Plus ${fmt(T.earned)} kcal extra you walked off${nmComma()} — eat it if you want, or leave it for your pound. 👟`
     : `Pound Mode${nmComma()}: walking today goes toward your next pound.`;
+  if(T.pm&&Engine.ready(profile)&&T.earned>0){ // Nov 15 2026: today's total counts what you walked off
+    const tot=T.base+T.earned;
+    $('eaten').innerHTML=`${fmt(T.eaten)} <span class="unit">of ${fmt(tot)} kcal</span>`;
+    $('bar').style.width=Math.min(100,Math.max(0,T.eaten/tot*100))+'%';
+    $('bar').className=realLeft(T)<0?'over':'';
+  }
   if(T.pm&&Engine.ready(profile)&&T.left<0){
     const R=realLeft(T), extra=-T.left;
     if(R>=0){
