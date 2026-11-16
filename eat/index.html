@@ -771,6 +771,7 @@ function render(){
   const over=T.left<0;
   $('leftCalories').className='left'+(over?' over':'');
   $('leftCalories').innerHTML=`${fmt(Math.abs(T.left))} <small>kcal ${over?'past today’s plan':'to enjoy'}</small>`;
+  if(!Engine.ready(profile)){ $('leftCalories').className='left'; $('leftCalories').innerHTML=`– <small>fill in Profile to see your number</small>`; }
   $('heroEyebrow').textContent = profile.name ? `${profile.name.toUpperCase()}’S FOOD FOR TODAY` : 'YOUR FOOD FOR TODAY';
   $('profileTitle').textContent = profile.name ? `${profile.name}’s profile` : 'Profile';
   $('goalText').textContent = !Engine.ready(profile) ? 'Fill in your profile and your daily amount shows up here.'
