@@ -1848,14 +1848,16 @@ function realLeft(T){ return T.pm ? T.left + T.earned : T.left; }
 function paintPoundHome(){
   const T=Engine.totals(day,profile);
   $('earnedLabel').textContent=T.pm?'Walked off (Pound Mode)':'Extra from moving';
-  if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent=`Pound Mode${nmComma()}: ${fmt(T.banked)} kcal walked off today toward your next pound.`;
+  if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent= T.earned>0
+    ? `Plus ${fmt(T.earned)} kcal extra you walked off${nmComma()} — eat it if you want, or leave it for your pound. 👟`
+    : `Pound Mode${nmComma()}: walking today goes toward your next pound.`;
   if(T.pm&&Engine.ready(profile)&&T.left<0){
     const R=realLeft(T), extra=-T.left;
     if(R>=0){
       $('leftCalories').className='left';
-      $('leftCalories').innerHTML=`${fmt(extra)} <small>kcal extra — walked off ✓</small>`;
+      $('leftCalories').innerHTML=`${fmt(R)} <small>kcal extra to enjoy</small>`;
       $('bar').className='';
-      $('goalText').textContent=`Your walking covered the extra ${fmt(extra)} kcal${nmComma()} — ${fmt(T.banked)} kcal still going toward your pound. 👟`;
+      $('goalText').textContent=`You walked off the ${fmt(extra)} you went over ✓ — this extra is yours if you want it, or leave it for your pound. 👟`;
     } else {
       $('leftCalories').innerHTML=`${fmt(-R)} <small>kcal past today’s plan</small>`;
       $('goalText').textContent=T.earned>0?`Your walking already covered ${fmt(T.earned)} kcal of it${nmComma()}. A little more covers the rest.`:`A full day of fuel${nmComma()} — a walk covers the extra.`;
