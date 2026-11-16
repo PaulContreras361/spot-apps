@@ -1788,8 +1788,8 @@ function paintBurnNote(){
   const per=Engine.stepKcal(profile,105); const st=fmt(Math.ceil(TREAT_KCAL/per/100)*100);
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0);
   const L=realLeft(T);
-  el.classList.toggle('roast',L<=0&&roastOn());
-  if(L<=0){ el.innerHTML=roastOn()?roastLine(st):PAST_LINES[seed%PAST_LINES.length](st); el.hidden=false; }
+  el.classList.toggle('roast',L<0&&roastOn());
+  if(L<0){ el.innerHTML=roastOn()?roastLine(st):PAST_LINES[seed%PAST_LINES.length](st); el.hidden=false; }
   else if(L<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(L),st); el.hidden=false; }
   else el.hidden=true;
 }
@@ -1807,15 +1807,15 @@ function showRoast(head){
 }
 function roastOnOpen(){
   if(!roastOn()||!Engine.ready(profile)) return;
-  const left=realLeft(Engine.totals(day,profile)), state=left<=0?'past':left<=NEAR_KCAL?'near':''; if(!state) return;
+  const left=realLeft(Engine.totals(day,profile)), state=left<0?'past':left<=NEAR_KCAL?'near':''; if(!state) return;
   const k=NS+'roastOpen', seen=sGet(k)||''; if(seen===today+':'+state) return; sSet(k,today+':'+state);
   showRoast(state==='past'?'You’re past today’s plan…':`Only ${fmt(left)} kcal left!`);
 }
 function autoRoast(leftBefore){
   if(!roastOn()||!Engine.ready(profile)) return;
   const left=realLeft(Engine.totals(day,profile));
-  sSet(NS+'roastOpen',today+':'+(left<=0?'past':left<=NEAR_KCAL?'near':''));
-  if(left<=0) showRoast(leftBefore>0?`You just passed today’s plan!`:`Still past today’s plan…`);
+  sSet(NS+'roastOpen',today+':'+(left<0?'past':left<=NEAR_KCAL?'near':''));
+  if(left<0) showRoast(leftBefore>=0?`You just passed today’s plan!`:`Still past today’s plan…`);
   else if(left<=NEAR_KCAL) showRoast(`Only ${fmt(left)} kcal left!`);
 }
 let popRoast='';
@@ -1840,6 +1840,7 @@ function poundSync(){            // keep today's flag and ledger entry in step w
   const want=poundOn();
   if(!!day.pm!==want){ day.pm=want; saveDay(); }
   if(day.pm){ const b=Math.round(Engine.totals(day,profile).banked); if(pound.days[today]!==b){ pound.days[today]=b; savePound(); } }
+  else if(today in pound.days){ delete pound.days[today]; savePound(); } // switched to Classic: today's walking is food again, not pound credit
 }
 function poundTotal(){ return Object.entries(pound.days).filter(([k])=>k>=pound.start).reduce((a,[,v])=>a+(Number(v)||0),0); }
 function lbText(x){ return (Math.round(x*100)/100).toFixed(2); }
@@ -1857,7 +1858,7 @@ function paintPoundHome(){
       $('leftCalories').className='left';
       $('leftCalories').innerHTML=`${fmt(R)} <small>kcal extra to enjoy</small>`;
       $('bar').className='';
-      $('goalText').textContent=`You walked off the ${fmt(extra)} you went over ✓ — this extra is yours if you want it, or leave it for your pound. 👟`;
+      $('goalText').textContent= R>0 ? `You walked off the ${fmt(extra)} you went over ✓ — this extra is yours if you want it, or leave it for your pound. 👟` : `You walked off the ${fmt(extra)} you went over ✓ — right on plan now.`;
     } else {
       $('leftCalories').innerHTML=`${fmt(-R)} <small>kcal past today’s plan</small>`;
       $('goalText').textContent=T.earned>0?`Your walking already covered ${fmt(T.earned)} kcal of it${nmComma()}. A little more covers the rest.`:`A full day of fuel${nmComma()} — a walk covers the extra.`;
