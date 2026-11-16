@@ -996,7 +996,7 @@ $('saveMeal').onclick=()=>{
   const name=$('mealName').value.trim()||'Meal';
   checkRollover();
   const meal={id:uid(),name,cal,type:$('mealType').value,t:Date.now(),img:pickedThumb,macros:$('mealDialog').dataset.macros||''};
-  const leftBefore=Engine.totals(day,profile).left;
+  const leftBefore=realLeft(Engine.totals(day,profile));
   day.meals.push(meal);
   delete $('mealDialog').dataset.macros;
   if(pickedPlate) Plates.put(meal.id,pickedPlate);
@@ -1787,9 +1787,10 @@ function paintBurnNote(){
   const T=Engine.totals(day,profile);
   const per=Engine.stepKcal(profile,105); const st=fmt(Math.ceil(TREAT_KCAL/per/100)*100);
   const seed=[...today].reduce((a,c)=>a+c.charCodeAt(0),0);
-  el.classList.toggle('roast',T.left<=0&&roastOn());
-  if(T.left<=0){ el.innerHTML=roastOn()?roastLine(st):PAST_LINES[seed%PAST_LINES.length](st); el.hidden=false; }
-  else if(T.left<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(T.left),st); el.hidden=false; }
+  const L=realLeft(T);
+  el.classList.toggle('roast',L<=0&&roastOn());
+  if(L<=0){ el.innerHTML=roastOn()?roastLine(st):PAST_LINES[seed%PAST_LINES.length](st); el.hidden=false; }
+  else if(L<=NEAR_KCAL){ el.innerHTML=NEAR_LINES[seed%NEAR_LINES.length](fmt(L),st); el.hidden=false; }
   else el.hidden=true;
 }
 
@@ -1806,13 +1807,13 @@ function showRoast(head){
 }
 function roastOnOpen(){
   if(!roastOn()||!Engine.ready(profile)) return;
-  const left=Engine.totals(day,profile).left, state=left<=0?'past':left<=NEAR_KCAL?'near':''; if(!state) return;
+  const left=realLeft(Engine.totals(day,profile)), state=left<=0?'past':left<=NEAR_KCAL?'near':''; if(!state) return;
   const k=NS+'roastOpen', seen=sGet(k)||''; if(seen===today+':'+state) return; sSet(k,today+':'+state);
   showRoast(state==='past'?'You’re past today’s plan…':`Only ${fmt(left)} kcal left!`);
 }
 function autoRoast(leftBefore){
   if(!roastOn()||!Engine.ready(profile)) return;
-  const left=Engine.totals(day,profile).left;
+  const left=realLeft(Engine.totals(day,profile));
   sSet(NS+'roastOpen',today+':'+(left<=0?'past':left<=NEAR_KCAL?'near':''));
   if(left<=0) showRoast(leftBefore>0?`You just passed today’s plan!`:`Still past today’s plan…`);
   else if(left<=NEAR_KCAL) showRoast(`Only ${fmt(left)} kcal left!`);
@@ -1842,10 +1843,24 @@ function poundSync(){            // keep today's flag and ledger entry in step w
 }
 function poundTotal(){ return Object.entries(pound.days).filter(([k])=>k>=pound.start).reduce((a,[,v])=>a+(Number(v)||0),0); }
 function lbText(x){ return (Math.round(x*100)/100).toFixed(2); }
+// Nov 15 2026: in Pound Mode the plan doesn't grow with walking, so 'real' room left counts the walking you did
+function realLeft(T){ return T.pm ? T.left + T.earned : T.left; }
 function paintPoundHome(){
   const T=Engine.totals(day,profile);
   $('earnedLabel').textContent=T.pm?'Walked off (Pound Mode)':'Extra from moving';
   if(T.pm&&Engine.ready(profile)&&T.left>=0) $('goalText').textContent=`Pound Mode${nmComma()}: ${fmt(T.banked)} kcal walked off today toward your next pound.`;
+  if(T.pm&&Engine.ready(profile)&&T.left<0){
+    const R=realLeft(T), extra=-T.left;
+    if(R>=0){
+      $('leftCalories').className='left';
+      $('leftCalories').innerHTML=`${fmt(extra)} <small>kcal extra — walked off ✓</small>`;
+      $('bar').className='';
+      $('goalText').textContent=`Your walking covered the extra ${fmt(extra)} kcal${nmComma()} — ${fmt(T.banked)} kcal still going toward your pound. 👟`;
+    } else {
+      $('leftCalories').innerHTML=`${fmt(-R)} <small>kcal past today’s plan</small>`;
+      $('goalText').textContent=T.earned>0?`Your walking already covered ${fmt(T.earned)} kcal of it${nmComma()}. A little more covers the rest.`:`A full day of fuel${nmComma()} — a walk covers the extra.`;
+    }
+  }
 }
 function paintPound(){
   const kid=profile.age>0&&profile.age<18, ok=poundAllowed();
