@@ -283,6 +283,8 @@ footer{border-top:0;color:#33433A}
 .songbtn.busy{opacity:.75}
 .songinfo{font-size:.85rem;color:var(--muted);line-height:1.4}
 .songinfo a{color:var(--emerald)}
+.songinfo .cleantog{margin:2px 0 4px;color:#fff;background:var(--emerald);border-color:var(--emerald)}
+.songinfo .cleantog[aria-pressed="false"]{color:var(--muted);background:none;border-color:var(--rule)}
 .songinfo button{font:inherit;font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--emerald);background:none;border:1px solid var(--rule);border-radius:999px;padding:3px 10px;margin-left:4px;cursor:pointer}
 .listen-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start}
 @media (max-width:760px){.listen-grid{grid-template-columns:1fr}}
@@ -849,13 +851,18 @@ if(store.get("mbbs_big",false))setBig(true);
 /* ===== Bird songs (free recordings from Wikimedia Commons, looked up when you tap) ===== */
 const ALT={bbhu:["Amazilis yucatanensis"],rcki:["Regulus calendula"],dowo:["Picoides pubescens"],vefl:["Pyrocephalus rubinus"]};
 const songCache={};
+const LOWCUT={whcr:250,rosp:250,blja:450,grja:450,rbwo:500,gfwo:500,dowo:600,puma:700,nomo:700,stfl:800,gkis:700,baor:800};
+let songCtx=null, curSrc=null, dnWorker=null; const cleanCache=new Map();
+if(navigator.audioSession){try{navigator.audioSession.type="playback"}catch(_){}} // play even with the ring/silent switch on
+const cleanOn=()=>store.get("bb_clean",true);
 const player=new Audio(); player.preload="none";
 const SILENT=(()=>{const n=800,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
   w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
   v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
   return URL.createObjectURL(new Blob([b],{type:"audio/wav"}))})();
 let unlocked=false;
-function unlockPlayer(){if(unlocked)return;unlocked=true;try{player.src=SILENT;const p=player.play();if(p&&p.catch)p.catch(()=>{unlocked=false})}catch(_){unlocked=false}}
+function unlockPlayer(){try{if(!songCtx){const AC=window.AudioContext||window.webkitAudioContext;songCtx=new AC()} if(songCtx.state!=="running")songCtx.resume()}catch(_){}
+  if(unlocked)return;unlocked=true;try{player.src=SILENT;const p=player.play();if(p&&p.catch)p.catch(()=>{unlocked=false})}catch(_){unlocked=false}}
 let songNow=null; // {key, btn, info, list, i}
 const strip=h=>{const d=document.createElement("div");d.innerHTML=h||"";return (d.textContent||"").trim()};
 const normN=t=>t.toLowerCase().replace(/[_\-]+/g," ");
@@ -890,22 +897,50 @@ async function findSongs(sci,common,alts){
   list.sort((a,b)=>a.rank-b.rank);
   list=list.slice(0,8); if(list.length||!failed)songCache[key]=list; list.failed=failed&&!list.length; return list;
 }
-function setSongBtn(btn,state){
+function setSongBtn(btn,state,busyTxt){
   if(!btn)return; btn.classList.toggle("playing",state==="play");btn.classList.toggle("busy",state==="busy");
-  const l=btn.querySelector(".lbl"); if(l)l.textContent=state==="play"?"Stop":state==="busy"?"Finding song…":(btn.dataset.label||"Hear its song");
+  const l=btn.querySelector(".lbl"); if(l)l.textContent=state==="play"?"Stop":state==="busy"?(busyTxt||"Finding song…"):(btn.dataset.label||"Hear its song");
 }
+function stopOutput(){player.pause(); if(curSrc){try{curSrc.onended=null;curSrc.stop()}catch(_){} curSrc=null}}
 function stopSong(){
-  player.pause(); if(songNow){setSongBtn(songNow.btn,"idle")} songNow=null;
+  stopOutput(); if(songNow){setSongBtn(songNow.btn,"idle")} songNow=null;
+}
+function denoise(pcm,sr,lowCut){
+  return new Promise((res,rej)=>{
+    if(!dnWorker)dnWorker=new Worker("denoise.js");
+    const t=setTimeout(()=>rej(new Error("timeout")),30000);
+    dnWorker.onmessage=({data})=>{clearTimeout(t);data.ok?res(data.pcm):rej(new Error(data.why))};
+    dnWorker.onerror=e=>{clearTimeout(t);rej(e)};
+    dnWorker.postMessage({pcm,sr,lowCut},[pcm.buffer]);
+  });
+}
+async function cleanTrack(rec,lowCut){
+  const key=rec.src+"|"+lowCut; if(cleanCache.has(key))return cleanCache.get(key);
+  const ac=new AbortController(), tm=setTimeout(()=>ac.abort(),20000);
+  const r=await fetch(rec.src,{signal:ac.signal}); clearTimeout(tm);
+  if(!r.ok)throw new Error("http "+r.status);
+  const ab=await r.arrayBuffer(); if(ab.byteLength>25e6)throw new Error("too big");
+  const buf=await new Promise((res,rej)=>{const p=songCtx.decodeAudioData(ab,res,rej);if(p&&p.catch)p.catch(rej)});
+  const sr=buf.sampleRate, n=Math.min(buf.length,Math.round(sr*45)); // first 45 seconds is plenty
+  const mono=new Float32Array(n);
+  for(let c=0;c<buf.numberOfChannels;c++){const d=buf.getChannelData(c);for(let i=0;i<n;i++)mono[i]+=d[i]/buf.numberOfChannels}
+  const y=await denoise(mono,sr,lowCut);
+  const out=songCtx.createBuffer(1,y.length,sr); out.getChannelData(0).set(y);
+  if(cleanCache.size>12)cleanCache.delete(cleanCache.keys().next().value);
+  cleanCache.set(key,out); return out;
 }
 function showSongInfo(){
   if(!songNow||!songNow.info)return; const r=songNow.list[songNow.i];
-  songNow.info.innerHTML=`Recording ${songNow.i+1} of ${songNow.list.length}${r.by?" · by "+esc(r.by):""}${r.lic?" · "+esc(r.lic):""} · <a href="${esc(r.page)}" target="_blank" rel="noopener">source</a>`
+  const on=cleanOn();
+  songNow.info.innerHTML=`<button type="button" class="cleantog" aria-pressed="${on}">${on?"✓ Bird only (noise removed)":"Original sound"}</button><br>`
+    +(songNow.cleanFail&&on?`<small>This recording couldn't be cleaned, playing the original.</small><br>`:"")
+    +`Recording ${songNow.i+1} of ${songNow.list.length}${r.by?" · by "+esc(r.by):""}${r.lic?" · "+esc(r.lic):""} · <a href="${esc(r.page)}" target="_blank" rel="noopener">source</a>`
     +(songNow.list.length>1?`<button type="button" class="nextsong">Another recording ›</button>`:"");
 }
 async function playSong(key,sci,common,alts,btn,info){
   if(songNow&&songNow.key===key&&songNow.btn===btn){stopSong();return}
   stopSong();
-  const me={key,btn,info,list:[],i:0}; songNow=me;
+  const me={key,btn,info,list:[],i:0,lowCut:(LOWCUT[key]||(BIRDS.some(b=>b.id===key)?1000:400))}; songNow=me;
   setSongBtn(btn,"busy"); if(info)info.textContent="";
   const list=await findSongs(sci,common,alts);
   if(songNow!==me)return;
@@ -916,9 +951,20 @@ async function playSong(key,sci,common,alts,btn,info){
   }
   me.list=list; startTrack(0);
 }
-function startTrack(i){
-  if(!songNow)return; songNow.i=i; const me=songNow;
-  player.src=me.list[i].src; showSongInfo();
+async function startTrack(i){
+  if(!songNow)return; songNow.i=i; const me=songNow; me.cleanFail=false; stopOutput(); showSongInfo();
+  if(cleanOn()&&songCtx){
+    setSongBtn(me.btn,"busy","Removing noise…");
+    try{
+      const buf=await cleanTrack(me.list[i],me.lowCut||1000);
+      if(songNow!==me||me.i!==i)return;
+      if(songCtx.state!=="running")await songCtx.resume();
+      const src=songCtx.createBufferSource(); src.buffer=buf; src.connect(songCtx.destination);
+      src.onended=()=>{if(curSrc===src){curSrc=null;if(songNow===me){setSongBtn(me.btn,"idle");songNow=null}}};
+      curSrc=src; src.start(); setSongBtn(me.btn,"play"); return;
+    }catch(e){ if(songNow!==me||me.i!==i)return; me.cleanFail=true; showSongInfo(); }
+  }
+  player.src=me.list[i].src;
   player.play().then(()=>{if(songNow===me)setSongBtn(me.btn,"play")}).catch(err=>{
     if(songNow!==me)return;
     if(err&&err.name==="NotAllowedError"){setSongBtn(me.btn,"idle");if(me.info)me.info.textContent="Found it. Tap the button once more to play.";songNow=null;return}
@@ -928,8 +974,10 @@ function startTrack(i){
 player.addEventListener("ended",()=>{if(player.src===SILENT)return;if(songNow)setSongBtn(songNow.btn,"idle");songNow=null});
 player.addEventListener("error",()=>{if(player.src===SILENT)return;if(songNow&&songNow.i+1<songNow.list.length)startTrack(songNow.i+1)});
 function songClick(e){
+  const ct=e.target.closest(".cleantog");
+  if(ct&&songNow){unlockPlayer();store.set("bb_clean",!cleanOn());startTrack(songNow.i);return true}
   const nx=e.target.closest(".nextsong");
-  if(nx&&songNow){unlockPlayer();startTrack((songNow.i+1)%songNow.list.length);setSongBtn(songNow.btn,"play");return true}
+  if(nx&&songNow){unlockPlayer();startTrack((songNow.i+1)%songNow.list.length);return true}
   const b=e.target.closest(".songbtn"); if(!b)return false;
   unlockPlayer();
   if(b.dataset.song){const bd=BIRDS.find(x=>x.id===b.dataset.song);playSong(bd.id,bd.s,bd.n,ALT[bd.id],b,$("si-"+bd.id));}
