@@ -1,0 +1,7 @@
+Who's Singing? listener in Backyard Bird
+Bird-sound model: BirdNET (K. Lisa Yang Center for Conservation Bioacoustics, Cornell Lab of Ornithology,
+and Chemnitz University of Technology). Model license: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+Kahl, S., Wood, C. M., Eibl, M., & Klinck, H. (2021). BirdNET: A deep learning solution for avian diversity monitoring. Ecological Informatics, 61, 101236.
+Browser code adapted from BirdNET Live, github.com/birdnet-team/real-time-pwa (MIT License, Copyright (c) 2025 BirdNET-Team),
+based on github.com/georg95/birdnet-web.
+TensorFlow.js 4.22.0 (Apache License 2.0).

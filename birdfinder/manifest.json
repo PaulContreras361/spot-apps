@@ -1,6 +1,6 @@
 {
-  "name": "BirdFinder",
-  "short_name": "BirdFinder",
+  "name": "Backyard Bird",
+  "short_name": "Backyard Bird",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
