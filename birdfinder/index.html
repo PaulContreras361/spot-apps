@@ -305,6 +305,7 @@ footer{border-top:0;color:#33433A}
 .filebtn{position:relative;overflow:hidden;display:inline-block;text-align:center}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .listen-tips{text-align:left;margin:0;padding-left:1.2em;font-size:.95rem;color:var(--muted)}
+.fieldready{margin:0;font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--emerald)}
 .res-h{font-size:1.4rem;margin-bottom:6px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--rule)}
 .res:first-child{border-top:0}
@@ -383,12 +384,14 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
       <button type="button" class="micbtn" id="micBtn" aria-live="polite"><span class="mic-ico" aria-hidden="true"></span><span id="micLabel">Listen</span></button>
       <div class="meter" aria-hidden="true"><i id="micLevel"></i></div>
       <p class="listen-status" id="listenStatus" aria-live="polite">Tap <b>Listen</b> when you hear a bird. It listens for up to 15 seconds. Tap again to stop sooner.</p>
+      <p class="fieldready" id="fieldReady" hidden></p>
       <div class="listen-progress" id="loadBox" hidden><div><i id="loadBar"></i></div><span id="loadTxt">Getting the listener ready…</span></div>
+      <button type="button" class="btn" id="fieldBtn">Get ready for the field</button>
       <label class="btn ghost filebtn">Use a recording from my phone<input type="file" id="audioFile" accept="audio/*,video/*,.m4a,.mp3,.wav,.aac,.caf,.ogg"></label>
       <ul class="listen-tips">
         <li>Get as close as you can, and point the bottom of the phone at the bird.</li>
         <li>Hold still and stay quiet while it listens.</li>
-        <li>The first time, the listener downloads about 60&nbsp;MB. Use Wi-Fi. After that it opens quickly.</li>
+        <li>Before you head out: on Wi-Fi, tap <b>Get ready for the field</b> once. Then the listener works with no signal.</li>
       </ul>
     </div>
     <div class="panel">
@@ -953,7 +956,7 @@ function loadListener(){
     try{bnWorker=new Worker("birdnet/worker.js")}catch(e){bnWorker=null;$("loadBox").hidden=true;rej(e);return}
     bnWorker.onmessage=({data})=>{
       if(data.msg==="progress"){$("loadBar").style.width=data.pct+"%";$("loadTxt").textContent=`Getting the listener ready… ${data.pct}%`}
-      else if(data.msg==="ready"){bnReady=true;$("loadBox").hidden=true;bnWaiting&&bnWaiting.res();bnWaiting=null}
+      else if(data.msg==="ready"){bnReady=true;$("loadBox").hidden=true;if(!store.get("bb_field",false))saveForField();bnWaiting&&bnWaiting.res();bnWaiting=null}
       else if(data.msg==="error"){
         $("loadBox").hidden=true;
         if(!bnReady){const w=bnWaiting;bnWaiting=null;try{bnWorker.terminate()}catch(_){};bnWorker=null;w&&w.rej(new Error(data.why))}
@@ -1077,6 +1080,23 @@ $("listenResults").addEventListener("click",e=>{
     sel.value=name;$("fDate").value=iso(new Date());$("fNotes").value="Heard it · ID'd by sound";
     $("log").scrollIntoView({block:"start"});$("logMsg").textContent="Check the details, then tap Add sighting.";}
 });
+
+/* ===== Works with no signal: save the app + listener on the phone ===== */
+function fieldStatus(t,ok){const el=$("fieldReady");el.hidden=false;el.textContent=t;el.style.color=ok?"":"var(--muted)";if(ok)$("fieldBtn").hidden=true}
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+  navigator.serviceWorker.addEventListener("message",e=>{const d=e.data||{};if(!("saved" in d))return;
+    if(d.saved){store.set("bb_field",true);fieldStatus("✓ Ready for the field. Listener works with no signal.",true)}
+    else fieldStatus(`Saved ${d.have} of ${d.need} pieces. Stay on Wi-Fi and tap again.`,false)});
+  if(store.get("bb_field",false))fieldStatus("✓ Ready for the field. Listener works with no signal.",true);
+}
+async function saveForField(){
+  if(!("serviceWorker" in navigator)){fieldStatus("This browser can't save the app for offline use.",false);return}
+  fieldStatus("Saving the listener on your phone… (about 60 MB)",false);
+  try{const reg=await navigator.serviceWorker.ready; (navigator.serviceWorker.controller||reg.active).postMessage("save-listener");}
+  catch(e){fieldStatus("Couldn't save. Check Wi-Fi and try again.",false)}
+}
+$("fieldBtn").addEventListener("click",()=>{saveForField();loadListener().catch(()=>{})});
 renderMonth();renderGuide();renderCal();renderFeeder();renderSun();renderLog();
 </script>
 
