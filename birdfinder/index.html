@@ -847,24 +847,30 @@ if(store.get("mbbs_big",false))setBig(true);
 const ALT={bbhu:["Amazilis yucatanensis"],rcki:["Regulus calendula"],dowo:["Picoides pubescens"],vefl:["Pyrocephalus rubinus"]};
 const songCache={};
 const player=new Audio(); player.preload="none";
+const SILENT=(()=>{const n=800,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([b],{type:"audio/wav"}))})();
+let unlocked=false;
+function unlockPlayer(){if(unlocked)return;unlocked=true;try{player.src=SILENT;const p=player.play();if(p&&p.catch)p.catch(()=>{unlocked=false})}catch(_){unlocked=false}}
 let songNow=null; // {key, btn, info, list, i}
 const strip=h=>{const d=document.createElement("div");d.innerHTML=h||"";return (d.textContent||"").trim()};
 const normN=t=>t.toLowerCase().replace(/[_\-]+/g," ");
 async function findSongs(sci,common,alts){
   const key=sci; if(songCache[key])return songCache[key];
   const names=[sci,...(alts||[])];
-  let list=[];
+  let list=[],failed=false;
   for(const q of [...names.map(n=>`filetype:audio "${n}"`),`filetype:audio "${common}"`]){
     const u="https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=15"
       +"&prop=videoinfo&viprop=url|derivatives|extmetadata&viextmetadatafilter=Artist|LicenseShortName&gsrsearch="+encodeURIComponent(q);
-    let j; try{j=await fetch(u).then(r=>r.json())}catch(e){continue}
+    let j; try{const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),12000);j=await fetch(u,{signal:ac.signal}).then(r=>r.json());clearTimeout(tm)}catch(e){failed=true;continue}
     const pages=Object.values((j.query&&j.query.pages)||{}).sort((a,b)=>(a.index||0)-(b.index||0));
     for(const p of pages){
       const vi=(p.videoinfo||[])[0]; if(!vi)continue;
       const cand=[...(vi.derivatives||[])];
       const mp3=cand.find(d=>/mpeg|mp3/i.test(d.type||"")||/\.mp3$/i.test(d.src||""));
       let src=mp3&&mp3.src;
-      if(!src&&/\.(mp3|m4a|wav|aac)$/i.test(vi.url))src=vi.url;
+      if(!src&&/\.(mp3|m4a|wav|aac|flac)$/i.test(vi.url))src=vi.url;
       if(!src&&player.canPlayType('audio/ogg; codecs="vorbis"'))src=vi.url;
       if(!src)continue;
       const t=normN(p.title), m=vi.extmetadata||{};
@@ -879,7 +885,7 @@ async function findSongs(sci,common,alts){
   list=list.filter((x,i,a)=>a.findIndex(y=>y.src===x.src)===i);
   if(list.some(x=>x.rank<10))list=list.filter(x=>x.rank<10);
   list.sort((a,b)=>a.rank-b.rank);
-  return songCache[key]=list.slice(0,8);
+  list=list.slice(0,8); if(list.length||!failed)songCache[key]=list; list.failed=failed&&!list.length; return list;
 }
 function setSongBtn(btn,state){
   if(!btn)return; btn.classList.toggle("playing",state==="play");btn.classList.toggle("busy",state==="busy");
@@ -902,7 +908,7 @@ async function playSong(key,sci,common,alts,btn,info){
   if(songNow!==me)return;
   if(!list.length){
     setSongBtn(btn,"idle"); songNow=null;
-    if(info)info.innerHTML=navigator.onLine===false?"Bird songs need an internet connection.":`No free recording found. <a href="https://xeno-canto.org/explore?query=${encodeURIComponent(sci)}" target="_blank" rel="noopener">Search xeno-canto</a>`;
+    if(info)info.innerHTML=(navigator.onLine===false||list.failed)?"Couldn't reach the bird-song library. Check your internet and tap again.":`No free recording found. <a href="https://xeno-canto.org/explore?query=${encodeURIComponent(sci)}" target="_blank" rel="noopener">Search xeno-canto</a>`;
     return;
   }
   me.list=list; startTrack(0);
@@ -910,22 +916,25 @@ async function playSong(key,sci,common,alts,btn,info){
 function startTrack(i){
   if(!songNow)return; songNow.i=i; const me=songNow;
   player.src=me.list[i].src; showSongInfo();
-  player.play().then(()=>{if(songNow===me)setSongBtn(me.btn,"play")}).catch(()=>{
+  player.play().then(()=>{if(songNow===me)setSongBtn(me.btn,"play")}).catch(err=>{
     if(songNow!==me)return;
+    if(err&&err.name==="NotAllowedError"){setSongBtn(me.btn,"idle");if(me.info)me.info.textContent="Found it. Tap the button once more to play.";songNow=null;return}
     if(i+1<me.list.length)startTrack(i+1); else {setSongBtn(me.btn,"idle");if(me.info)me.info.textContent="Couldn't play the recording. Check the volume switch and internet, then try again.";songNow=null}
   });
 }
-player.addEventListener("ended",()=>{if(songNow)setSongBtn(songNow.btn,"idle");songNow=null});
-player.addEventListener("error",()=>{if(songNow&&songNow.i+1<songNow.list.length)startTrack(songNow.i+1)});
+player.addEventListener("ended",()=>{if(player.src===SILENT)return;if(songNow)setSongBtn(songNow.btn,"idle");songNow=null});
+player.addEventListener("error",()=>{if(player.src===SILENT)return;if(songNow&&songNow.i+1<songNow.list.length)startTrack(songNow.i+1)});
 function songClick(e){
   const nx=e.target.closest(".nextsong");
-  if(nx&&songNow){startTrack((songNow.i+1)%songNow.list.length);setSongBtn(songNow.btn,"play");return true}
+  if(nx&&songNow){unlockPlayer();startTrack((songNow.i+1)%songNow.list.length);setSongBtn(songNow.btn,"play");return true}
   const b=e.target.closest(".songbtn"); if(!b)return false;
+  unlockPlayer();
   if(b.dataset.song){const bd=BIRDS.find(x=>x.id===b.dataset.song);playSong(bd.id,bd.s,bd.n,ALT[bd.id],b,$("si-"+bd.id));}
   else playSong(b.dataset.sci,b.dataset.sci,b.dataset.common,[],b,b.parentNode.parentNode.querySelector(".songinfo"));
   return true;
 }
 $("guideGrid").addEventListener("click",e=>{songClick(e)});
+{const _sf=setFilter; setFilter=g=>{if(songNow&&songNow.btn&&songNow.btn.closest("#guideGrid"))stopSong(); _sf(g)};}
 
 /* ===== Who's singing? (BirdNET listener, runs on the phone) ===== */
 (function(){
@@ -1038,8 +1047,10 @@ function guideMatch(r){
 }
 function showResults(list){
   const box=$("listenResults");
-  const good=list.filter(r=>r.conf>=0.15);
-  if(!good.length){box.innerHTML=`<p class="note" style="margin-top:.3rem">No bird came through clearly. Get closer, hold still, and try again while it's singing.</p>`;return}
+  const good=list.filter((r,i)=>r.conf>=0.30&&(i===0||r.geo>=0.03||r.conf>=0.6));
+  if(!good.length){const f=list[0]&&list[0].conf>=0.15?list[0]:null;
+    box.innerHTML=`<p class="note" style="margin-top:.3rem">No bird came through clearly. Get closer, hold still, and try again while it's singing.</p>`
+      +(f?`<p class="note">Faint guess only: ${esc(f.c)} (${Math.round(f.conf*100)}%). Not enough to count on.</p>`:"");return}
   box.innerHTML=good.slice(0,4).map((r,k)=>{
     const b=guideMatch(r), lv=r.conf>=0.7?3:r.conf>=0.4?2:1, word=["","Possible","Likely","Very likely"][lv];
     const img=b&&THUMBS[b.id]?`<img class="rthumb" src="${THUMBS[b.id]}" alt="">`:`<div class="rnoimg" aria-hidden="true">${esc(r.c[0])}</div>`;
