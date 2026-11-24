@@ -496,7 +496,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Be kind to the birds.</b> Keep your distance from nests, don't chase or bait birds for photos, and keep feeders and bird baths clean.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Bird · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Bird · version 2026-11-23d · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -855,6 +855,9 @@ const LOWCUT={whcr:250,rosp:250,blja:450,grja:450,rbwo:500,gfwo:500,dowo:600,pum
 let songCtx=null, curSrc=null, dnWorker=null; const cleanCache=new Map();
 if(navigator.audioSession){try{navigator.audioSession.type="playback"}catch(_){}} // play even with the ring/silent switch on
 const cleanOn=()=>store.get("bb_clean",true);
+const PICKS={rosp:[
+  {src:"https://xeno-canto.org/161523/download",page:"https://xeno-canto.org/161523",by:"Paul Marvin (xeno-canto)",lic:"CC BY-NC-SA",title:"pair calling"},
+  {src:"https://xeno-canto.org/397346/download",page:"https://xeno-canto.org/397346",by:"Bruce Lagerquist (xeno-canto)",lic:"CC BY-NC-SA 4.0",title:"call, bill snaps"}]};
 const QUIET={rosp:"Spoonbills are almost silent. What you hear is low grunts and bill clacks, not a song.",
   whcr:"Whooping Cranes give loud bugling calls, not a song."};
 const player=new Audio(); player.preload="none";
@@ -936,17 +939,21 @@ function showSongInfo(){
   const on=cleanOn();
   songNow.info.innerHTML=`<button type="button" class="cleantog" aria-pressed="${on}">${on?"✓ Bird only (noise removed)":"Original sound"}</button><br>`
     +(QUIET[songNow.key]?`<small>${QUIET[songNow.key]}</small><br>`:"")
-    +(songNow.cleanFail&&on?`<small>This recording is mostly background, so cleaning it would ruin the bird. Playing the original.</small><br>`:"")
+    +(songNow.cleanFail==="bg"&&on?`<small>This recording is mostly background, so cleaning it would ruin the bird. Playing the original.</small><br>`:"")
+    +(songNow.cleanFail==="blocked"&&on?`<small>This recording can't be cleaned (the site doesn't allow it). Playing the original.</small><br>`:"")
     +`Recording ${songNow.i+1} of ${songNow.list.length}${r.by?" · by "+esc(r.by):""}${r.lic?" · "+esc(r.lic):""} · <a href="${esc(r.page)}" target="_blank" rel="noopener">source</a>`
     +(songNow.list.length>1?`<button type="button" class="nextsong">Another recording ›</button>`:"");
 }
 async function playSong(key,sci,common,alts,btn,info){
+  // (hand-picked recordings are added in front of the search results below)
   if(songNow&&songNow.key===key&&songNow.btn===btn){stopSong();return}
   stopSong();
   const me={key,btn,info,list:[],i:0,lowCut:(LOWCUT[key]||(BIRDS.some(b=>b.id===key)?1000:400))}; songNow=me;
   setSongBtn(btn,"busy"); if(info)info.textContent="";
-  const list=await findSongs(sci,common,alts);
+  const found=await findSongs(sci,common,alts);
   if(songNow!==me)return;
+  const list=[...(PICKS[key]||[]),...found.filter(x=>!(PICKS[key]||[]).some(p=>p.src===x.src))];
+  if(found.failed&&!PICKS[key])list.failed=true;
   if(!list.length){
     setSongBtn(btn,"idle"); songNow=null;
     if(info)info.innerHTML=(navigator.onLine===false||list.failed)?"Couldn't reach the bird-song library. Check your internet and tap again.":`No free recording found. <a href="https://xeno-canto.org/explore?query=${encodeURIComponent(sci)}" target="_blank" rel="noopener">Search xeno-canto</a>`;
@@ -965,7 +972,7 @@ async function startTrack(i){
       const src=songCtx.createBufferSource(); src.buffer=buf; src.connect(songCtx.destination);
       src.onended=()=>{if(curSrc===src){curSrc=null;if(songNow===me){setSongBtn(me.btn,"idle");songNow=null}}};
       curSrc=src; src.start(); setSongBtn(me.btn,"play"); return;
-    }catch(e){ if(songNow!==me||me.i!==i)return; me.cleanFail=true; showSongInfo(); }
+    }catch(e){ if(songNow!==me||me.i!==i)return; me.cleanFail=/background/.test(String(e&&e.message))?"bg":"blocked"; showSongInfo(); }
   }
   player.src=me.list[i].src;
   player.play().then(()=>{if(songNow===me)setSongBtn(me.btn,"play")}).catch(err=>{

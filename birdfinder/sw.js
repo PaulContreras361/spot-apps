@@ -1,5 +1,5 @@
 /* Backyard Bird offline helper: keeps the app and the bird listener on the phone so they work with no signal. */
-const SHELL = 'bb-shell-v2';
+const SHELL = 'bb-shell-v3';
 const MODEL = 'bb-birdnet-v1';   // the big listener files; only change this name if the model files change
 const SHELL_FILES = ['./', 'index.html', 'manifest.json', 'apple-touch-icon.png', 'favicon.png', 'icon-192.png', 'icon-512.png'];
 const MODEL_FILES = ['birdnet/worker.js', 'birdnet/tf.min.js', 'birdnet/model.json', 'birdnet/labels/en_us.txt',
@@ -40,7 +40,7 @@ self.addEventListener('fetch', e => {
   // the app itself: get the newest when there is signal, fall back to the saved copy when there isn't
   // weak signal: if the internet takes more than 5 seconds, open the saved copy instead of waiting
   const saved = () => caches.match(e.request, { ignoreSearch: true }).then(hit => hit || caches.match('index.html'));
-  const net = fetch(e.request).then(r => {
+  const net = fetch(e.request, { cache: 'no-cache' }).then(r => {  // always check GitHub for the newest page
     if (r.ok) { const copy = r.clone(); caches.open(SHELL).then(c => c.put(e.request, copy)); }
     return r;
   });
