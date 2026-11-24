@@ -736,7 +736,7 @@ function renderGuide(){
       <p><b>ID</b>${b.id_}</p>
       <p><b>Feeds on</b>${b.food}</p>
       <p><b>Tip</b>${b.tip}</p>
-      <button type="button" class="songbtn" data-song="${b.id}"><span class="ico" aria-hidden="true"></span><span class="lbl">Hear its song</span></button>
+      ${(()=>{const L=(b.id==="rosp"||b.id==="whcr")?"Hear its call":"Hear its song";return `<button type="button" class="songbtn" data-song="${b.id}" data-label="${L}"><span class="ico" aria-hidden="true"></span><span class="lbl">${L}</span></button>`})()}
       <div class="songinfo" id="si-${b.id}" aria-live="polite"></div>
       <div class="strip" aria-label="Months in Texas">${b.m.map((v,i)=>`<span class="p${v} ${i===curM?"now":""}" title="${MONL[i]}">${MON[i][0]}</span>`).join("")}</div>
     </div>
@@ -855,6 +855,8 @@ const LOWCUT={whcr:250,rosp:250,blja:450,grja:450,rbwo:500,gfwo:500,dowo:600,pum
 let songCtx=null, curSrc=null, dnWorker=null; const cleanCache=new Map();
 if(navigator.audioSession){try{navigator.audioSession.type="playback"}catch(_){}} // play even with the ring/silent switch on
 const cleanOn=()=>store.get("bb_clean",true);
+const QUIET={rosp:"Spoonbills are almost silent. What you hear is low grunts and bill clacks, not a song.",
+  whcr:"Whooping Cranes give loud bugling calls, not a song."};
 const player=new Audio(); player.preload="none";
 const SILENT=(()=>{const n=800,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
   w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
@@ -890,7 +892,7 @@ async function findSongs(sci,common,alts){
         by:strip(m.Artist&&m.Artist.value).slice(0,60),lic:strip(m.LicenseShortName&&m.LicenseShortName.value),
         rank:(named?0:10)+(/song|sing/i.test(t)?0:2)+(/call/i.test(t)?1:0)});
     }
-    if(list.some(x=>x.rank<10))break;
+    if(list.filter(x=>x.rank<10).length>=3)break;
   }
   list=list.filter((x,i,a)=>a.findIndex(y=>y.src===x.src)===i);
   if(list.some(x=>x.rank<10))list=list.filter(x=>x.rank<10);
@@ -933,7 +935,8 @@ function showSongInfo(){
   if(!songNow||!songNow.info)return; const r=songNow.list[songNow.i];
   const on=cleanOn();
   songNow.info.innerHTML=`<button type="button" class="cleantog" aria-pressed="${on}">${on?"✓ Bird only (noise removed)":"Original sound"}</button><br>`
-    +(songNow.cleanFail&&on?`<small>This recording couldn't be cleaned, playing the original.</small><br>`:"")
+    +(QUIET[songNow.key]?`<small>${QUIET[songNow.key]}</small><br>`:"")
+    +(songNow.cleanFail&&on?`<small>This recording is mostly background, so cleaning it would ruin the bird. Playing the original.</small><br>`:"")
     +`Recording ${songNow.i+1} of ${songNow.list.length}${r.by?" · by "+esc(r.by):""}${r.lic?" · "+esc(r.lic):""} · <a href="${esc(r.page)}" target="_blank" rel="noopener">source</a>`
     +(songNow.list.length>1?`<button type="button" class="nextsong">Another recording ›</button>`:"");
 }

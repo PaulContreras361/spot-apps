@@ -74,6 +74,17 @@ function clean(x, sr, lowCut, opt) {
       G[p] = Math.max(FLOOR_GAIN, g);
     }
   }
+  // 3-slice median over time: stops the gate flickering on and off, which sounds bubbly / underwater
+  if (frames > 2) {
+    const tmp = new Float32Array(frames);
+    for (let k = 0; k < BINS; k++) {
+      for (let f = 0; f < frames; f++) tmp[f] = G[f * BINS + k];
+      for (let f = 1; f < frames - 1; f++) {
+        const a = tmp[f - 1], b = tmp[f], c = tmp[f + 1];
+        G[f * BINS + k] = Math.max(Math.min(a, b), Math.min(Math.max(a, b), c));
+      }
+    }
+  }
   // smooth gains over neighbouring bands and keep each note's tail (fast open, slower close)
   const G2 = new Float32Array(frames * BINS);
   for (let f = 0; f < frames; f++) for (let k = 0; k < BINS; k++) {
@@ -85,6 +96,12 @@ function clean(x, sr, lowCut, opt) {
     if (prev > G2[p]) G2[p] = prev;
   }
 
+  // how much was kept? (sound above the low cut, after vs before)
+  let eIn = 0, eKeep = 0;
+  for (let f = 0; f < frames; f++) for (let k = Math.max(1, cutBin); k <= topBin; k++) {
+    const p = f * BINS + k, m2 = MAG[p] * MAG[p]; eIn += m2; eKeep += m2 * G2[p] * G2[p];
+  }
+  const kept = eIn > 0 ? eKeep / eIn : 0;
   // back to sound
   const out = new Float32Array(padLen);
   for (let f = 0; f < frames; f++) {
@@ -102,14 +119,23 @@ function clean(x, sr, lowCut, opt) {
   // short fade in/out so there is no click
   const fade = Math.min(y.length >> 1, Math.floor(sr * 0.02));
   for (let i = 0; i < fade; i++) { const g = i / fade; y[i] *= g; y[y.length - 1 - i] *= g; }
-  return new Float32Array(y);
+  const res = new Float32Array(y); res.kept = kept; return res;
 }
 
 if (typeof self !== 'undefined' && typeof importScripts === 'function') {
   onmessage = ({ data }) => {
     try {
-      const y = clean(data.pcm, data.sr, data.lowCut || 1000);
-      postMessage({ ok: true, pcm: y }, [y.buffer]);
+      const lc = data.lowCut || 1000;
+      // Try the strong cleanup and see how much bird it found.
+      //   clear bird (lots kept)            -> strong cleanup
+      //   bird there but noisy (some kept)  -> gentle cleanup
+      //   bird buried in noise (almost none)-> don't touch it, play the original
+      const strong = clean(data.pcm.slice(), data.sr, lc);
+      let y, mode;
+      if (strong.kept >= 0.15) { y = strong; mode = 'strong'; }
+      else if (strong.kept >= 0.03) { y = clean(data.pcm, data.sr, lc, { th: 1.4, fg: 0.18, rel: 0.9 }); mode = 'gentle'; }
+      else { postMessage({ ok: false, why: 'mostly background' }); return; }
+      postMessage({ ok: true, pcm: y, mode, kept: y.kept }, [y.buffer]);
     } catch (e) { postMessage({ ok: false, why: String(e) }); }
   };
 }
