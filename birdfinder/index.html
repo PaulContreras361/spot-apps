@@ -308,6 +308,32 @@ footer{border-top:0;color:#33433A}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .listen-tips{text-align:left;margin:0;padding-left:1.2em;font-size:.95rem;color:var(--muted)}
 .fieldready{margin:0;font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--emerald)}
+.idtabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.idtab{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:1.05rem;min-height:56px;border-radius:14px;border:2px solid var(--emerald);background:#fff;color:var(--emerald);cursor:pointer}
+.idtab.on{background:var(--emerald);color:#fff}
+.wiz-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.wiz-step{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted)}
+.wiz h3{font-family:var(--display);font-weight:400;font-size:1.7rem;margin:4px 0 4px}
+.wiz .hint{color:var(--muted);margin:0 0 12px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:64px;padding:12px 14px;border-radius:14px;border:2px solid var(--rule);background:#fff;cursor:pointer;font:inherit;font-size:1.08rem;color:inherit}
+.opt small{color:var(--muted);font-size:.85rem}
+.opt.on{border-color:var(--emerald);background:#EAF4EE;box-shadow:inset 0 0 0 1px var(--emerald)}
+.opt.unsure{border-style:dashed}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border-radius:14px;border:2px solid var(--rule);background:#fff;cursor:pointer;font:inherit;font-size:1rem;color:inherit}
+.sw i{width:44px;height:44px;border-radius:50%;border:2px solid rgba(0,0,0,.18)}
+.sw.on{border-color:var(--emerald);background:#EAF4EE;box-shadow:inset 0 0 0 1px var(--emerald)}
+.sw.on i{outline:3px solid var(--emerald);outline-offset:2px}
+.wiz-next{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap}
+.match{display:inline-block;font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:.8rem;border-radius:999px;padding:2px 9px;margin:4px 0;color:#fff;background:var(--emerald)}
+.match.m2{background:var(--gold)}.match.m1{background:#7A8A7F}
+.heardline{font-size:.9rem;color:var(--muted);margin:2px 0}
+.now{display:inline-flex;align-items:center;gap:6px;font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:.8rem;color:var(--cardinal)}
+.now::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--cardinal);animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.res.singing{background:linear-gradient(90deg,rgba(181,35,43,.07),transparent 70%);border-radius:10px}
+.entry .clipbtn{background:var(--emerald);color:#fff;border-color:var(--emerald)}
 .res-h{font-size:1.4rem;margin-bottom:6px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--rule)}
 .res:first-child{border-top:0}
@@ -332,12 +358,12 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <h1>Backyard <em>Bird</em></h1>
   </div></div>
   <div class="coverlines"><div class="wrap"><ul>
-    <li>Hummingbirds month by month</li><li>Cardinals &amp; feeder regulars</li><li>Nectar &amp; seed guide</li><li>Bird songs &amp; sound ID</li><li>Bird's-eye view of 19 spots</li>
+    <li>Hummingbirds month by month</li><li>Cardinals &amp; feeder regulars</li><li>Nectar &amp; seed guide</li><li>Name any bird by sight or sound</li><li>Bird's-eye view of 19 spots</li>
   </ul></div></div>
 </header>
 
 <nav class="tabs" aria-label="Sections"><div class="wrap">
-  <a href="#now">This Month</a><a href="#guide">Field Guide</a><a href="#listen">Who's Singing?</a><a href="#calendar">Calendar</a><a href="#feeder">Feeder Station</a><a href="#hotspots">Bird's-Eye View</a><a href="#log">My Bird Log</a><button type="button" class="textsize" id="textSize" aria-pressed="false">Aa Bigger text</button>
+  <a href="#now">This Month</a><a href="#guide">Field Guide</a><a href="#listen">Name That Bird</a><a href="#calendar">Calendar</a><a href="#feeder">Feeder Station</a><a href="#hotspots">Bird's-Eye View</a><a href="#log">My Bird Log</a><button type="button" class="textsize" id="textSize" aria-pressed="false">Aa Bigger text</button>
 </div></nav>
 
 <main class="wrap">
@@ -380,12 +406,21 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
 </section>
 
 <section class="dept" id="listen">
-  <div class="spread" data-n="3" style="--bp:78% 55%"><div class="spread-txt"><span class="eyebrow">Department 3</span><h2>Who's singing?</h2><p class="kicker">Hold up your phone, let it listen, and it tells you which bird it hears</p></div></div><p class="lede intro">Works for any bird, not just the ones in this guide. The listening happens right on your phone. No sound is sent anywhere.</p>
+  <div class="spread" data-n="3" style="--bp:78% 55%"><div class="spread-txt"><span class="eyebrow">Department 3</span><h2>Name that bird</h2><p class="kicker">Tell it what you saw, or let it listen to what you hear</p></div></div><div class="idtabs" role="tablist" aria-label="How do you want to name the bird?">
+    <button type="button" class="idtab" role="tab" data-tab="see" id="tabSeeBtn">I can see it</button>
+    <button type="button" class="idtab" role="tab" data-tab="hear" id="tabHearBtn">I can hear it</button>
+  </div>
+  <div id="tabSee" class="panel wiz" role="tabpanel" hidden>
+    <div class="wiz-top"><span class="wiz-step" id="wizStep"></span><button type="button" class="btn ghost" id="wizBack">‹ Back</button></div>
+    <div id="wizBody"></div>
+  </div>
+  <div id="tabHear" role="tabpanel">
+  <p class="lede intro">Names any bird it hears, not just the ones in this guide, and keeps a list as each one sings. The listening happens right on your phone. No sound is sent anywhere.</p>
   <div class="listen-grid">
     <div class="panel listen-panel">
       <button type="button" class="micbtn" id="micBtn" aria-live="polite"><span class="mic-ico" aria-hidden="true"></span><span id="micLabel">Listen</span></button>
       <div class="meter" aria-hidden="true"><i id="micLevel"></i></div>
-      <p class="listen-status" id="listenStatus" aria-live="polite">Tap <b>Listen</b> when you hear a bird. It listens for up to 15 seconds. Tap again to stop sooner.</p>
+      <p class="listen-status" id="listenStatus" aria-live="polite">Tap <b>Listen</b> and hold up your phone. Each bird shows up on the list as it sings. Tap <b>Stop</b> when you're done.</p>
       <p class="fieldready" id="fieldReady" hidden></p>
       <div class="listen-progress" id="loadBox" hidden><div><i id="loadBar"></i></div><span id="loadTxt">Getting the listener ready…</span></div>
       <button type="button" class="btn" id="fieldBtn">Get ready for the field</button>
@@ -400,6 +435,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
       <h3 class="res-h">What it heard</h3>
       <div id="listenResults"><p class="note" style="margin-top:.3rem">Your results show up here.</p></div>
     </div>
+  </div>
   </div>
 </section>
 
@@ -494,9 +530,10 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>For enjoyment and general guidance only.</b> Backyard Bird is a hobby guide for backyard bird watching. Bird seasons, ranges, and counts are typical for Texas and change with weather, year, and region.</p>
     <p><b>Bird's-eye view places.</b> Hours, access, fees, and rules can change. Check with each park, refuge, or preserve before you go, follow posted rules, and stay off private property unless you have permission.</p>
     <p><b>Be kind to the birds.</b> Keep your distance from nests, don't chase or bait birds for photos, and keep feeders and bird baths clean.</p>
+    <p><b>Name that bird.</b> The "I can see it" questions match the 29 birds in this guide only. The "I can hear it" listener knows birds worldwide.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Bird · version 2026-11-23d · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Bird · version 2026-11-23e · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -829,20 +866,51 @@ function renderLog(){
   const list=log.slice().sort((a,b)=>b.date.localeCompare(a.date));
   $("entries").innerHTML=list.length?list.map(e=>`<div class="entry"><span class="d num">${esc(e.date.slice(5).replace("-","/"))}</span>
     <div class="s"><strong>${esc(e.sp)}</strong> <span class="num">×${esc(e.n)}</span>${e.ex?'<span class="example">Example</span>':""}<small>${esc([e.place,e.notes].filter(Boolean).join(" · "))}</small></div>
-    <button type="button" data-k="${log.indexOf(e)}">Remove</button></div>`).join(""):`<p class="note">No sightings yet. Add your first bird on the left.</p>`;
+    ${e.clip?`<button type="button" class="clipbtn" data-clip="${esc(e.clip)}">Play it</button>`:""}<button type="button" data-k="${log.indexOf(e)}">Remove</button></div>`).join(""):`<p class="note">No sightings yet. Add your first bird on the left.</p>`;
   $("stTotal").textContent=real.length;
   $("stLife").textContent=new Set(real.map(e=>e.sp)).size;
   $("stYear").textContent=new Set(real.filter(e=>e.date.startsWith(String(today.getFullYear()))).map(e=>e.sp)).size;
 }
-$("logForm").addEventListener("submit",e=>{
+let pendingClip=null;
+const clipDB=(()=>{let p;const db=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open("backyard-bird",1);r.onupgradeneeded=()=>r.result.createObjectStore("clips");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+  const tx=(mode,fn)=>db().then(d=>new Promise((res,rej)=>{const t=d.transaction("clips",mode);const out=fn(t.objectStore("clips"));t.oncomplete=()=>res(out&&out.result);t.onerror=()=>rej(t.error)}));
+  return{put:(k,v)=>tx("readwrite",s=>s.put(v,k)),get:k=>tx("readonly",s=>s.get(k)),del:k=>tx("readwrite",s=>s.delete(k)).catch(()=>{})}})();
+function wavBytes(x,sr){const n=x.length,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  let pk=0;for(let i=0;i<n;i++){const a=Math.abs(x[i]);if(a>pk)pk=a} const g=pk>0?0.9/pk:1;
+  w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,x[i]*g))*32767,true);return b}
+$("logForm").addEventListener("submit",async e=>{
   e.preventDefault();
   log=log.filter(x=>!x.ex);
-  log.push({sp:$("fSpecies").value,date:$("fDate").value||iso(today),n:Math.max(1,parseInt($("fCount").value)||1),place:$("fPlace").value.trim(),notes:$("fNotes").value.trim()});
+  const entry={sp:$("fSpecies").value,date:$("fDate").value||iso(today),n:Math.max(1,parseInt($("fCount").value)||1),place:$("fPlace").value.trim(),notes:$("fNotes").value.trim()};
+  if(pendingClip&&pendingClip.sp===entry.sp){
+    const id="clip_"+Date.now();
+    try{await clipDB.put(id,wavBytes(pendingClip.pcm,48000));entry.clip=id}catch(_){}
+  }
+  pendingClip=null;
+  log.push(entry);
   const ok=store.set(KEY,log);
   $("logMsg").textContent=ok?"Saved.":"Added for this visit. This browser isn't letting the page save, so it will clear when you close it.";
   $("fNotes").value="";renderLog();
 });
-$("entries").addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b)return;log.splice(+b.dataset.k,1);store.set(KEY,log.filter(x=>!x.ex));renderLog()});
+let clipURL=null,clipBtn=null;
+$("entries").addEventListener("click",async e=>{
+  const c=e.target.closest("button[data-clip]");
+  if(c){ unlockPlayer();
+    if(clipBtn===c&&!player.paused){player.pause();c.textContent="Play it";clipBtn=null;return}
+    stopSong(); if(clipBtn)clipBtn.textContent="Play it";
+    try{
+      const data=await clipDB.get(c.dataset.clip); if(!data){c.textContent="Recording missing";return}
+      if(clipURL)URL.revokeObjectURL(clipURL); clipURL=URL.createObjectURL(new Blob([data],{type:"audio/wav"}));
+      player.src=clipURL; clipBtn=c; c.textContent="Stop"; await player.play();
+      player.onended=()=>{if(clipBtn){clipBtn.textContent="Play it";clipBtn=null}};
+    }catch(_){c.textContent="Couldn't play"}
+    return;
+  }
+  const b=e.target.closest("button[data-k]");if(!b)return;
+  const gone=log[+b.dataset.k]; if(gone&&gone.clip)clipDB.del(gone.clip);
+  log.splice(+b.dataset.k,1);store.set(KEY,log.filter(x=>!x.ex));renderLog()});
 
 function setBig(on){document.documentElement.classList.toggle("bigtext",on);$("textSize").setAttribute("aria-pressed",on);$("textSize").textContent=on?"Aa Normal text":"Aa Bigger text";store.set("mbbs_big",on)}
 $("textSize").onclick=()=>setBig(!document.documentElement.classList.contains("bigtext"));
@@ -1038,7 +1106,11 @@ async function to48k(buf){
   const out=await off.startRendering();
   return new Float32Array(out.getChannelData(0));
 }
-let rec=null; // {ctx,stream,node,chunks,len,timer,t0}
+let rec=null; // live listening session
+const LIVE_MAX=180, STEP_SEC=3, WIN_SEC=6;
+const heard=new Map(); // scientific name -> {r, best, count, first, last, clip}
+let oneShotClip=null;
+const mmss=t=>{t=Math.max(0,Math.round(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")};
 async function startListening(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){listenMsg("This browser can't use the microphone. Try Safari or Chrome, or use a recording.");return}
   const AC=window.AudioContext||window.webkitAudioContext;
@@ -1046,39 +1118,106 @@ async function startListening(){
   let stream;
   try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}
   catch(e){ctx.close();listenMsg("The microphone is turned off for this app. On iPhone: <b>Settings → Safari → Microphone → Allow</b> (or tap <b>aA</b> in the address bar → Website Settings → Microphone). Then try again.");return}
-  stopSong();
+  stopSong(); heard.clear(); oneShotClip=null; renderHeard();
   const srcN=ctx.createMediaStreamSource(stream);
   const node=ctx.createScriptProcessor(4096,1,1);
   const mute=ctx.createGain();mute.gain.value=0;
-  rec={ctx,stream,node,chunks:[],len:0,t0:Date.now()};
+  const sr=ctx.sampleRate, keep=Math.round(sr*(WIN_SEC+1));
+  rec={ctx,stream,node,sr,ring:new Float32Array(keep),filled:0,total:0,t0:Date.now(),lastSent:0,busy:false,chunks:0};
   node.onaudioprocess=ev=>{
-    if(!rec)return; const d=ev.inputBuffer.getChannelData(0);
-    rec.chunks.push(new Float32Array(d)); rec.len+=d.length;
+    if(!rec)return; const d=ev.inputBuffer.getChannelData(0), R=rec.ring;
+    if(d.length>=R.length)R.set(d.subarray(d.length-R.length));
+    else{R.copyWithin(0,d.length);R.set(d,R.length-d.length)}
+    rec.filled=Math.min(R.length,rec.filled+d.length); rec.total+=d.length;
     let pk=0;for(let i=0;i<d.length;i+=4){const v=Math.abs(d[i]);if(v>pk)pk=v}
     $("micLevel").style.width=Math.min(100,Math.round(Math.sqrt(pk)*140))+"%";
   };
   srcN.connect(node);node.connect(mute);mute.connect(ctx.destination);
   $("micBtn").classList.add("on");$("micLabel").textContent="Stop";
-  const tick=()=>{if(!rec)return;const left=MAXSEC-Math.floor((Date.now()-rec.t0)/1000);
-    listenMsg(`Listening… <b>${Math.max(0,left)}</b> seconds left. Hold still.`); if(left<=0)stopListening(); else rec.timer=setTimeout(tick,250)};
+  const tick=()=>{
+    if(!rec)return; const el=(Date.now()-rec.t0)/1000;
+    listenMsg(bnReady?`Listening… <b>${mmss(el)}</b>. Each bird shows up as it sings. Tap <b>Stop</b> when you're done.`
+                     :`Listening… <b>${mmss(el)}</b>. Getting the listener ready, birds will show up in a moment.`);
+    if(el>=LIVE_MAX){stopListening();return}
+    if(bnReady&&!rec.busy&&rec.total/rec.sr-rec.lastSent>=STEP_SEC&&rec.filled/rec.sr>=2.5)liveChunk();
+    rec.timer=setTimeout(tick,250);
+  };
   tick();
-  loadListener().catch(()=>{}); // start the download while it listens
+  loadListener().catch(e=>{listenMsg(/webgl/i.test(String(e))?"This phone's browser can't run the listener. Updating your phone's software usually fixes it.":"Couldn't get the listener ready. Check your internet for the first-time download, or tap <b>Get ready for the field</b> on Wi-Fi.");});
+}
+async function liveChunk(){
+  const r=rec; r.busy=true; r.lastSent=r.total/r.sr;
+  const n=Math.min(r.filled,Math.round(r.sr*WIN_SEC)), R=r.ring;
+  const buf=r.ctx.createBuffer(1,n,r.sr); buf.getChannelData(0).set(R.subarray(R.length-n));
+  const at=(Date.now()-r.t0)/1000;
+  try{
+    const pcm=await to48k(buf); const clip=pcm.slice();
+    const out=await identify(pcm);
+    addHeard(out.list,at,clip);
+  }catch(e){}
+  r.busy=false;
+}
+function addHeard(list,at,clip){
+  list.forEach((x,i)=>{
+    if(!(x.conf>=0.35&&(x.geo>=0.03||x.conf>=0.6)))return;
+    const h=heard.get(x.s);
+    if(!h)heard.set(x.s,{r:x,best:x.conf,count:1,first:at,last:at,clip});
+    else{h.count++;h.last=at;if(x.conf>h.best){h.best=x.conf;h.r=x;h.clip=clip}}
+  });
+  renderHeard(at);
 }
 async function stopListening(){
   if(!rec)return; const r=rec; rec=null; clearTimeout(r.timer);
   r.node.disconnect(); r.stream.getTracks().forEach(t=>t.stop());
   $("micBtn").classList.remove("on");$("micLabel").textContent="Listen";$("micLevel").style.width="0";
-  const secs=r.len/r.ctx.sampleRate;
-  if(secs<1.5){r.ctx.close();listenMsg("That was too short. Tap <b>Listen</b> and let it go at least 3 seconds.");return}
-  const buf=r.ctx.createBuffer(1,r.len,r.ctx.sampleRate);const ch=buf.getChannelData(0);let o=0;for(const c of r.chunks){ch.set(c,o);o+=c.length}
+  // catch a bird that sang in the last moments
+  if(bnReady&&r.filled/r.sr>=1.5&&r.total/r.sr-r.lastSent>=1){
+    listenMsg("Checking the last few seconds…");
+    while(r.busy)await new Promise(z=>setTimeout(z,100));
+    const n=Math.min(r.filled,Math.round(r.sr*WIN_SEC));const buf=r.ctx.createBuffer(1,n,r.sr);buf.getChannelData(0).set(r.ring.subarray(r.ring.length-n));
+    try{const pcm=await to48k(buf);const clip=pcm.slice();const out=await identify(pcm);addHeard(out.list,(Date.now()-r.t0)/1000,clip)}catch(e){}
+  }
   r.ctx.close();
-  await runID(buf);
+  renderHeard(-99);
+  const k=heard.size, secs=Math.round(r.total/r.sr);
+  if(!bnReady&&!k)listenMsg("The listener wasn't ready yet. Tap <b>Listen</b> again in a moment.");
+  else if(secs<3&&!k)listenMsg("That was too short. Tap <b>Listen</b> and let it go at least 3 seconds.");
+  else listenMsg(k?`Done. Heard <b>${k}</b> bird${k>1?"s":""} in ${mmss(secs)}. Tap <b>Listen</b> to go again.`:"Done. Tap <b>Listen</b> to try again.");
 }
+function renderHeard(now){
+  const box=$("listenResults");
+  const items=[...heard.values()].sort((a,b)=>b.best-a.best);
+  if(!items.length){box.innerHTML=`<p class="note" style="margin-top:.3rem">${rec?"Listening for birds…":"No bird came through clearly. Get closer, hold still, and try again while it's singing."}</p>`;return}
+  box.innerHTML=items.map(h=>resCard(h.r,h.best,{
+    singing:rec&&now>=0&&now-h.last<=WIN_SEC,
+    line:`Heard ${h.count} time${h.count>1?"s":""} · first at ${mmss(h.first)}${h.count>1?` · last at ${mmss(h.last)}`:""}`
+  })).join("")+`<p class="note">Percent is how sure the listener is. Tap <b>Compare its song</b> before you log it.</p>`;
+}
+function resCard(r,conf,o){
+  o=o||{};
+  const b=guideMatch(r), lv=conf>=0.7?3:conf>=0.4?2:1, word=["","Possible","Likely","Very likely"][lv];
+  const img=b&&THUMBS[b.id]?`<img class="rthumb" src="${THUMBS[b.id]}" alt="">`:`<div class="rnoimg" aria-hidden="true">${esc(r.c[0])}</div>`;
+  return `<div class="res${o.singing?" singing":""}">${img}<div>
+    <h4>${esc(b?b.n:r.c)}</h4><div class="sci">${esc(r.s)}</div>
+    ${o.singing?`<span class="now">Singing now</span><br>`:""}
+    <span class="lvl l${lv}">${word} · ${Math.round(conf*100)}%</span>
+    ${o.line?`<p class="heardline">${o.line}</p>`:""}
+    ${r.geo<0.03?`<p class="warn">Not usually around here this time of year. Double-check it.</p>`:""}
+    <div class="acts">
+      <button type="button" class="songbtn" data-sci="${esc(b?b.s:r.s)}" data-common="${esc(b?b.n:r.c)}" data-label="Compare its song"><span class="ico" aria-hidden="true"></span><span class="lbl">Compare its song</span></button>
+      ${b?`<button type="button" class="btn ghost" data-goto="${b.id}">In the guide</button>`:""}
+      <button type="button" class="btn" data-log="${esc(b?b.n:r.c)}" data-clipfor="${esc(r.s)}">Add to my log</button>
+    </div>
+    <div class="songinfo"></div>
+  </div></div>`;
+}
+
 async function runID(buf){
   $("micBtn").disabled=true;
   try{
     listenMsg("Thinking…");
     const pcm=await to48k(buf);
+    oneShotClip=pcm.slice(0,Math.min(pcm.length,48000*15));
     await loadListener();
     listenMsg("Thinking…");
     const out=await identify(pcm);
@@ -1107,25 +1246,13 @@ function guideMatch(r){
   return BIRDS.find(b=>b.s.toLowerCase()===sc||b.n.toLowerCase()===cn||(ALT[b.id]||[]).some(a=>a.toLowerCase()===sc));
 }
 function showResults(list){
-  const box=$("listenResults");
+  const box=$("listenResults"); heard.clear();
   const good=list.filter((r,i)=>r.conf>=0.30&&(i===0||r.geo>=0.03||r.conf>=0.6));
   if(!good.length){const f=list[0]&&list[0].conf>=0.15?list[0]:null;
     box.innerHTML=`<p class="note" style="margin-top:.3rem">No bird came through clearly. Get closer, hold still, and try again while it's singing.</p>`
       +(f?`<p class="note">Faint guess only: ${esc(f.c)} (${Math.round(f.conf*100)}%). Not enough to count on.</p>`:"");return}
-  box.innerHTML=good.slice(0,4).map((r,k)=>{
-    const b=guideMatch(r), lv=r.conf>=0.7?3:r.conf>=0.4?2:1, word=["","Possible","Likely","Very likely"][lv];
-    const img=b&&THUMBS[b.id]?`<img class="rthumb" src="${THUMBS[b.id]}" alt="">`:`<div class="rnoimg" aria-hidden="true">${esc(r.c[0])}</div>`;
-    return `<div class="res">${img}<div>
-      <h4>${esc(b?b.n:r.c)}</h4><div class="sci">${esc(r.s)}</div>
-      <span class="lvl l${lv}">${word} · ${Math.round(r.conf*100)}%</span>
-      ${r.geo<0.03?`<p class="warn">Not usually around here this time of year. Double-check it.</p>`:""}
-      <div class="acts">
-        <button type="button" class="songbtn" data-sci="${esc(b?b.s:r.s)}" data-common="${esc(b?b.n:r.c)}" data-label="Compare its song"><span class="ico" aria-hidden="true"></span><span class="lbl">Compare its song</span></button>
-        ${b?`<button type="button" class="btn ghost" data-goto="${b.id}">In the guide</button>`:""}
-        <button type="button" class="btn" data-log="${esc(b?b.n:r.c)}">Add to my log</button>
-      </div>
-      <div class="songinfo"></div>
-    </div></div>`}).join("")
+  good.slice(0,4).forEach(r=>heard.set(r.s,{r,best:r.conf,count:1,first:0,last:0,clip:oneShotClip}));
+  box.innerHTML=good.slice(0,4).map(r=>resCard(r,r.conf)).join("")
     +`<p class="note">Percent is how sure the listener is. Listen to the song to compare before you log it.</p>`;
 }
 $("listenResults").addEventListener("click",e=>{
@@ -1133,11 +1260,126 @@ $("listenResults").addEventListener("click",e=>{
   const g=e.target.closest("[data-goto]");
   if(g){setFilter("all");const el=$("b-"+g.dataset.goto);el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");return}
   const l=e.target.closest("[data-log]");
-  if(l){const name=l.dataset.log, sel=$("fSpecies");
+  if(l){const name=l.dataset.log, sel=$("fSpecies"), h=heard.get(l.dataset.clipfor);
+    pendingClip=h&&h.clip?{sp:name,pcm:h.clip}:null;
     if(![...sel.options].some(o=>o.value===name)){const o=document.createElement("option");o.textContent=name;sel.insertBefore(o,sel.lastElementChild)}
     sel.value=name;$("fDate").value=iso(new Date());$("fNotes").value="Heard it · ID'd by sound";
-    $("log").scrollIntoView({block:"start"});$("logMsg").textContent="Check the details, then tap Add sighting.";}
+    $("log").scrollIntoView({block:"start"});$("logMsg").textContent=pendingClip?"Check the details, then tap Add sighting. The recording will be saved with it.":"Check the details, then tap Add sighting.";}
 });
+
+  
+/* ===== Name that bird: 4 questions, matched against the field guide ===== */
+// z = size (1 tiny hummingbird, 2 small sparrow, 3 medium robin/cardinal, 4 large jay/mockingbird+, 5 very big heron/crane)
+// c = colors you can see, w = where you usually see it, d = what it is usually doing
+const ATTR={
+ rthu:{z:1,c:["green","red","white","black"],w:["feeder","tree"],d:["hover"]},
+ bchu:{z:1,c:["green","black","purple","white"],w:["feeder","tree"],d:["hover"]},
+ ruhu:{z:1,c:["orange","red","green","white"],w:["feeder","tree"],d:["hover"]},
+ bbhu:{z:1,c:["green","brown","red"],w:["feeder","tree"],d:["hover"]},
+ noca:{z:3,c:["red","black","brown"],w:["feeder","tree","ground"],d:["seed"]},
+ pyrr:{z:3,c:["gray","red"],w:["feeder","tree"],d:["seed"]},
+ pabu:{z:2,c:["blue","red","green","yellow"],w:["feeder","tree"],d:["seed"]},
+ inbu:{z:2,c:["blue","brown"],w:["feeder","tree","wire"],d:["seed"]},
+ blja:{z:4,c:["blue","white","black","gray"],w:["feeder","tree"],d:["seed","flock"]},
+ grja:{z:4,c:["green","yellow","blue","black"],w:["feeder","tree"],d:["seed","flock"]},
+ nomo:{z:4,c:["gray","white","black"],w:["wire","tree","ground"],d:["perch","ground"]},
+ cawr:{z:2,c:["brown","white","orange"],w:["tree","ground","feeder"],d:["flit","ground"]},
+ cach:{z:2,c:["black","white","gray"],w:["feeder","tree"],d:["seed","flit"]},
+ bcti:{z:2,c:["gray","black","white","orange"],w:["feeder","tree"],d:["seed","flit"]},
+ rbwo:{z:3,c:["red","black","white"],w:["tree","feeder"],d:["climb"]},
+ gfwo:{z:3,c:["yellow","red","black","white","orange"],w:["tree","feeder","wire"],d:["climb"]},
+ dowo:{z:2,c:["black","white","red"],w:["tree","feeder"],d:["climb"]},
+ amgo:{z:2,c:["yellow","black","brown","white"],w:["feeder","tree"],d:["seed","flock"]},
+ cewa:{z:3,c:["brown","yellow","gray","black","red"],w:["tree"],d:["flock","fruit"]},
+ yrwa:{z:2,c:["gray","yellow","brown","white","black"],w:["tree","ground"],d:["flit","catch"]},
+ rcki:{z:1,c:["green","gray","white","red"],w:["tree"],d:["flit"]},
+ stfl:{z:4,c:["gray","pink","white","orange","black"],w:["wire","sky"],d:["catch","perch"]},
+ baor:{z:3,c:["orange","black","yellow","white"],w:["tree","feeder"],d:["fruit"]},
+ puma:{z:3,c:["purple","black","blue","gray","white"],w:["sky","wire"],d:["fly","flock"]},
+ eabl:{z:3,c:["blue","orange","white","brown"],w:["wire","ground","tree"],d:["catch","perch"]},
+ vefl:{z:2,c:["red","brown","black","gray"],w:["wire","tree"],d:["catch","perch"]},
+ gkis:{z:3,c:["yellow","brown","black","white"],w:["wire","tree","water"],d:["catch","perch"]},
+ rosp:{z:5,c:["pink","white","red"],w:["water"],d:["wade","flock"]},
+ whcr:{z:5,c:["white","black","red"],w:["water","sky"],d:["wade","fly"]}
+};
+const COLORS=[["red","Red","#C8102E"],["orange","Orange","#E8742A"],["yellow","Yellow","#F2C81B"],["green","Green","#2F8E4E"],
+ ["blue","Blue","#2E5FB8"],["purple","Purple","#5B3A8C"],["pink","Pink","#E98BB0"],["brown","Brown","#8A5A33"],
+ ["gray","Gray","#9A9C98"],["black","Black","#16161A"],["white","White","#FFFFFF"]];
+const QS=[
+ {k:"z",q:"How big was it?",hint:"Pick the closest size.",one:true,o:[[1,"Tiny","Hummingbird size, about 3 to 4 inches"],[2,"Small","Sparrow or chickadee size, 4 to 6 inches"],[3,"Medium","Cardinal or robin size, 7 to 10 inches"],[4,"Large","Blue Jay size or bigger, 10 to 14 inches"],[5,"Very big","Heron, spoonbill or crane size"]]},
+ {k:"c",q:"What colors did you see?",hint:"Tap every color you noticed, then tap Next.",colors:true},
+ {k:"w",q:"Where was it?",hint:"Where you saw it this time.",one:true,o:[["feeder","At a feeder"],["tree","In a tree or bush"],["ground","On the ground or lawn"],["wire","On a wire, fence or post"],["sky","Flying overhead"],["water","In water or a marsh"]]},
+ {k:"d",q:"What was it doing?",hint:"The last question.",one:true,o:[["hover","Hovering at flowers or a feeder"],["seed","Eating seed"],["climb","Climbing up a tree trunk"],["catch","Flying out to catch bugs"],["flit","Hopping around in the leaves"],["wade","Wading in shallow water"],["flock","Moving in a flock"],["fruit","Eating berries or fruit"],["perch","Sitting up high, singing"]]}
+];
+let wiz={step:0,a:{z:null,c:[],w:null,d:null}};
+function wizRender(){
+  const body=$("wizBody"); $("wizBack").hidden=wiz.step===0;
+  if(wiz.step>=QS.length){$("wizStep").textContent="Your matches";body.innerHTML=wizResults();return}
+  const Q=QS[wiz.step]; $("wizStep").textContent=`Question ${wiz.step+1} of ${QS.length}`;
+  let h=`<h3>${Q.q}</h3><p class="hint">${Q.hint}</p>`;
+  if(Q.colors){
+    h+=`<div class="swatches">${COLORS.map(([k,l,hex])=>`<button type="button" class="sw${wiz.a.c.includes(k)?" on":""}" data-col="${k}" aria-pressed="${wiz.a.c.includes(k)}"><i style="background:${hex}"></i>${l}</button>`).join("")}</div>
+      <div class="wiz-next"><button type="button" class="btn" data-next="1">Next ›</button><button type="button" class="btn ghost" data-skip="1">Not sure</button></div>`;
+  }else{
+    h+=`<div class="opts">${Q.o.map(([v,l,sm])=>`<button type="button" class="opt${wiz.a[Q.k]===v?" on":""}" data-v="${v}">${l}${sm?`<small>${sm}</small>`:""}</button>`).join("")}
+      <button type="button" class="opt unsure" data-skip="1">Not sure<small>Skip this question</small></button></div>`;
+  }
+  body.innerHTML=h;
+}
+function wizScore(b){
+  const A=ATTR[b.id], a=wiz.a; if(!A)return -99; let s=0, max=0;
+  if(a.z!=null){max+=4; const d=Math.abs(a.z-A.z); s+=d===0?4:d===1?1.5:-4}
+  if(a.c.length){max+=a.c.length*2; a.c.forEach(c=>{s+=A.c.includes(c)?2:-2})}
+  if(a.w){max+=2; s+=A.w.includes(a.w)?2:-1}
+  if(a.d){max+=3; s+=A.d.includes(a.d)?3:-1.5}
+  const mo=b.m[new Date().getMonth()]; // 0 not here now, 1 some, 2 peak
+  max+=1; s+=mo===2?1:mo===1?0.5:-3;
+  return max?s/max:0;
+}
+function wizResults(){
+  const ranked=BIRDS.map(b=>({b,sc:wizScore(b)})).sort((x,y)=>y.sc-x.sc);
+  const top=ranked.filter(x=>x.sc>0.35).slice(0,5);
+  const month=new Date().toLocaleString("en-US",{month:"long"});
+  if(!top.length)return `<p class="note">No bird in this guide matches all of that. Try again and pick fewer colors, or use <b>I can hear it</b> if it's singing.</p>
+    <div class="wiz-next"><button type="button" class="btn" data-restart="1">Start over</button></div>`;
+  return top.map(({b,sc})=>{
+    const lv=sc>=0.75?3:sc>=0.55?2:1, word=["","Possible","Good match","Best match"][lv];
+    const mo=b.m[new Date().getMonth()];
+    return `<div class="res">${THUMBS[b.id]?`<img class="rthumb" src="${THUMBS[b.id]}" alt="">`:`<div class="rnoimg">${esc(b.n[0])}</div>`}<div>
+      <h4>${esc(b.n)}</h4><div class="sci">${esc(b.s)}</div>
+      <span class="match m${lv}">${word}</span>
+      <p class="heardline">${esc(b.id_)}</p>
+      ${mo===0?`<p class="warn">Not usually here in ${month}. Double-check it.</p>`:""}
+      <div class="acts">
+        <button type="button" class="songbtn" data-sci="${esc(b.s)}" data-common="${esc(b.n)}" data-label="Hear its song"><span class="ico" aria-hidden="true"></span><span class="lbl">Hear its song</span></button>
+        <button type="button" class="btn ghost" data-goto="${b.id}">In the guide</button>
+        <button type="button" class="btn" data-log="${esc(b.n)}" data-seen="1">Add to my log</button>
+      </div><div class="songinfo"></div></div></div>`}).join("")
+   +`<p class="note">Matches come from the ${BIRDS.length} birds in this guide. Compare the photo and the song before you log it.</p>
+     <div class="wiz-next"><button type="button" class="btn ghost" data-restart="1">Start over</button></div>`;
+}
+$("wizBody").addEventListener("click",e=>{
+  if(songClick(e))return;
+  const t=e.target.closest("button"); if(!t)return; const Q=QS[wiz.step];
+  if(t.dataset.restart){wiz={step:0,a:{z:null,c:[],w:null,d:null}};wizRender();return}
+  if(t.dataset.goto){setFilter("all");const el=$("b-"+t.dataset.goto);el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash");return}
+  if(t.dataset.log){const name=t.dataset.log,sel=$("fSpecies");pendingClip=null;sel.value=name;$("fDate").value=iso(new Date());$("fNotes").value="Seen it · named with Name That Bird";
+    $("log").scrollIntoView({block:"start"});$("logMsg").textContent="Check the details, then tap Add sighting.";return}
+  if(t.dataset.col){const k=t.dataset.col,i=wiz.a.c.indexOf(k);i<0?wiz.a.c.push(k):wiz.a.c.splice(i,1);t.classList.toggle("on",i<0);t.setAttribute("aria-pressed",i<0);return}
+  if(t.dataset.skip){if(Q.colors)wiz.a.c=[];else wiz.a[Q.k]=null;wiz.step++;wizRender();$("tabSee").scrollIntoView({block:"start"});return}
+  if(t.dataset.next){wiz.step++;wizRender();$("tabSee").scrollIntoView({block:"start"});return}
+  if(t.dataset.v!=null&&Q){const v=Q.k==="z"?+t.dataset.v:t.dataset.v;wiz.a[Q.k]=v;wiz.step++;wizRender();$("tabSee").scrollIntoView({block:"start"})}
+});
+$("wizBack").addEventListener("click",()=>{if(wiz.step>0){wiz.step--;wizRender()}});
+function showTab(t){
+  const see=t==="see"; $("tabSee").hidden=!see; $("tabHear").hidden=see;
+  $("tabSeeBtn").classList.toggle("on",see); $("tabHearBtn").classList.toggle("on",!see);
+  $("tabSeeBtn").setAttribute("aria-selected",see); $("tabHearBtn").setAttribute("aria-selected",!see);
+  if(see&&rec)stopListening(); store.set("bb_tab",t);
+}
+$("tabSeeBtn").addEventListener("click",()=>showTab("see"));
+$("tabHearBtn").addEventListener("click",()=>showTab("hear"));
+showTab(store.get("bb_tab","see")); wizRender();
 
 /* ===== Works with no signal: save the app + listener on the phone ===== */
 function fieldStatus(t,ok){const el=$("fieldReady");el.hidden=false;el.textContent=t;el.style.color=ok?"":"var(--muted)";if(ok)$("fieldBtn").hidden=true}
