@@ -275,10 +275,13 @@ nav.tabs a{display:inline-flex;align-items:center;font-size:.9rem}
 .disclaimer p{margin:.55rem 0}
 .disclaimer .copy{color:var(--muted);font-size:.85rem;margin-top:12px}
 .textsize{margin-left:auto;flex:none;font-family:var(--label);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.9rem;min-height:44px;padding:0 14px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer}
-.sosbar{display:flex!important;gap:10px;padding-block:8px 0!important;overflow:visible!important}
-.sosbtn{flex:1;white-space:nowrap;padding:0 8px;min-height:52px;border-radius:12px;border:0;font-family:var(--label);font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:1.1rem;cursor:pointer;color:#fff}
+.sosbar[hidden]{display:none!important}
+.sosbar{display:flex!important;gap:8px;padding-block:8px 0!important;overflow:visible!important}
+.sosbtn{flex:1;white-space:nowrap;padding:0 8px;min-height:52px;border-radius:12px;border:0;font-family:var(--label);font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:clamp(.78rem,3.9vw,1.1rem);cursor:pointer;color:#fff;min-width:0}
 .sosbtn.safe{background:#C77700}
-.sosbtn.sos{background:#C62828}
+.sosoff{flex:none;min-height:52px;min-width:50px;padding:0 8px;border-radius:12px;border:2px solid var(--rule);background:var(--card);color:var(--muted);font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:.95rem;cursor:pointer}
+.sosonpill{flex:none;min-height:44px;padding:0 14px;border-radius:999px;border:2px solid #C77700;background:#FFF4E0;color:#8A5200;font-family:var(--label);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.85rem;cursor:pointer;margin-right:6px}
+.sosbtn.sos{background:#C62828;flex:1.35}
 .sheet .bigcall{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:72px;border-radius:16px;background:#C62828;color:#fff;font-family:var(--label);font-weight:800;font-size:1.6rem;letter-spacing:.05em;text-decoration:none;margin:12px 0 6px;box-sizing:border-box}
 .sheet .bigbtn{width:100%;min-height:58px;font-size:1.1rem;margin-top:10px}
 .locbox{border:2px solid var(--rule);border-radius:14px;padding:12px 14px;background:#fff;margin-top:10px}
@@ -432,8 +435,8 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
   </ul></div></div>
 </header>
 
-<nav class="tabs" aria-label="Sections"><div class="wrap sosbar"><button type="button" class="sosbtn safe" id="safetyBtn">⚠ Safety</button><button type="button" class="sosbtn sos" id="sosBtn">🆘 Emergency</button></div><div class="wrap">
-  <a href="#now">This Month</a><a href="#guide">Field Guide</a><a href="#listen">Name That Bird</a><a href="#calendar">Calendar</a><a href="#feeder">Feeder Station</a><a href="#hotspots">Bird's-Eye View</a><a href="#log">My Bird Log</a><a href="#finds">First Finds</a><button type="button" class="textsize" id="textSize" aria-pressed="false">Aa Bigger text</button>
+<nav class="tabs" aria-label="Sections"><div class="wrap sosbar"><button type="button" class="sosbtn safe" id="safetyBtn">⚠ Safety</button><button type="button" class="sosbtn sos" id="sosBtn">🆘 Emergency</button><button type="button" class="sosoff" id="sosOff" aria-label="Turn off Safety and Emergency buttons">Off</button></div><div class="wrap">
+  <button type="button" class="sosonpill" id="sosOn" hidden>⚠ Safety: Off · Turn on</button><a href="#now">This Month</a><a href="#guide">Field Guide</a><a href="#listen">Name That Bird</a><a href="#calendar">Calendar</a><a href="#feeder">Feeder Station</a><a href="#hotspots">Bird's-Eye View</a><a href="#log">My Bird Log</a><a href="#finds">First Finds</a><button type="button" class="textsize" id="textSize" aria-pressed="false">Aa Bigger text</button>
 </div></nav>
 
 <main class="wrap">
@@ -739,7 +742,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25o · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25p · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2535,8 +2538,14 @@ $("goSend").addEventListener("click",()=>{
 });
 [$("sosSheet"),$("safeSheet")].forEach(s=>s.addEventListener("click",e=>{if(e.target===s)s.hidden=true}));
 
+/* -- Safety & Emergency on/off (remembered on this phone) -- */
+function setSosOn(on){store.set("bb_sos_on",on);$("safetyBtn").parentNode.hidden=!on;$("sosOn").hidden=on}
+$("sosOff").addEventListener("click",()=>{if(confirm("Turn off the Safety and Emergency buttons?\n\nYou can turn them back on any time with the \"Safety: Off\" button at the top."))setSosOn(false)});
+$("sosOn").addEventListener("click",()=>setSosOn(true));
+setSosOn(store.get("bb_sos_on",true));
+
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25o";
+const APP_VERSION="2026-11-25p";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
