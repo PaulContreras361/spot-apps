@@ -1,5 +1,5 @@
 /* Backyard Birding offline helper: keeps the app and the bird listener on the phone so they work with no signal. */
-const SHELL = 'bb-shell-v15';
+const SHELL = 'bb-shell-v16';
 const PHOTOS = 'bb-photos-v1';
 const MODEL = 'bb-birdnet-v1';   // the big listener files; only change this name if the model files change
 const SHELL_FILES = ['./', 'index.html', 'manifest.json', 'apple-touch-icon.png', 'favicon.png', 'icon-192.png', 'icon-512.png', 'denoise.js', 'photoid/photoid.js', 'photoid/texas.json'];

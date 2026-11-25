@@ -438,8 +438,8 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
         <div><span>Evening window</span><b class="num" id="wPM" style="font-size:1.1rem">–</b></div>
       </div>
       <p class="note">Birds feed hardest in the first two hours after sunrise and again before dusk. Hummingbirds tank up right before sunset.</p>
-      <input type="hidden" id="lat" value="28.68"><input type="hidden" id="lon" value="-96.56">
-      <p class="note" id="locName">Times for Point Comfort, Central Time.</p>
+      <input type="hidden" id="lat" value="28.615"><input type="hidden" id="lon" value="-96.626">
+      <p class="note" id="locName">Times for Port Lavaca, Central Time.</p>
       <button type="button" class="mtog" id="townTog" aria-expanded="false"><span>Change town</span><span class="mtog-i" aria-hidden="true">▼</span></button>
       <div id="townBody" hidden>
         <span class="eyebrow" style="display:block;margin-top:12px;color:var(--muted)">Pick your town</span>
@@ -657,7 +657,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25j · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25k · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1201,11 +1201,13 @@ function renderSun(){
   }
   const p=PRESETS.find(p=>Math.abs(p[1]-lat)<.01&&Math.abs(p[2]-lon)<.01);
   $("presets").querySelectorAll("[data-i]").forEach(b=>b.setAttribute("aria-pressed",PRESETS[b.dataset.i]===p));
-  $("townTog").firstElementChild.innerHTML=($("townBody").hidden?"Change town":"Done")+` <b style="font-weight:400;text-transform:none;letter-spacing:0">· ${esc(p?p[0]:"Point Comfort")}</b>`;
-  $("locName").textContent="Times for "+(p?p[0]:"Point Comfort")+", "+today.toLocaleDateString("en-US",{month:"short",day:"numeric"})+", Central Time.";
+  $("townTog").firstElementChild.innerHTML=($("townBody").hidden?"Change town":"Done")+` <b style="font-weight:400;text-transform:none;letter-spacing:0">· ${esc(p?p[0]:"Port Lavaca")}</b>`;
+  $("locName").textContent="Times for "+(p?p[0]:"Port Lavaca")+", "+today.toLocaleDateString("en-US",{month:"short",day:"numeric"})+", Central Time.";
   renderSpots();
 }
-const BUILTIN_TOWNS=PRESETS.length;
+const BUILTIN_TOWNS=PRESETS.length, DEFAULT_TOWN="Port Lavaca"; // default town until changed
+// one-time move: phones still on the old default (Point Comfort) switch to the new default
+if(!store.get("bb_default_v2",false)){const s=store.get("mbbs_loc",null); if(s&&Math.abs(s[0]-28.68)<.01&&Math.abs(s[1]+96.56)<.01)store.set("mbbs_loc",[28.615,-96.626]); store.set("bb_default_v2",true)}
 let MYTOWNS=store.get("bb_mytowns",[]); MYTOWNS.forEach(t=>PRESETS.push(t));
 function renderPresets(){
   $("presets").innerHTML=PRESETS.map((p,i)=>i<BUILTIN_TOWNS?`<button type="button" data-i="${i}">${esc(p[0])}</button>`
@@ -1218,7 +1220,7 @@ $("presets").addEventListener("click",e=>{
   if(r){const i=+r.dataset.rm,p=PRESETS[i]; if(!confirm(`Remove ${p[0]} from your places?`))return;
     const wasOn=Math.abs(+$("lat").value-p[1])<.01&&Math.abs(+$("lon").value-p[2])<.01;
     PRESETS.splice(i,1); MYTOWNS=PRESETS.slice(BUILTIN_TOWNS); store.set("bb_mytowns",MYTOWNS); renderPresets();
-    if(wasOn)setTown(PRESETS[5]); else renderSun(); return}
+    if(wasOn)setTown(PRESETS.find(t=>t[0]===DEFAULT_TOWN)); else renderSun(); return}
   const b=e.target.closest("[data-i]"); if(b)setTown(PRESETS[b.dataset.i]);
 });
 function addTown(name,lat,lon){
@@ -2291,7 +2293,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25j";
+const APP_VERSION="2026-11-25k";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
