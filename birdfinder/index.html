@@ -296,6 +296,9 @@ nav.tabs a{display:inline-flex;align-items:center;font-size:.9rem}
 .ctc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .ctc input{font:inherit;font-size:1.05rem;padding:10px;border:2px solid var(--rule);border-radius:10px;background:#fff;min-width:0}
 .safelist li{margin:6px 0}
+.sheet [hidden]{display:none!important}
+.handopts .opt{min-height:60px;font-size:1.05rem}
+.roadset summary{cursor:pointer;color:var(--emerald);font-weight:600;min-height:44px;display:flex;align-items:center}
 .textsize[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 /* Photo backgrounds: each department sits on a washed-out version of one picture */
 html,body{overflow-x:clip}
@@ -707,6 +710,19 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
 <div class="addbird" id="safeSheet" hidden role="dialog" aria-modal="true" aria-labelledby="safeTitle"><div class="sheet">
   <h3 id="safeTitle" style="color:#C77700">⚠ Safety</h3>
   <p class="note" id="safeWhere" style="margin:.2rem 0 0"></p>
+  <h4>I need a hand (not an emergency)</h4>
+  <div class="opts handopts" id="handKinds"></div>
+  <div id="handBox" hidden>
+    <div class="alertbox" id="handTip"></div>
+    <a class="bigcall" id="handCall911" href="tel:911" hidden style="min-height:58px;font-size:1.3rem">📞 Call 911</a>
+    <a class="btn bigbtn" id="handRoad" hidden style="display:flex;align-items:center;justify-content:center;text-decoration:none;box-sizing:border-box">🚗 Call roadside help</a>
+    <button type="button" class="btn bigbtn" id="handText" style="background:#C77700;border-color:#C77700">Text my location to my contacts</button>
+    <button type="button" class="btn ghost bigbtn" id="handShare">Send it another way (group chat…)</button>
+    <p class="note" id="handMsg" style="margin:.5rem 0 0"></p>
+  </div>
+  <details class="roadset" style="margin-top:10px"><summary>Roadside help number (insurance or AAA)</summary>
+    <div class="ctc" style="grid-template-columns:1fr auto"><input type="tel" id="roadNum" placeholder="Phone number"><button type="button" class="btn ghost" id="roadSave">Save</button></div>
+    <p class="note" id="roadMsg" style="margin:.3rem 0 0">Saved only on this phone.</p></details>
   <h4>Weather alerts</h4><div id="safeAlerts"><p class="note">Checking…</p></div>
   <h4>Right now</h4><div id="safeNow"><p class="note">Checking…</p></div>
   <h4>Report a problem</h4>
@@ -742,7 +758,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25p · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25q · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2538,6 +2554,31 @@ $("goSend").addEventListener("click",()=>{
 });
 [$("sosSheet"),$("safeSheet")].forEach(s=>s.addEventListener("click",e=>{if(e.target===s)s.hidden=true}));
 
+/* -- I need a hand (not an emergency) -- */
+const HAND=[
+ {k:"car",l:"🚗 Flat tire or car trouble",tip:"Pull fully off the road, turn on your hazard lights, and stay with your car if it's safe.",road:true},
+ {k:"lost",l:"🧭 I'm lost",tip:"Stay where you are if you can. Your location will be in the text so someone can find you."},
+ {k:"bees",l:"🐝 Bees, wasps, or fire ants",tip:"Walk away from the nest. <b>Trouble breathing, or swelling of the face or throat? Call 911 now.</b>",nine:true},
+ {k:"fell",l:"🦵 I fell but I'm okay",tip:"Sit and rest first. <b>Hit your head, can't get up, or bad pain? Call 911.</b>",nine:true},
+ {k:"heat",l:"🥵 Too hot or out of water",tip:"Get into shade or a cool car and sip water. <b>Confused, fainting, or very hot without sweating? Call 911.</b>",nine:true},
+ {k:"other",l:"🙋 Other, I need a hand",tip:"Your location will be in the text."}];
+let handSel=null;
+$("handKinds").innerHTML=HAND.map(x=>`<button type="button" class="opt" data-hk="${x.k}">${x.l}</button>`).join("");
+$("handKinds").addEventListener("click",e=>{const b=e.target.closest("[data-hk]");if(!b)return;handSel=HAND.find(x=>x.k===b.dataset.hk);
+  $("handKinds").querySelectorAll(".opt").forEach(o=>o.classList.toggle("on",o===b));
+  $("handTip").innerHTML=handSel.tip; $("handCall911").hidden=!handSel.nine;
+  const rn=store.get("bb_roadside","").replace(/[^\d+]/g,""); $("handRoad").hidden=!(handSel.road&&rn); if(rn)$("handRoad").href="tel:"+rn;
+  $("handMsg").textContent=handSel.road&&!rn?"Tip: save your roadside help number below to call it from here.":"";
+  $("handBox").hidden=false; $("handBox").scrollIntoView({block:"nearest"})});
+async function handBody(){let p=null;try{p=await getPos(true)}catch(_){}
+  const what=handSel.k==="other"?"":": "+handSel.l.replace(/^\S+\s/,"");
+  return `I need a hand${what}. Not an emergency. My location: ${p?mapLink(p):"near "+townName()}. Sent ${new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}. (Backyard Birding)`}
+$("handText").addEventListener("click",async()=>{if(!handSel)return;const c=sosContacts();
+  if(!c.length)$("handMsg").textContent="No emergency contacts saved yet (add them under Emergency). Your text will open so you can pick who to send it to.";
+  sendText(await handBody(),c.map(x=>x.phone))});
+$("handShare").addEventListener("click",async()=>{if(handSel)shareText(await handBody(),$("handMsg"))});
+$("roadSave").addEventListener("click",()=>{const v=$("roadNum").value.trim();store.set("bb_roadside",v);$("roadMsg").textContent=v?"Saved. It shows on the Flat tire button.":"Removed."});
+$("safetyBtn").addEventListener("click",()=>{handSel=null;$("handBox").hidden=true;$("handKinds").querySelectorAll(".opt").forEach(o=>o.classList.remove("on"));$("roadNum").value=store.get("bb_roadside","")});
 /* -- Safety & Emergency on/off (remembered on this phone) -- */
 function setSosOn(on){store.set("bb_sos_on",on);$("safetyBtn").parentNode.hidden=!on;$("sosOn").hidden=on}
 $("sosOff").addEventListener("click",()=>{if(confirm("Turn off the Safety and Emergency buttons?\n\nYou can turn them back on any time with the \"Safety: Off\" button at the top."))setSosOn(false)});
@@ -2545,7 +2586,7 @@ $("sosOn").addEventListener("click",()=>setSosOn(true));
 setSosOn(store.get("bb_sos_on",true));
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25p";
+const APP_VERSION="2026-11-25q";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
