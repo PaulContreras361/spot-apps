@@ -619,7 +619,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <h2 class="fftitle">Group First Finds</h2>
     <p class="note">Found a bird that isn't in this guide? Add it with <b>+ Add a bird I found</b>, then tap <b>Share with group</b> on its card. The first person to post a bird with a photo or recording gets the 🥇. First is decided by when it was posted, not by the date typed in.</p>
     <div id="ffSetup" class="ffsetup">
-      <label for="ffName">Your name (what the group sees)</label><input type="text" id="ffName" autocomplete="name" placeholder="Example: Paul C.">
+      <label for="ffName">Your name (what the group sees)</label><input type="text" id="ffName" autocomplete="name" placeholder="Your name">
       <label for="ffCode">Group code</label><input type="text" id="ffCode" autocomplete="off" autocapitalize="off" placeholder="From your group leader">
       <button type="button" class="btn" id="ffSave">Save and show the board</button>
     </div>
@@ -679,7 +679,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25m · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25n · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2382,7 +2382,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25m";
+const APP_VERSION="2026-11-25n";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
