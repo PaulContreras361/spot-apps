@@ -296,6 +296,7 @@ nav.tabs a{display:inline-flex;align-items:center;font-size:.9rem}
 .ctc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .ctc input{font:inherit;font-size:1.05rem;padding:10px;border:2px solid var(--rule);border-radius:10px;background:#fff;min-width:0}
 .safelist li{margin:6px 0}
+.privnote{font-size:.95rem;color:var(--muted);background:var(--wash);border-radius:10px;padding:8px 10px;margin:10px 0 0}
 .sheet [hidden]{display:none!important}
 .handopts .opt{min-height:60px;font-size:1.05rem}
 .roadset summary{cursor:pointer;color:var(--emerald);font-weight:600;min-height:44px;display:flex;align-items:center}
@@ -695,6 +696,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
   <h3 id="sosTitle" style="color:#C62828">🆘 Emergency</h3>
   <a class="bigcall" href="tel:911">📞 Call 911</a>
   <p class="note" style="margin:0">If someone is hurt or in danger, call 911 first.</p>
+  <p class="privnote">📍 Your location stays on your phone. It's only used for the weather and added to texts you choose to send. It's never sent to the app's maker.</p>
   <div class="locbox"><span class="eyebrow" style="color:var(--muted)">Your location · read this to the dispatcher</span>
     <div class="coords" id="sosCoords">Finding your location…</div><p class="note" id="sosNear" style="margin:0"></p>
     <button type="button" class="btn ghost" id="sosRefresh" style="margin-top:8px">Update my location</button></div>
@@ -710,6 +712,8 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
 <div class="addbird" id="safeSheet" hidden role="dialog" aria-modal="true" aria-labelledby="safeTitle"><div class="sheet">
   <h3 id="safeTitle" style="color:#C77700">⚠ Safety</h3>
   <p class="note" id="safeWhere" style="margin:.2rem 0 0"></p>
+  <button type="button" class="btn ghost" id="safeHere" style="margin-top:6px">Use where I am now</button>
+  <p class="privnote">📍 Your location stays on your phone. It's only used for the weather and added to texts you choose to send. It's never sent to the app's maker.</p>
   <h4>I need a hand (not an emergency)</h4>
   <div class="opts handopts" id="handKinds"></div>
   <div id="handBox" hidden>
@@ -758,7 +762,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25r · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25s · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2510,9 +2514,10 @@ $("sosShare").addEventListener("click",()=>shareText(sosBody(),$("sosMsg")));
 const WX={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",80:"Rain showers",81:"Rain showers",82:"Heavy showers",95:"Thunderstorms",96:"Thunderstorms with hail",99:"Thunderstorms with hail"};
 const SAFE_KINDS=["Flooded or closed road","Gate locked or area closed","Alligator, snake, or dangerous animal","Bad weather","Unsafe trail or boardwalk","Other problem"];
 let safeKind=null, safePos=null;
-async function loadSafety(){
+async function loadSafety(useGPS){
   $("safeAlerts").innerHTML='<p class="note">Checking…</p>'; $("safeNow").innerHTML='<p class="note">Checking…</p>';
-  try{safePos=await getPos(false);$("safeWhere").textContent="For where you are now."}catch(_){safePos=townPos();$("safeWhere").textContent="For "+townName()+" (turn on Location for where you are now)."}
+  safePos=townPos(); $("safeWhere").textContent="Weather for "+townName()+".";
+  if(useGPS){try{safePos=await getPos(false);$("safeWhere").textContent="Weather for where you are now."}catch(_){$("safeWhere").textContent="Weather for "+townName()+". (Location is off for this app.)"}}
   const {lat,lon}=safePos;
   try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);
     const j=await fetch(`https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`,{signal:ac.signal,headers:{Accept:"application/geo+json"}}).then(r=>r.json()); clearTimeout(tm);
@@ -2536,7 +2541,8 @@ async function loadSafety(){
 $("safetyBtn").addEventListener("click",()=>{stopSong();safeKind=null;$("safeNotes").value="";$("safeMsg").textContent="";
   $("safeKinds").innerHTML=SAFE_KINDS.map(k=>`<button type="button" class="opt" data-sk="${esc(k)}">${esc(k)}</button>`).join("");
   const a=activeSpot>=0&&SPOTS[activeSpot]; $("goWhere").value=a?a.n:""; 
-  $("safeSheet").hidden=false; loadSafety()});
+  $("safeSheet").hidden=false; loadSafety(false)});
+$("safeHere").addEventListener("click",()=>loadSafety(true));
 $("safeClose").addEventListener("click",()=>$("safeSheet").hidden=true);
 $("safeKinds").addEventListener("click",e=>{const b=e.target.closest("[data-sk]");if(!b)return;safeKind=b.dataset.sk;$("safeKinds").querySelectorAll(".opt").forEach(o=>o.classList.toggle("on",o===b))});
 $("safeSend").addEventListener("click",async()=>{
@@ -2587,7 +2593,7 @@ $("sosOn").addEventListener("click",()=>setSosOn(true));
 showSos(store.get("bb_sos_on2",false)); // off until the person turns it on
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25r";
+const APP_VERSION="2026-11-25s";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
