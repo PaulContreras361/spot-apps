@@ -86,6 +86,10 @@ section.dept{padding-block:34px 10px}
 .monthpick strong{font-family:var(--display);font-weight:400;font-size:1.6rem;min-width:7.5ch}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-family:var(--label);font-weight:600;letter-spacing:.03em;font-size:.95rem;padding:4px 10px;border-radius:999px;border:1px solid var(--rule);background:var(--paper);cursor:pointer}
+#nowChips{display:block}
+.mtog{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;margin:10px 0 0;padding:10px 14px;border:2px solid var(--emerald);border-radius:12px;background:#fff;color:var(--emerald);font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:1rem;text-align:left;cursor:pointer}
+.mtog[aria-expanded="true"]{background:var(--emerald);color:#fff}
+.mgroup{display:flex;flex-wrap:wrap;gap:8px;padding:10px 2px 4px}
 .chip.peak{border-color:var(--cardinal);color:var(--cardinal);background:transparent}
 .chip.peak::after{content:" ▲";font-size:.7em}
 .note{font-size:.92rem;color:var(--muted);margin:.7rem 0 0}
@@ -417,7 +421,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
         <button type="button" id="mToday" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--label);color:var(--emerald);text-transform:uppercase;letter-spacing:.1em;font-size:.8rem">Today</button>
       </div>
       <div class="chips" id="nowChips"></div>
-      <p class="note">The most common feeder birds are listed first. Red outline ▲ = peak month. Tap a bird to jump to its field-guide card.</p>
+      <p class="note">Tap a heading to open or close it. Red outline ▲ = peak month. Tap a bird to jump to its field-guide card.</p>
       <div class="callout" id="monthNote"></div>
     </div>
     <div class="panel">
@@ -632,7 +636,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25e · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25f · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1194,17 +1198,24 @@ const FW_TX=[["noca","Northern Cardinal",70.5,2.06],["cach","Carolina Chickadee"
  .map(r=>({id:r[0],n:r[1],pct:r[2],grp:r[3],score:r[2]*r[3]})).sort((a,b)=>b.score-a.score);
 const FW_RANK={}; FW_TX.forEach((r,i)=>{if(r.id)FW_RANK[r.id]=i});
 /* ---- this month ---- */
+const monthOpen={common:true,rest:false};
 function renderMonth(){
   $("mName").textContent=MONL[viewM];
   const fr=id=>id in FW_RANK?FW_RANK[id]:99;
   const here=BIRDS.filter(b=>b.m[viewM]>0).sort((a,b)=>fr(a.id)-fr(b.id)||b.m[viewM]-a.m[viewM]);
-  $("nowChips").innerHTML=here.map(b=>`<button type="button" class="chip ${b.m[viewM]===2?"peak":""}" data-id="${b.id}">${b.n}</button>`).join("");
+  const common=here.filter(b=>fr(b.id)<99), rest=here.filter(b=>fr(b.id)>=99);
+  const chip=b=>`<button type="button" class="chip ${b.m[viewM]===2?"peak":""}" data-id="${b.id}">${b.n}</button>`;
+  const grp=(k,label,list,showNum)=>{const open=monthOpen[k];
+    return `<button type="button" class="mtog" data-mtog="${k}" aria-expanded="${open}"><span>${label} <b>(${list.length})</b></span><span class="mtog-i" aria-hidden="true">${open?"▲":"▼"}</span></button>`
+      +(open?`<div class="mgroup">${list.length?list.map((b,i)=>showNum?chip({...b,n:(i+1)+". "+b.n}):chip(b)).join(""):`<p class="note" style="margin:0">None this month.</p>`}</div>`:"")};
+  $("nowChips").innerHTML=grp("common","Most common this month",common,true)+grp("rest","All other birds this month",rest,false);
   $("monthNote").textContent=MONTH_NOTES[viewM];
 }
 $("mPrev").onclick=()=>{viewM=(viewM+11)%12;renderMonth()};
 $("mNext").onclick=()=>{viewM=(viewM+1)%12;renderMonth()};
 $("mToday").onclick=()=>{viewM=curM;renderMonth()};
-$("nowChips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(!c)return;setFilter("all");const el=$("b-"+c.dataset.id);el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")});
+$("nowChips").addEventListener("click",e=>{const t=e.target.closest("[data-mtog]");if(t){monthOpen[t.dataset.mtog]=!monthOpen[t.dataset.mtog];renderMonth();return}
+  const c=e.target.closest(".chip");if(!c)return;setFilter("all");const el=$("b-"+c.dataset.id);el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")});
 
 /* ---- guide ---- */
 let filter="all";
@@ -2203,7 +2214,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25e";
+const APP_VERSION="2026-11-25f";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
