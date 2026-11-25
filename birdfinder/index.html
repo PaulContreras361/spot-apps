@@ -441,8 +441,11 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
   </div>
   <div class="panel nearby" id="feederTop">
     <span class="eyebrow" style="color:var(--emerald)">Most common at Texas feeders</span>
-    <p class="note" style="margin:.4rem 0 0">Ranked by how many birds of each kind people actually counted at Texas feeders, from Project FeederWatch (Cornell Lab), Nov 1–13, 2026, 305 Texas feeders. Tap one to see it in the guide.</p>
+    <button type="button" class="mtog" id="fwTog" aria-expanded="false"><span>Show the top 20 feeder birds</span><span class="mtog-i" aria-hidden="true">▼</span></button>
+    <div id="fwBody" hidden>
+    <p class="note" style="margin:.6rem 0 0">Ranked by how many birds of each kind people actually counted at Texas feeders, from Project FeederWatch (Cornell Lab), Nov 1–13, 2026, 305 Texas feeders. Tap one to see it in the guide.</p>
     <div class="nearby-list" id="fwList"></div>
+    </div>
   </div>
   <div class="panel nearby">
     <span class="eyebrow" style="color:var(--emerald)">Seen near you this week</span>
@@ -636,7 +639,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25f · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25g · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1098,7 +1101,7 @@ async function loadWikiPics(){
       Object.values(q.pages||{}).forEach(p=>{const src=back[p.title]; const b=part.find(x=>x.s===src); if(b&&p.thumbnail&&p.thumbnail.source)WIKIPIC[b.id]=p.thumbnail.source});
     }catch(_){}
   }
-  store.set("bb_wikipics",WIKIPIC); renderGuide();
+  store.set("bb_wikipics",WIKIPIC); renderGuide(); if(!$("fwBody").hidden)renderFeederTop();
 }
 const MONTH_NOTES=[
  "Peak winter feeder month. Goldfinches, waxwings, and kinglets are here. Whooping Cranes are on the Aransas marshes.",
@@ -2029,7 +2032,9 @@ function renderFeederTop(){
     return `<button type="button" class="nb" ${ok?`data-goto="${r.id}"`:"disabled"}>${ph?`<img src="${esc(ph)}" alt="" loading="lazy">`:""}<span><b>${i+1}. ${esc(r.n)}</b><small>At ${Math.round(r.pct)}% of feeders · groups of about ${Math.round(r.grp)}${ok?"":" · not in this guide"}</small></span></button>`}).join("")
     +`<p class="note" style="grid-column:1/-1">Source: Project FeederWatch, Cornell Lab of Ornithology, Texas results Nov 1–13, 2026.</p>`;
 }
-renderFeederTop();
+$("fwTog").addEventListener("click",()=>{const open=$("fwBody").hidden; $("fwBody").hidden=!open;
+  $("fwTog").setAttribute("aria-expanded",open); $("fwTog").firstElementChild.textContent=open?"Hide the top 20 feeder birds":"Show the top 20 feeder birds";
+  $("fwTog").lastElementChild.textContent=open?"▲":"▼"; if(open)renderFeederTop()});
 $("fwList").addEventListener("click",e=>{const g=e.target.closest("[data-goto]");if(!g)return;setFilter("all");const el=$("b-"+g.dataset.goto);el.scrollIntoView({block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")});
 
 /* ===== Add a bird to my guide ===== */
@@ -2214,7 +2219,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25f";
+const APP_VERSION="2026-11-25g";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
