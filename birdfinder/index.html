@@ -758,7 +758,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25q · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25r · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2580,13 +2580,14 @@ $("handShare").addEventListener("click",async()=>{if(handSel)shareText(await han
 $("roadSave").addEventListener("click",()=>{const v=$("roadNum").value.trim();store.set("bb_roadside",v);$("roadMsg").textContent=v?"Saved. It shows on the Flat tire button.":"Removed."});
 $("safetyBtn").addEventListener("click",()=>{handSel=null;$("handBox").hidden=true;$("handKinds").querySelectorAll(".opt").forEach(o=>o.classList.remove("on"));$("roadNum").value=store.get("bb_roadside","")});
 /* -- Safety & Emergency on/off (remembered on this phone) -- */
-function setSosOn(on){store.set("bb_sos_on",on);$("safetyBtn").parentNode.hidden=!on;$("sosOn").hidden=on}
+function showSos(on){$("safetyBtn").parentNode.hidden=!on;$("sosOn").hidden=on}
+function setSosOn(on){store.set("bb_sos_on2",on);showSos(on)}
 $("sosOff").addEventListener("click",()=>{if(confirm("Turn off the Safety and Emergency buttons?\n\nYou can turn them back on any time with the \"Safety: Off\" button at the top."))setSosOn(false)});
 $("sosOn").addEventListener("click",()=>setSosOn(true));
-setSosOn(store.get("bb_sos_on",true));
+showSos(store.get("bb_sos_on2",false)); // off until the person turns it on
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25q";
+const APP_VERSION="2026-11-25r";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
