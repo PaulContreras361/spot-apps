@@ -103,6 +103,11 @@ section.dept{padding-block:34px 10px}
 input,select,textarea{width:100%;background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:7px 9px}
 .presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .presets button{font-family:var(--label);font-size:.92rem;font-weight:600;border:1px solid var(--rule);background:transparent;border-radius:4px;padding:5px 10px;cursor:pointer}
+.mytown{display:inline-flex}
+.mytown [data-rm]{margin-left:-1px;border-radius:0 4px 4px 0!important;padding:5px 12px!important;color:var(--muted)}
+.mytown [data-i]{border-radius:4px 0 0 4px!important}
+.addplace{display:flex;gap:8px;margin-top:8px}
+.addplace input{flex:1;min-width:0;font:inherit;font-size:1.05rem;padding:10px 12px;border:2px solid var(--rule);border-radius:12px;background:#fff}
 .presets button[aria-pressed="true"]{background:var(--emerald);border-color:var(--emerald);color:var(--card)}
 
 /* Field guide */
@@ -434,9 +439,17 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
       </div>
       <p class="note">Birds feed hardest in the first two hours after sunrise and again before dusk. Hummingbirds tank up right before sunset.</p>
       <input type="hidden" id="lat" value="28.68"><input type="hidden" id="lon" value="-96.56">
-      <span class="eyebrow" style="display:block;margin-top:14px;color:var(--muted)">Pick your coastal town</span>
-      <div class="presets" id="presets"></div>
       <p class="note" id="locName">Times for Point Comfort, Central Time.</p>
+      <button type="button" class="mtog" id="townTog" aria-expanded="false"><span>Change town</span><span class="mtog-i" aria-hidden="true">▼</span></button>
+      <div id="townBody" hidden>
+        <span class="eyebrow" style="display:block;margin-top:12px;color:var(--muted)">Pick your town</span>
+        <div class="presets" id="presets"></div>
+        <span class="eyebrow" style="display:block;margin-top:16px;color:var(--muted)">Add a place</span>
+        <div class="addplace"><input type="text" id="placeName" placeholder="Town name, like Bay City" autocomplete="off" enterkeyhint="search"><button type="button" class="btn" id="placeFind">Find</button></div>
+        <button type="button" class="btn ghost" id="placeHere" style="margin-top:8px">Use where I am now</button>
+        <p class="note" id="placeMsg" style="margin:.5rem 0 0"></p>
+        <div class="nearby-list" id="placeList" style="grid-template-columns:1fr"></div>
+      </div>
     </div>
   </div>
   <div class="panel nearby" id="feederTop">
@@ -644,7 +657,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25i · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25j · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1187,12 +1200,60 @@ function renderSun(){
     $("wPM").textContent=fmtT(new Date(t.set.getTime()-2*3600e3))+" – "+fmtT(t.set);
   }
   const p=PRESETS.find(p=>Math.abs(p[1]-lat)<.01&&Math.abs(p[2]-lon)<.01);
-  [...$("presets").children].forEach(b=>b.setAttribute("aria-pressed",PRESETS[b.dataset.i]===p));
+  $("presets").querySelectorAll("[data-i]").forEach(b=>b.setAttribute("aria-pressed",PRESETS[b.dataset.i]===p));
+  $("townTog").firstElementChild.innerHTML=($("townBody").hidden?"Change town":"Done")+` <b style="font-weight:400;text-transform:none;letter-spacing:0">· ${esc(p?p[0]:"Point Comfort")}</b>`;
   $("locName").textContent="Times for "+(p?p[0]:"Point Comfort")+", "+today.toLocaleDateString("en-US",{month:"short",day:"numeric"})+", Central Time.";
   renderSpots();
 }
-$("presets").innerHTML=PRESETS.map((p,i)=>`<button type="button" data-i="${i}">${p[0]}</button>`).join("");
-$("presets").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const p=PRESETS[b.dataset.i];$("lat").value=p[1];$("lon").value=p[2];store.set("mbbs_loc",[p[1],p[2]]);renderSun()});
+const BUILTIN_TOWNS=PRESETS.length;
+let MYTOWNS=store.get("bb_mytowns",[]); MYTOWNS.forEach(t=>PRESETS.push(t));
+function renderPresets(){
+  $("presets").innerHTML=PRESETS.map((p,i)=>i<BUILTIN_TOWNS?`<button type="button" data-i="${i}">${esc(p[0])}</button>`
+    :`<span class="mytown"><button type="button" data-i="${i}">${esc(p[0])}</button><button type="button" data-rm="${i}" aria-label="Remove ${esc(p[0])}">×</button></span>`).join("");
+}
+renderPresets();
+function setTown(p){$("lat").value=p[1];$("lon").value=p[2];store.set("mbbs_loc",[p[1],p[2]]);renderSun()}
+$("presets").addEventListener("click",e=>{
+  const r=e.target.closest("[data-rm]");
+  if(r){const i=+r.dataset.rm,p=PRESETS[i]; if(!confirm(`Remove ${p[0]} from your places?`))return;
+    const wasOn=Math.abs(+$("lat").value-p[1])<.01&&Math.abs(+$("lon").value-p[2])<.01;
+    PRESETS.splice(i,1); MYTOWNS=PRESETS.slice(BUILTIN_TOWNS); store.set("bb_mytowns",MYTOWNS); renderPresets();
+    if(wasOn)setTown(PRESETS[5]); else renderSun(); return}
+  const b=e.target.closest("[data-i]"); if(b)setTown(PRESETS[b.dataset.i]);
+});
+function addTown(name,lat,lon){
+  lat=Math.round(lat*1000)/1000; lon=Math.round(lon*1000)/1000;
+  let p=PRESETS.find(p=>Math.abs(p[1]-lat)<.01&&Math.abs(p[2]-lon)<.01);
+  if(!p){p=[name.slice(0,40),lat,lon];PRESETS.push(p);MYTOWNS=PRESETS.slice(BUILTIN_TOWNS);store.set("bb_mytowns",MYTOWNS);renderPresets()}
+  $("placeList").innerHTML=""; $("placeName").value=""; $("placeMsg").textContent=p[0]+" is now your town.";
+  setTown(p);
+}
+$("townTog").addEventListener("click",()=>{const open=$("townBody").hidden;$("townBody").hidden=!open;$("townTog").setAttribute("aria-expanded",open);
+  $("townTog").lastElementChild.textContent=open?"▲":"▼";$("placeMsg").textContent="";renderSun()});
+async function findPlace(){
+  const q=$("placeName").value.trim(), msg=$("placeMsg"), box=$("placeList");
+  if(q.length<2){msg.textContent="Type a town name.";return}
+  msg.textContent="Looking it up…"; box.innerHTML="";
+  try{
+    const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),12000);
+    const j=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&format=json&countryCode=US&name="+encodeURIComponent(q),{signal:ac.signal}).then(r=>r.json()); clearTimeout(tm);
+    const res=(j.results||[]).sort((a,b)=>(b.admin1==="Texas")-(a.admin1==="Texas"));
+    if(!res.length){msg.textContent="No place found with that name. Check the spelling, or use where you are now.";return}
+    msg.textContent="Tap the right place:";
+    box.innerHTML=res.map(r=>`<button type="button" class="nb" data-pn="${esc(r.name)}" data-plat="${r.latitude}" data-plon="${r.longitude}"><span><b>${esc(r.name)}</b><small>${esc([r.admin2,r.admin1].filter(Boolean).join(", "))}</small></span></button>`).join("");
+  }catch(_){msg.textContent=navigator.onLine===false?"Finding a town needs an internet connection. You can still use where you are now.":"Couldn't look it up. Try again in a minute, or use where you are now."}
+}
+$("placeFind").addEventListener("click",findPlace);
+$("placeName").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();findPlace()}});
+$("placeList").addEventListener("click",e=>{const b=e.target.closest("[data-pn]");if(b)addTown(b.dataset.pn,+b.dataset.plat,+b.dataset.plon)});
+$("placeHere").addEventListener("click",()=>{
+  const msg=$("placeMsg"); if(!navigator.geolocation){msg.textContent="This phone can't share its location with the app.";return}
+  msg.textContent="Finding where you are…";
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const n=(prompt("Name this place (like Home, the Ranch, or the Lake):","My place")||"").trim(); if(!n){msg.textContent="";return}
+    addTown(n,pos.coords.latitude,pos.coords.longitude);
+  },()=>{msg.textContent="Location is turned off for this app. Turn it on in your phone's Settings, or type a town name."},{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
+});
 const savedLoc=store.get("mbbs_loc",null); if(savedLoc&&PRESETS.some(p=>Math.abs(p[1]-savedLoc[0])<.01&&Math.abs(p[2]-savedLoc[1])<.01)){$("lat").value=savedLoc[0];$("lon").value=savedLoc[1]}
 
 /* ===== Most common at Texas feeders (Project FeederWatch, Texas, Nov 1-13 2026, 305 sites) =====
@@ -2230,7 +2291,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25i";
+const APP_VERSION="2026-11-25j";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
