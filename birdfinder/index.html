@@ -657,7 +657,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25k · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25l · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1269,7 +1269,7 @@ const FW_TX=[["noca","Northern Cardinal",70.5,2.06],["cach","Carolina Chickadee"
  .map(r=>({id:r[0],n:r[1],pct:r[2],grp:r[3],score:r[2]*r[3]})).sort((a,b)=>b.score-a.score);
 const FW_RANK={}; FW_TX.forEach((r,i)=>{if(r.id)FW_RANK[r.id]=i});
 /* ---- this month ---- */
-const monthOpen={common:true,rest:false};
+const monthOpen={common:false,rest:false};
 function renderMonth(){
   $("mName").textContent=MONL[viewM];
   const fr=id=>id in FW_RANK?FW_RANK[id]:99;
@@ -2293,7 +2293,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");i
 ffShowSetup(); ffLoad();
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25k";
+const APP_VERSION="2026-11-25l";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
