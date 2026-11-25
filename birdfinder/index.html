@@ -296,6 +296,7 @@ nav.tabs a{display:inline-flex;align-items:center;font-size:.9rem}
 .ctc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .ctc input{font:inherit;font-size:1.05rem;padding:10px;border:2px solid var(--rule);border-radius:10px;background:#fff;min-width:0}
 .safelist li{margin:6px 0}
+.lochelp{display:block;margin-top:6px;padding:10px 12px;border-radius:10px;background:#FFF4E0;border:2px solid #C77700;color:var(--ink);line-height:1.5}
 .privnote{font-size:.95rem;color:var(--muted);background:var(--wash);border-radius:10px;padding:8px 10px;margin:10px 0 0}
 .sheet [hidden]{display:none!important}
 .handopts .opt{min-height:60px;font-size:1.05rem}
@@ -766,7 +767,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Pictures of the newer birds in the guide come from Wikipedia and Wikimedia Commons. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25t · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25u · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -1363,7 +1364,7 @@ $("placeHere").addEventListener("click",()=>{
   navigator.geolocation.getCurrentPosition(pos=>{
     const n=(prompt("Name this place (like Home, the Ranch, or the Lake):","My place")||"").trim(); if(!n){msg.textContent="";return}
     addTown(n,pos.coords.latitude,pos.coords.longitude);
-  },()=>{msg.textContent="Location is turned off for this app. Turn it on in your phone's Settings, or type a town name."},{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
+  },err=>{msg.innerHTML=locHelp(err)+" Or type a town name above."},{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
 });
 const savedLoc=store.get("mbbs_loc",null); if(savedLoc&&PRESETS.some(p=>Math.abs(p[1]-savedLoc[0])<.01&&Math.abs(p[2]-savedLoc[1])<.01)){$("lat").value=savedLoc[0];$("lon").value=savedLoc[1]}
 
@@ -1527,7 +1528,7 @@ $("asHere").addEventListener("click",()=>{
   if(!navigator.geolocation){$("asWhere").textContent="This phone can't share its location with the app.";return}
   $("asWhere").textContent="Finding where you are…";
   navigator.geolocation.getCurrentPosition(pos=>{if(asPending)asSetWhere(pos.coords.latitude,pos.coords.longitude,"Where you are now")},
-    ()=>{$("asWhere").textContent="Location is turned off for this app. Turn it on in your phone's Settings, or type a place."},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+    err=>{$("asWhere").innerHTML=locHelp(err)+" Or type a place above."},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});
 });
 async function asFind(){
   const q=$("asPlace").value.trim(); if(q.length<2){$("asWhere").textContent="Type a place name.";return}
@@ -2476,6 +2477,14 @@ $("ffPhoto").addEventListener("change",async e=>{
 document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");if(s)shareFind(s.dataset.share,s)});
 ffShowSetup(); ffLoad();
 
+/* plain-English help when the phone won't give a location */
+function locHelp(err){
+  if(err&&err.code===1){
+    return `<span class="lochelp"><b>Your phone is blocking location for this app.</b> To fix it:<br>
+1. Open the <b>Settings</b> app.<br>2. Tap <b>Privacy &amp; Security</b>, then <b>Location Services</b>. Make sure it's <b>On</b>.<br>
+3. Scroll down, tap <b>Safari Websites</b>, and pick <b>While Using the App</b>.<br>4. Come back here and tap the button again. If your phone asks, tap <b>Allow</b>.</span>`}
+  return `<span class="lochelp"><b>Couldn't find your location right now.</b> The GPS signal may be weak. Step outside or near a window and tap the button again.</span>`;
+}
 /* ===== Safety & Emergency ===== */
 const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 let sosPos=null; // {lat,lon,acc,at}
@@ -2510,8 +2519,8 @@ async function sosLocate(){
     $("sosCoords").textContent=fmtCoord(sosPos.lat,sosPos.lon);
     const n=nearestSpot(sosPos.lat,sosPos.lon);
     $("sosNear").textContent=`Accurate to about ${Math.round(sosPos.acc*3.281)} feet.`+(n?` About ${n.d<1?"less than 1":Math.round(n.d)} mile${n.d<2?"":"s"} from ${n.s.n}.`:"");
-  }catch(_){sosPos=null;$("sosCoords").textContent="Location not available";
-    $("sosNear").textContent="Turn on Location for this app in your phone's Settings. You can still call 911 or text for help."}
+  }catch(err){sosPos=null;$("sosCoords").textContent="Location not available";
+    $("sosNear").innerHTML=locHelp(err)+" <b>You can still call 911 or text for help.</b>"}
 }
 $("sosBtn").addEventListener("click",()=>{stopSong();renderSosContacts();$("sosMsg").textContent="";$("sosSheet").hidden=false;sosLocate()});
 $("sosRefresh").addEventListener("click",sosLocate);
@@ -2529,7 +2538,7 @@ let safeKind=null, safePos=null;
 async function loadSafety(useGPS){
   $("safeAlerts").innerHTML='<p class="note">Checking…</p>'; $("safeNow").innerHTML='<p class="note">Checking…</p>';
   safePos=townPos(); $("safeWhere").textContent="Weather for "+townName()+".";
-  if(useGPS){try{safePos=await getPos(false);$("safeWhere").textContent="Weather for where you are now."}catch(_){$("safeWhere").textContent="Weather for "+townName()+". (Location is off for this app.)"}}
+  if(useGPS){try{safePos=await getPos(false);$("safeWhere").textContent="Weather for where you are now."}catch(err){$("safeWhere").innerHTML="Weather for "+esc(townName())+".<br>"+locHelp(err)}}
   const {lat,lon}=safePos;
   try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),15000);
     const j=await fetch(`https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`,{signal:ac.signal,headers:{Accept:"application/geo+json"}}).then(r=>r.json()); clearTimeout(tm);
@@ -2605,7 +2614,7 @@ $("sosOn").addEventListener("click",()=>setSosOn(true));
 showSos(store.get("bb_sos_on2",false)); // off until the person turns it on
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25t";
+const APP_VERSION="2026-11-25u";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
