@@ -673,10 +673,10 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
   <h3 id="abTitle">Add to my guide</h3>
   <p class="sci" id="abSci"></p>
   <h4>Name</h4><input type="text" id="abName">
-  <h4>How big was it?</h4><div class="opts" id="abSize"></div>
-  <h4>Colors you saw</h4><div class="swatches" id="abColors"></div>
-  <h4>Where did you see it?</h4><div class="opts" id="abWhere"></div>
-  <h4>What was it doing?</h4><div class="opts" id="abDoing"></div>
+  <h4>How big was the bird?</h4><div class="opts" id="abSize"></div>
+  <h4>Colors on the bird</h4><div class="swatches" id="abColors"></div>
+  <h4>Where did you see the bird?</h4><div class="opts" id="abWhere"></div>
+  <h4>What was the bird doing?</h4><div class="opts" id="abDoing"></div>
   <h4>My photo (optional)</h4><label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Add my photo<input type="file" id="abPhoto" accept="image/*" hidden><input type="file" id="ffPhoto" accept="image/*" hidden></label>
   <h4>My notes (optional)</h4><textarea id="abNotes" rows="2" placeholder="Where you saw it, what it was doing, anything to remember"></textarea>
   <p class="note" id="abMsg" style="margin:.6rem 0 0"></p>
@@ -776,7 +776,7 @@ html.bigtext .micbtn{width:200px;height:200px;font-size:2rem}
     <p><b>Photos and sightings.</b> Bird photos in the guide are real photos from Wikipedia and Wikimedia Commons, shown with the internet and saved on your phone for later. Photos you add are your own. "Seen near you this week" uses public, research-grade sightings from iNaturalist. "Most common at Texas feeders" uses Project FeederWatch counts from the Cornell Lab of Ornithology.</p>
     <p><b>Bird songs and sound ID.</b> Bird songs play from free recordings on Wikimedia Commons, credited under each player. The "Who's singing?" listener uses BirdNET (Cornell Lab of Ornithology and Chemnitz University of Technology, CC BY-SA 4.0) and runs on your phone. It makes mistakes, so use it as a helper and check with your eyes.</p>
     <p><b>Sunrise and sunset times</b> are calculated estimates and may be off by a minute or two.</p>
-    <p class="copy">Backyard Birding · version 2026-11-25w · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
+    <p class="copy">Backyard Birding · version 2026-11-25x · 1st Edition · © 2026 Paul Contreras Jr. All rights reserved.</p>
   </div>
 </footer>
 </main>
@@ -2140,10 +2140,10 @@ const COLORS=[["red","Red","#C8102E"],["orange","Orange","#E8742A"],["yellow","Y
  ["blue","Blue","#2E5FB8"],["purple","Purple","#5B3A8C"],["pink","Pink","#E98BB0"],["brown","Brown","#8A5A33"],
  ["gray","Gray","#9A9C98"],["black","Black","#16161A"],["white","White","#FFFFFF"]];
 const QS=[
- {k:"z",q:"How big was it?",hint:"Pick the closest size.",one:true,o:[[1,"Tiny","Hummingbird size, about 3 to 4 inches"],[2,"Small","Sparrow or chickadee size, 4 to 6 inches"],[3,"Medium","Cardinal or robin size, 7 to 10 inches"],[4,"Large","Blue Jay size or bigger, 10 to 14 inches"],[5,"Very big","Heron, spoonbill or crane size"]]},
- {k:"c",q:"What colors did you see?",hint:"Tap every color you noticed, then tap Next.",colors:true},
- {k:"w",q:"Where was it?",hint:"Where you saw it this time.",one:true,o:[["feeder","At a feeder"],["tree","In a tree or bush"],["ground","On the ground or lawn"],["wire","On a wire, fence or post"],["sky","Flying overhead"],["water","In water or a marsh"]]},
- {k:"d",q:"What was it doing?",hint:"The last question.",one:true,o:[["hover","Hovering at flowers or a feeder"],["seed","Eating seed"],["climb","Climbing up a tree trunk"],["catch","Flying out to catch bugs or fish"],["flit","Hopping around in the leaves"],["ground","Walking on the ground"],["wade","Wading in shallow water"],["swim","Swimming or diving"],["fly","Flying or soaring"],["flock","Moving in a flock"],["fruit","Eating berries or fruit"],["perch","Sitting up high"]]}
+ {k:"z",q:"How big was the bird?",hint:"Pick the size closest to the bird you saw.",one:true,o:[[1,"Tiny","Hummingbird size, about 3 to 4 inches"],[2,"Small","Sparrow or chickadee size, 4 to 6 inches"],[3,"Medium","Cardinal or robin size, 7 to 10 inches"],[4,"Large","Blue Jay size or bigger, 10 to 14 inches"],[5,"Very big","Heron, spoonbill or crane size"]]},
+ {k:"c",q:"What colors was the bird?",hint:"Tap every color you noticed on the bird, then tap Next.",colors:true},
+ {k:"w",q:"Where was the bird?",hint:"Where you saw the bird this time.",one:true,o:[["feeder","At a feeder"],["tree","In a tree or bush"],["ground","On the ground or lawn"],["wire","On a wire, fence or post"],["sky","Flying overhead"],["water","In water or a marsh"]]},
+ {k:"d",q:"What was the bird doing?",hint:"The last question.",one:true,o:[["hover","Hovering at flowers or a feeder"],["seed","Eating seed"],["climb","Climbing up a tree trunk"],["catch","Flying out to catch bugs or fish"],["flit","Hopping around in the leaves"],["ground","Walking on the ground"],["wade","Wading in shallow water"],["swim","Swimming or diving"],["fly","Flying or soaring"],["flock","Moving in a flock"],["fruit","Eating berries or fruit"],["perch","Sitting up high"]]}
 ];
 let wiz={step:0,a:{z:null,c:[],w:null,d:null}};
 function wizRender(){
@@ -2658,7 +2658,7 @@ $("bkLoad").addEventListener("change",async e=>{
 });
 
 /* ===== New version check ===== */
-const APP_VERSION="2026-11-25w";
+const APP_VERSION="2026-11-25x";
 async function checkVersion(){
   try{const v=await fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());
     if(v.version&&v.version>APP_VERSION)$("updateBar").hidden=false;}catch(_){}
